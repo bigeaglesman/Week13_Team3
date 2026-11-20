@@ -194,7 +194,14 @@ FTransform USkeletalMeshComponent::GetBoneWorldTransform(int32 BoneIndex) const
 
 	const FQuat WorldRotation = (GetWorldRotation().Quaternion() * BoneRotation).Normalized();
 
-	return FTransform(WorldRotation, WorldLocation, GetWorldScale3D());
+	FVector WorldScale = GetWorldScale3D();
+
+	for (int32 Index = BoneIndex; Index >= 0; Index = Bones[Index].ParentIndex)
+	{
+		WorldScale = WorldScale * BoneSpaceTransforms[Index].Scale;
+	}
+
+	return FTransform(WorldRotation, WorldLocation, WorldScale);
 }
 
 void USkeletalMeshComponent::ResetPose()

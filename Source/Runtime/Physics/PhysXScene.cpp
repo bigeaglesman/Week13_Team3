@@ -559,10 +559,12 @@ void FPhysXScene::SyncTransforms()
             {
                 const physx::PxTransform Pose = static_cast<physx::PxRigidDynamic*>(BoneBody->Actor)->getGlobalPose();
 
+                const FVector PhysicsWorldScale = ParentWorld.Scale * LocalTransform.Scale;
+
                 const FTransform PhysicsWorld(
                     FQuat(Pose.q.x, Pose.q.y, Pose.q.z, Pose.q.w),
                     FVector(Pose.p.x, Pose.p.y, Pose.p.z),
-                    ComponentWorld.Scale
+                    PhysicsWorldScale
                 );
 
                 LocalTransform = PhysicsWorld.GetRelativeTransform(ParentWorld);
@@ -927,17 +929,22 @@ bool FPhysXScene::CreateRagdollConstraint(const FPhysicsConstraintSetup& Constra
         return false;
     }
 
-    const FVector& WorldScale = Component->GetWorldScale3D();
+    const FTransform BoneWorldTransformA = Component->GetBoneWorldTransform(BoneIndexA);
+    const FTransform BoneWorldTransformB = Component->GetBoneWorldTransform(BoneIndexB);
+
+    const FVector& WorldScaleA = BoneWorldTransformA.Scale;
+    const FVector& WorldScaleB = BoneWorldTransformB.Scale;
+
     const FQuat RotationA = ConstraintSetup.FrameA.Rotation.Normalized();
     const FQuat RotationB = ConstraintSetup.FrameB.Rotation.Normalized();
 
     const physx::PxTransform LocalFrameA(
-        physx::PxVec3(ConstraintSetup.FrameA.Location.X * WorldScale.X, ConstraintSetup.FrameA.Location.Y * WorldScale.Y, ConstraintSetup.FrameA.Location.Z * WorldScale.Z),
+        physx::PxVec3(ConstraintSetup.FrameA.Location.X * WorldScaleA.X, ConstraintSetup.FrameA.Location.Y * WorldScaleA.Y, ConstraintSetup.FrameA.Location.Z * WorldScaleA.Z),
         physx::PxQuat(RotationA.X, RotationA.Y, RotationA.Z, RotationA.W)
     );
 
     const physx::PxTransform LocalFrameB(
-        physx::PxVec3(ConstraintSetup.FrameB.Location.X * WorldScale.X, ConstraintSetup.FrameB.Location.Y * WorldScale.Y, ConstraintSetup.FrameB.Location.Z * WorldScale.Z),
+        physx::PxVec3(ConstraintSetup.FrameB.Location.X * WorldScaleB.X, ConstraintSetup.FrameB.Location.Y * WorldScaleB.Y, ConstraintSetup.FrameB.Location.Z * WorldScaleB.Z),
         physx::PxQuat(RotationB.X, RotationB.Y, RotationB.Z, RotationB.W)
     );
 

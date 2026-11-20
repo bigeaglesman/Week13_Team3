@@ -15,6 +15,7 @@
 class UGameInstance;
 class FGameViewportClient;
 class FAudioDevice;
+class FPhysXRuntime;
 
 struct FWorldContext
 {
@@ -69,6 +70,9 @@ class UEngine : public UObject
 	GENERATED_BODY()
 	friend class FEngineLoop;
 public:
+	UEngine();
+	virtual ~UEngine();
+
 	// 창을 만들기 전에, GEngine이 아니라 클래스 기본 객체(CDO)에서 호출된다.
 	virtual FEngineConfig GetConfig() const { return {}; }
 
@@ -107,6 +111,8 @@ public:
 	void InitializeAudioDevice();     // UE UEngine::InitializeAudioDeviceManager
 	void ShutdownAudioDevice();
 
+	FPhysXRuntime* GetPhysXRuntime() const { return PhysXRuntime.get(); }
+
 	// 창, 스왑체인, 렌더러를 가진 엔진 루프. UE에서는 전역 GEngineLoop로 어디서나 접근한다.
 	FEngineLoop& GetEngineLoop() const { return *EngineLoop; }
 
@@ -129,6 +135,7 @@ protected:
 	int32 NextWorldContextHandle = 0;
 private:
 	FEngineLoop* EngineLoop = nullptr;
+	TUniquePtr<FPhysXRuntime> PhysXRuntime;
 };
 
 // FEngineLoop::Init에서 설정되고 Exit에서 해제된다.

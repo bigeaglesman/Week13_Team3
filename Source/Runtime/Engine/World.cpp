@@ -3,6 +3,10 @@
 #include "World.h"
 #include "Level.h"
 
+#include "Engine/Engine.h"
+#include "Physics/PhysXRuntime.h"
+#include "Physics/PhysXScene.h"
+
 #include "Core/EngineStatics.h"
 #include "GameFramework/Actor/StaticMeshActor.h"
 
@@ -79,6 +83,36 @@ UWorld::~UWorld()
 
 bool UWorld::Init()
 {
+	// PhysX Runtime이 먼저 초기화되어 있어야 한다.
+	if (!GEngine || !GEngine->GetPhysXRuntime() || !GEngine->GetPhysXRuntime()->IsInitialized())
+	{
+		HTR_LOG(Error, "[World] PhysX Runtime is not initialized.");
+		return false;
+	}
+
+	// World마다 독립적인 Physics Scene 생성
+	PhysicsScene = MakeUnique<FPhysXScene>();
+
+	if (!PhysicsScene->Initialize(GEngine->GetPhysXRuntime()->GetPhysics()))
+	{
+		HTR_LOG(Error, "[World] Failed to initialize Physics Scene.");
+		PhysicsScene.reset();
+		return false;
+	}
+
+#if defined(ENGINE_DEBUG)
+	if (IsGameWorld())
+	{
+		// 바닥
+		if (!PhysicsScene->CreateStaticBox(FVector(0.0f, 0.0f, -0.5f), FVector(50.0f, 50.0f, 0.5f)))
+			HTR_LOG(Error, "[PhysX] Failed to create test ground.");
+
+		// 낙하하는 박스
+		if (!PhysicsScene->CreateDynamicBox(FVector(0.0f, 0.0f, 5.0f), FVector(0.5f, 0.5f, 0.5f), 1.0f))
+			HTR_LOG(Error, "[PhysX] Failed to create test box.");
+	}
+#endif
+
 	// Spawn Actor로 카메라 생성하고 세팅하기
 	PersistentLevel = NewObject<ULevel>(this);
 
@@ -165,6 +199,12 @@ void UWorld::Tick(float RealDeltaTime)
 	if (IsGameWorld())
 	{
 		GameWorldTick(DeltaTime);
+
+		if (!bIsPaused && PhysicsScene) 
+		{
+			PhysicsScene->Simulate(DeltaTime);
+			PhysicsScene->SyncTransforms();
+		}
 	}
 
 	if (WorldType == EWorldType::Editor)
@@ -331,6 +371,10 @@ void UWorld::ClearWorld()
 	Scene.RemoveAllLights();
 	Scene.RemoveAllDecals();
 	Scene.RemoveAllPrimitives();
+
+	if (PhysicsScene)
+		PhysicsScene->ClearActors();
+
 	HTR_LOG(Info, "{} : ", PersistentLevel->GetActorNum());
 }
 
@@ -917,7 +961,61 @@ void UWorld::BeginPlay()
 	if (!MyParticleEventManager)
 		MyParticleEventManager = SpawnActor<AParticleEventManager>();
 
-	// 기존 액터 목록을 고정한 후 시작한다. BeginPlay 중 생성된 액터는 대기열로 간다.
+#if defined(ENGINE_DEBUG)
+	if (PhysicsScene)
+	{
+		// 테스트 바닥 생성
+		FTransform GroundTransform(FVector(0.0f, 0.0f, -0.5f), FVector(100.0f, 100.0f, 1.0f), FRotator(0.0f, 0.0f, 0.0f));
+		AStaticMeshActor* GroundActor = SpawnActor<AStaticMeshActor>(NAME_None, &GroundTransform);
+
+		if (GroundActor)
+		{
+			UStaticMeshComponent* GroundMesh = GroundActor->GetStaticMeshComponent();
+
+			if (GroundMesh && GroundMesh->GetMeshData())
+			{
+				const FBox Bounds = GroundMesh->CalcLocalBounds();
+				const FVector LocalHalfExtents = (Bounds.Max - Bounds.Min) * 0.5f;
+				const FVector Scale = GroundMesh->GetWorldScale3D();
+
+				const FVector HalfExtents(
+					std::abs(LocalHalfExtents.X * Scale.X),
+					std::abs(LocalHalfExtents.Y * Scale.Y),
+					std::abs(LocalHalfExtents.Z * Scale.Z)
+				);
+
+				if (!PhysicsScene->CreateStaticBox(GroundMesh->GetWorldLocation(), HalfExtents))
+					HTR_LOG(Error, "[PhysX] Failed to create test ground.");
+			}
+		}
+
+		// 테스트 Dynamic Mesh 생성
+		FTransform BoxTransform(FVector(0.0f, 0.0f, 5.0f), FVector(1.0f, 1.0f, 1.0f), FRotator(0.0f, 0.0f, 10.0f));
+		AStaticMeshActor* BoxActor = SpawnActor<AStaticMeshActor>(NAME_None, &BoxTransform);
+
+		if (BoxActor)
+		{
+			UStaticMeshComponent* BoxMesh = BoxActor->GetStaticMeshComponent();
+
+			if (BoxMesh && BoxMesh->GetMeshData())
+			{
+				const FBox Bounds = BoxMesh->CalcLocalBounds();
+				const FVector HalfExtents = (Bounds.Max - Bounds.Min) * 0.5f;
+
+				const FTransform BodyTransform(BoxMesh->GetWorldRotation(), BoxMesh->GetWorldLocation(), BoxMesh->GetWorldScale3D());
+
+				physx::PxRigidDynamic* Body = PhysicsScene->CreateDynamicBox(BodyTransform, HalfExtents, 1.0f);
+
+				if (Body)
+					PhysicsScene->BindDynamicBody(Body, BoxMesh);
+				else
+					HTR_LOG(Error, "[PhysX] Failed to create test dynamic body.");
+			}
+		}
+	}
+#endif
+
+	// 기존 액터 목록을 고정한 후 시작한다.
 	TArray<AActor*> InitialActors;
 	for (ULevel* Level : Levels)
 		if (Level)
@@ -954,9 +1052,18 @@ void UWorld::EndPlay()
 UWorld* UWorld::CreateWorld(const EWorldType InWorldType, bool bInformEngineOfWorld, FName WorldName)
 {
 	UWorld* NewWorld = NewObject<UWorld>(nullptr, WorldName);
+
+	if (!NewWorld)
+		return nullptr;
+
 	NewWorld->SetFlags(EObjectFlags::RF_Transactional);
 	NewWorld->WorldType = InWorldType;
-	NewWorld->Init();
+
+	if (!NewWorld->Init())
+	{
+		delete NewWorld;
+		return nullptr;
+	}
 
 	return NewWorld;
 }

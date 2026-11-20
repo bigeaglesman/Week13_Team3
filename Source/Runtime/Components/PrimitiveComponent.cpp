@@ -8,6 +8,7 @@
 #include "Engine/PrimitiveSceneProxy.h"
 #include "Engine/Scene.h"
 #include "Engine/World.h"
+#include "Physics/PhysXScene.h"
 
 namespace
 {
@@ -51,6 +52,13 @@ void UPrimitiveComponent::BeginPlay()
 
 void UPrimitiveComponent::OnUnregister()
 {
+	if (UWorld* World = GetWorld())
+	{
+		if (FPhysXScene* PhysicsScene = World->GetPhysicsScene())
+		{
+			PhysicsScene->RemoveBodyForComponent(this);
+		}
+	}
 	Super::OnUnregister();
 	// 삭제/등록 해제된 도형을 상대의 OverlapInfos에 남기지 않는다.
 	while (!OverlapInfos.IsEmpty())

@@ -6,10 +6,8 @@
 #include "Engine/Engine.h"
 #include "Physics/PhysXRuntime.h"
 #include "Physics/PhysXScene.h"
-#include "Physics/BodyInstance.h"
 
 #include "Core/EngineStatics.h"
-#include "GameFramework/Actor/StaticMeshActor.h"
 
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
@@ -949,92 +947,6 @@ void UWorld::BeginPlay()
 
 	if (!MyParticleEventManager)
 		MyParticleEventManager = SpawnActor<AParticleEventManager>();
-
-#if defined(ENGINE_DEBUG)
-	if (PhysicsScene)
-	{
-		// 테스트 바닥 생성
-		FTransform GroundTransform(FVector(0.0f, 0.0f, -0.5f), FVector(100.0f, 100.0f, 1.0f), FRotator(0.0f, 0.0f, 0.0f));
-		AStaticMeshActor* GroundActor = SpawnActor<AStaticMeshActor>(NAME_None, &GroundTransform);
-
-		if (GroundActor)
-		{
-			UStaticMeshComponent* GroundMesh = GroundActor->GetStaticMeshComponent();
-
-			if (GroundMesh && GroundMesh->GetMeshData())
-			{
-				const FBox Bounds = GroundMesh->CalcLocalBounds();
-				const FVector LocalHalfExtents = (Bounds.Max - Bounds.Min) * 0.5f;
-				const FVector Scale = GroundMesh->GetWorldScale3D();
-
-				const FVector HalfExtents(
-					std::abs(LocalHalfExtents.X * Scale.X),
-					std::abs(LocalHalfExtents.Y * Scale.Y),
-					std::abs(LocalHalfExtents.Z * Scale.Z)
-				);
-
-				auto* GroundBody = PhysicsScene->CreateStaticBox(GroundMesh->GetWorldLocation(), HalfExtents);
-
-				if (!GroundBody)
-					HTR_LOG(Error, "[PhysX] Failed to create test ground.");
-				else
-				{
-					GroundMesh->bBlockComponent = true;
-					PhysicsScene->BindBody(GroundBody, GroundMesh);
-				}
-			}
-		}
-
-		// 테스트 Dynamic Mesh 생성
-		FTransform BoxTransform(FVector(0.0f, 0.0f, 5.0f), FVector(1.0f, 1.0f, 1.0f), FRotator(0.0f, 0.0f, 10.0f));
-		AStaticMeshActor* BoxActor = SpawnActor<AStaticMeshActor>(NAME_None, &BoxTransform);
-
-		if (BoxActor)
-		{
-			UStaticMeshComponent* BoxMesh = BoxActor->GetStaticMeshComponent();
-
-			if (BoxMesh && BoxMesh->GetMeshData())
-			{
-				const FBox Bounds = BoxMesh->CalcLocalBounds();
-				const FVector HalfExtents = (Bounds.Max - Bounds.Min) * 0.5f;
-
-				const FTransform BodyTransform(BoxMesh->GetWorldRotation(), BoxMesh->GetWorldLocation(), BoxMesh->GetWorldScale3D());
-
-				physx::PxRigidDynamic* Body = PhysicsScene->CreateDynamicBox(BodyTransform, HalfExtents, 1.0f);
-
-				if (Body)
-				{
-					BoxMesh->bBlockComponent = true;
-					PhysicsScene->BindBody(Body, BoxMesh);
-
-					if (FBodyInstance* BodyInstance = BoxMesh->GetBodyInstance())
-					{
-						HTR_LOG(Info, "[PhysX Test] BodyInstance Valid={}, Dynamic={}, Mass={}", BodyInstance->IsValid(), BodyInstance->IsDynamic(), BodyInstance->GetMass());
-					}
-
-					BoxMesh->OnComponentHit.Add([](UPrimitiveComponent*, AActor*, UPrimitiveComponent*)
-						{
-							HTR_LOG(Info, "[PhysX Test] OnComponentHit received.");
-						});
-
-					BoxMesh->OnComponentBeginOverlap.Add([](UPrimitiveComponent*, AActor*, UPrimitiveComponent*)
-						{
-							HTR_LOG(Info, "[PhysX Test] OnComponentBeginOverlap received.");
-						});
-
-					BoxMesh->OnComponentEndOverlap.Add([](UPrimitiveComponent*, AActor*, UPrimitiveComponent*)
-						{
-							HTR_LOG(Info, "[PhysX Test] OnComponentEndOverlap received.");
-						});
-				}
-				else
-				{
-					HTR_LOG(Error, "[PhysX] Failed to create test dynamic body.");
-				}
-			}
-		}
-	}
-#endif
 
 	// 기존 액터 목록을 고정한 후 시작한다.
 	TArray<AActor*> InitialActors;

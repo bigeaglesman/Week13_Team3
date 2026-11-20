@@ -53,13 +53,11 @@ struct FPhysXScene::FImpl : physx::PxSimulationEventCallback
     physx::PxMaterial* DefaultMaterial = nullptr;
 
     std::vector<physx::PxRigidActor*> Actors;
-    physx::PxRigidDynamic* LastDynamicBody = nullptr;
 
     std::mutex EventMutex;
     std::vector<FQueuedEvent> PendingEvents;
 
     float Accumulator = 0.0f;
-    uint32 DebugFrameCounter = 0;
 
     void QueueEvent(UPrimitiveComponent* A, UPrimitiveComponent* B, EQueuedEventType Type)
     {
@@ -80,7 +78,6 @@ struct FPhysXScene::FImpl : physx::PxSimulationEventCallback
 
     void onContact(const physx::PxContactPairHeader& PairHeader, const physx::PxContactPair* Pairs, physx::PxU32 PairCount) override
     {
-        HTR_LOG(Info, "[PhysX Test] onContact called. PairCount={}", PairCount);
         if (!PairHeader.actors[0] || !PairHeader.actors[1])
             return;
 
@@ -226,7 +223,6 @@ void FPhysXScene::Shutdown()
 
     Impl->Physics = nullptr;
     Impl->Accumulator = 0.0f;
-    Impl->DebugFrameCounter = 0;
 }
 
 void FPhysXScene::ClearActors()
@@ -261,7 +257,6 @@ void FPhysXScene::ClearActors()
     }
 
     Impl->Actors.clear();
-    Impl->LastDynamicBody = nullptr;
 }
 
 void FPhysXScene::Simulate(float DeltaTime)
@@ -290,29 +285,16 @@ void FPhysXScene::Simulate(float DeltaTime)
         Impl->Accumulator -= FixedDeltaTime;
         ++Steps;
     }
-
-#if defined(ENGINE_DEBUG)
-    if (Impl->LastDynamicBody && ++Impl->DebugFrameCounter >= 60)
-    {
-        const physx::PxVec3 Position = Impl->LastDynamicBody->getGlobalPose().p;
-
-        HTR_LOG(Info, "[PhysX] Dynamic Body Position: X={}, Y={}, Z={}", Position.x, Position.y, Position.z);
-
-        Impl->DebugFrameCounter = 0;
-    }
-#endif
 }
 
 void FPhysXScene::BindBody(physx::PxRigidStatic* Body, UPrimitiveComponent* Component)
 {
-    if (BindBodyInternal(Body, Component))
-        HTR_LOG(Info, "[PhysX Test] Static Body Bound.");
+    BindBodyInternal(Body, Component);
 }
 
 void FPhysXScene::BindBody(physx::PxRigidDynamic* Body, UPrimitiveComponent* Component)
 {
-    if (BindBodyInternal(Body, Component))
-        HTR_LOG(Info, "[PhysX Test] Dynamic Body Bound.");
+    BindBodyInternal(Body, Component);
 }
 
 void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
@@ -337,13 +319,8 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
 
         if (Actor && BodyInstance && (BodyInstance == TargetInstance || BodyInstance->GetOwnerComponent() == Component))
         {
-            if (Impl->LastDynamicBody == Actor)
-            {
-                Impl->LastDynamicBody = nullptr;
-            }
-
-            Actor->release();
             BodyInstance->Terminate();
+            Actor->release();
             It = Impl->Actors.erase(It);
         }
         else
@@ -544,7 +521,6 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicBox(const FTransform& WorldTran
 
     Impl->Scene->addActor(*Actor);
     Impl->Actors.push_back(Actor);
-    Impl->LastDynamicBody = Actor;
 
     return Actor;
 }

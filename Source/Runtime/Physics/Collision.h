@@ -25,7 +25,4 @@ namespace FCollision
 
 	// 두 도형이 겹치면 true를 반환
 	bool Overlap(const UShapeComponent* A, const UShapeComponent* B);
-
-	// 테스트 코드 : 실패한 케이스 수를 돌려준다
-	int32 RunSelfTest();
 }

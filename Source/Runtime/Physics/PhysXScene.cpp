@@ -685,7 +685,7 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
 
         if (ShapeSetup.ShapeType == EPhysicsShapeType::Capsule)
         {
-            PxLocalRotation == PxLocalRotation * physx::PxQuat(1.57079632679f, physx::PxVec3(0.0f, 1.0f, 0.0f));
+            PxLocalRotation = PxLocalRotation * physx::PxQuat(1.57079632679f, physx::PxVec3(0.0f, 1.0f, 0.0f));
         }
 
         Shape->setLocalPose(physx::PxTransform(PxLocalPosition, PxLocalRotation));

@@ -100,19 +100,6 @@ bool UWorld::Init()
 		return false;
 	}
 
-#if defined(ENGINE_DEBUG)
-	if (IsGameWorld())
-	{
-		// 바닥
-		if (!PhysicsScene->CreateStaticBox(FVector(0.0f, 0.0f, -0.5f), FVector(50.0f, 50.0f, 0.5f)))
-			HTR_LOG(Error, "[PhysX] Failed to create test ground.");
-
-		// 낙하하는 박스
-		if (!PhysicsScene->CreateDynamicBox(FVector(0.0f, 0.0f, 5.0f), FVector(0.5f, 0.5f, 0.5f), 1.0f))
-			HTR_LOG(Error, "[PhysX] Failed to create test box.");
-	}
-#endif
-
 	// Spawn Actor로 카메라 생성하고 세팅하기
 	PersistentLevel = NewObject<ULevel>(this);
 
@@ -204,6 +191,7 @@ void UWorld::Tick(float RealDeltaTime)
 		{
 			PhysicsScene->Simulate(DeltaTime);
 			PhysicsScene->SyncTransforms();
+			PhysicsScene->DispatchQueuedEvents();
 		}
 	}
 
@@ -984,8 +972,15 @@ void UWorld::BeginPlay()
 					std::abs(LocalHalfExtents.Z * Scale.Z)
 				);
 
-				if (!PhysicsScene->CreateStaticBox(GroundMesh->GetWorldLocation(), HalfExtents))
+				auto* GroundBody = PhysicsScene->CreateStaticBox(GroundMesh->GetWorldLocation(), HalfExtents);
+
+				if (!GroundBody)
 					HTR_LOG(Error, "[PhysX] Failed to create test ground.");
+				else
+				{
+					GroundMesh->bBlockComponent = true;
+					PhysicsScene->BindBody(GroundBody, GroundMesh);
+				}
 			}
 		}
 
@@ -1007,9 +1002,29 @@ void UWorld::BeginPlay()
 				physx::PxRigidDynamic* Body = PhysicsScene->CreateDynamicBox(BodyTransform, HalfExtents, 1.0f);
 
 				if (Body)
-					PhysicsScene->BindDynamicBody(Body, BoxMesh);
+				{
+					BoxMesh->bBlockComponent = true;
+					PhysicsScene->BindBody(Body, BoxMesh);
+
+					BoxMesh->OnComponentHit.Add([](UPrimitiveComponent*, AActor*, UPrimitiveComponent*)
+						{
+							HTR_LOG(Info, "[PhysX Test] OnComponentHit received.");
+						});
+
+					BoxMesh->OnComponentBeginOverlap.Add([](UPrimitiveComponent*, AActor*, UPrimitiveComponent*)
+						{
+							HTR_LOG(Info, "[PhysX Test] OnComponentBeginOverlap received.");
+						});
+
+					BoxMesh->OnComponentEndOverlap.Add([](UPrimitiveComponent*, AActor*, UPrimitiveComponent*)
+						{
+							HTR_LOG(Info, "[PhysX Test] OnComponentEndOverlap received.");
+						});
+				}
 				else
+				{
 					HTR_LOG(Error, "[PhysX] Failed to create test dynamic body.");
+				}
 			}
 		}
 	}

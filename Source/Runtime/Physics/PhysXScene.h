@@ -7,11 +7,12 @@ namespace physx
 {
     class PxPhysics;
     class PxScene;
+    class PxRigidActor;
     class PxRigidStatic;
     class PxRigidDynamic;
 }
 
-class USceneComponent;
+class UPrimitiveComponent;
 struct FTransform;
 
 class FPhysXScene
@@ -25,9 +26,11 @@ public:
     void ClearActors();
     void Simulate(float DeltaTime);
 
-    void BindDynamicBody(physx::PxRigidDynamic* Body, USceneComponent* Component);
-    void RemoveBodyForComponent(USceneComponent* Component);
+    void BindBody(physx::PxRigidStatic* Body, UPrimitiveComponent* Component);
+    void BindBody(physx::PxRigidDynamic* Body, UPrimitiveComponent* Component);
+    void RemoveBodyForComponent(UPrimitiveComponent* Component);
     void SyncTransforms();
+    void DispatchQueuedEvents();
 
     physx::PxRigidStatic* CreateStaticBox(const FVector& Position, const FVector& HalfExtents);
     physx::PxRigidDynamic* CreateDynamicBox(const FVector& Position, const FVector& HalfExtents, float Density = 1.0f);

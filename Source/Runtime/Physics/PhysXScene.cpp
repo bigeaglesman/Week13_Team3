@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "Physics/PhysXScene.h"
 #include "Components/SceneComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Math/Transform.h"
 
 #include <PxPhysicsAPI.h>
@@ -8,20 +9,123 @@
 
 #include <algorithm>
 #include <vector>
+#include <mutex>
 
-struct FPhysXScene::FImpl
+namespace
 {
+    physx::PxFilterFlags PhysXSimulationFilterShader(physx::PxFilterObjectAttributes Attributes0,
+        physx::PxFilterData, physx::PxFilterObjectAttributes Attributes1, physx::PxFilterData, physx::PxPairFlags& PairFlags, const void*, physx::PxU32)
+    {
+        if (physx::PxFilterObjectIsTrigger(Attributes0) || physx::PxFilterObjectIsTrigger(Attributes1))
+        {
+            PairFlags = physx::PxPairFlag::eTRIGGER_DEFAULT | physx::PxPairFlag::eNOTIFY_TOUCH_FOUND | physx::PxPairFlag::eNOTIFY_TOUCH_LOST;
+        }
+        else
+        {
+            PairFlags = physx::PxPairFlag::eCONTACT_DEFAULT | physx::PxPairFlag::eNOTIFY_TOUCH_FOUND | physx::PxPairFlag::eNOTIFY_TOUCH_LOST;
+        }
+
+        return physx::PxFilterFlag::eDEFAULT;
+    }
+}
+
+struct FPhysXScene::FImpl : physx::PxSimulationEventCallback
+{
+    enum class EQueuedEventType : uint8
+    {
+        ContactBegin,
+        ContactEnd,
+        TriggerBegin,
+        TriggerEnd
+    };
+
+    struct FQueuedEvent
+    {
+        UPrimitiveComponent* ComponentA = nullptr;
+        UPrimitiveComponent* ComponentB = nullptr;
+        EQueuedEventType Type = EQueuedEventType::ContactBegin;
+    };
+
     physx::PxPhysics* Physics = nullptr;
     physx::PxScene* Scene = nullptr;
     physx::PxDefaultCpuDispatcher* Dispatcher = nullptr;
     physx::PxMaterial* DefaultMaterial = nullptr;
 
     std::vector<physx::PxRigidActor*> Actors;
-
     physx::PxRigidDynamic* LastDynamicBody = nullptr;
+
+    std::mutex EventMutex;
+    std::vector<FQueuedEvent> PendingEvents;
 
     float Accumulator = 0.0f;
     uint32 DebugFrameCounter = 0;
+
+    void QueueEvent(UPrimitiveComponent* A, UPrimitiveComponent* B, EQueuedEventType Type)
+    {
+        if (!A || !B || A == B)
+            return;
+
+        std::lock_guard<std::mutex> Lock(EventMutex);
+        PendingEvents.push_back({ A, B, Type });
+    }
+
+    void onConstraintBreak(physx::PxConstraintInfo*, physx::PxU32) override {}
+
+    void onWake(physx::PxActor**, physx::PxU32) override {}
+
+    void onSleep(physx::PxActor**, physx::PxU32) override {}
+
+    void onAdvance(const physx::PxRigidBody* const*, const physx::PxTransform*, const physx::PxU32) override {}
+
+    void onContact(const physx::PxContactPairHeader& PairHeader, const physx::PxContactPair* Pairs, physx::PxU32 PairCount) override
+    {
+        HTR_LOG(Info, "[PhysX Test] onContact called. PairCount={}", PairCount);
+        if (!PairHeader.actors[0] || !PairHeader.actors[1])
+            return;
+
+        if ((PairHeader.flags & physx::PxContactPairHeaderFlag::eREMOVED_ACTOR_0) || (PairHeader.flags & physx::PxContactPairHeaderFlag::eREMOVED_ACTOR_1))
+            return;
+
+        UPrimitiveComponent* A = static_cast<UPrimitiveComponent*>(PairHeader.actors[0]->userData);
+        UPrimitiveComponent* B = static_cast<UPrimitiveComponent*>(PairHeader.actors[1]->userData);
+
+        if (!A || !B)
+            return;
+
+        for (physx::PxU32 Index = 0; Index < PairCount; ++Index)
+        {
+            if ((Pairs[Index].flags & physx::PxContactPairFlag::eREMOVED_SHAPE_0) || (Pairs[Index].flags & physx::PxContactPairFlag::eREMOVED_SHAPE_1))
+                continue;
+
+            if (Pairs[Index].flags & physx::PxContactPairFlag::eACTOR_PAIR_HAS_FIRST_TOUCH)
+                QueueEvent(A, B, EQueuedEventType::ContactBegin);
+
+            if (Pairs[Index].flags & physx::PxContactPairFlag::eACTOR_PAIR_LOST_TOUCH)
+                QueueEvent(A, B, EQueuedEventType::ContactEnd);
+        }
+    }
+
+    void onTrigger(physx::PxTriggerPair* Pairs, physx::PxU32 Count) override
+    {
+        for (physx::PxU32 Index = 0; Index < Count; ++Index)
+        {
+            const physx::PxTriggerPair& Pair = Pairs[Index];
+
+            if (!Pair.triggerActor || !Pair.otherActor)
+                continue;
+
+            if ((Pair.flags & physx::PxTriggerPairFlag::eREMOVED_SHAPE_TRIGGER) || (Pair.flags & physx::PxTriggerPairFlag::eREMOVED_SHAPE_OTHER))
+                continue;
+
+            UPrimitiveComponent* A = static_cast<UPrimitiveComponent*>(Pair.triggerActor->userData);
+            UPrimitiveComponent* B = static_cast<UPrimitiveComponent*>(Pair.otherActor->userData);
+
+            if (Pair.status == physx::PxPairFlag::eNOTIFY_TOUCH_FOUND)
+                QueueEvent(A, B, EQueuedEventType::TriggerBegin);
+            else if (Pair.status == physx::PxPairFlag::eNOTIFY_TOUCH_LOST)
+                QueueEvent(A, B, EQueuedEventType::TriggerEnd);
+        }
+    }
 };
 
 FPhysXScene::FPhysXScene()
@@ -68,7 +172,8 @@ bool FPhysXScene::Initialize(physx::PxPhysics* InPhysics)
 
     SceneDesc.gravity = physx::PxVec3(0.0f, 0.0f, -9.81f);
     SceneDesc.cpuDispatcher = Impl->Dispatcher;
-    SceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
+    SceneDesc.filterShader = PhysXSimulationFilterShader;
+    SceneDesc.simulationEventCallback = Impl.get();
 
     SceneDesc.flags |= physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS;
 
@@ -124,6 +229,11 @@ void FPhysXScene::ClearActors()
         return;
     }
 
+    {
+        std::lock_guard<std::mutex> Lock(Impl->EventMutex);
+        Impl->PendingEvents.clear();
+    }
+
     for (physx::PxRigidActor* Actor : Impl->Actors)
     {
         if (Actor)
@@ -175,21 +285,35 @@ void FPhysXScene::Simulate(float DeltaTime)
 #endif
 }
 
-void FPhysXScene::BindDynamicBody(physx::PxRigidDynamic* Body, USceneComponent* Component)
+void FPhysXScene::BindBody(physx::PxRigidStatic* Body, UPrimitiveComponent* Component)
 {
     if (!IsInitialized() || !Body || !Component || Body->getScene() != Impl->Scene)
-    {
         return;
-    }
 
     Body->userData = Component;
+    HTR_LOG(Info, "[PhysX Test] Static Body Bound.");
 }
 
-void FPhysXScene::RemoveBodyForComponent(USceneComponent* Component)
+void FPhysXScene::BindBody(physx::PxRigidDynamic* Body, UPrimitiveComponent* Component)
+{
+    if (!IsInitialized() || !Body || !Component || Body->getScene() != Impl->Scene)
+        return;
+
+    Body->userData = Component;
+    HTR_LOG(Info, "[PhysX Test] Dynamic Body Bound.");
+}
+
+void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
 {
     if (!Component || !Impl)
     {
         return;
+    }
+
+    {
+        std::lock_guard<std::mutex> Lock(Impl->EventMutex);
+        auto& Events = Impl->PendingEvents;
+        Events.erase(std::remove_if(Events.begin(), Events.end(), [Component](const FImpl::FQueuedEvent& Event) {return Event.ComponentA == Component || Event.ComponentB == Component;}), Events.end());
     }
 
     for (auto It = Impl->Actors.begin(); It != Impl->Actors.end();)
@@ -238,7 +362,7 @@ void FPhysXScene::SyncTransforms()
         }
 
         physx::PxRigidDynamic* Body = static_cast<physx::PxRigidDynamic*>(Actor);
-        USceneComponent* Component = static_cast<USceneComponent*>(Body->userData);
+        UPrimitiveComponent* Component = static_cast<UPrimitiveComponent*>(Body->userData);
 
         if (!Component || !Component->IsRegistered())
         {
@@ -253,6 +377,61 @@ void FPhysXScene::SyncTransforms()
         );
 
         Component->SetWorldTransform(WorldTransform.GetLocalMatrix(), false);
+    }
+}
+
+void FPhysXScene::DispatchQueuedEvents()
+{
+    if (!Impl)
+    {
+        return;
+    }
+
+    std::vector<FImpl::FQueuedEvent> Events;
+
+    {
+        std::lock_guard<std::mutex> Lock(Impl->EventMutex);
+        Events.swap(Impl->PendingEvents);
+    }
+
+    for (const FImpl::FQueuedEvent& Event : Events)
+    {
+        UPrimitiveComponent* A = Event.ComponentA;
+        UPrimitiveComponent* B = Event.ComponentB;
+
+        if (!A || !B || !A->IsRegistered() || !B->IsRegistered())
+            continue;
+
+        switch (Event.Type)
+        {
+        case FImpl::EQueuedEventType::ContactBegin:
+            if (A->bGenerateOverlapEvents && B->bGenerateOverlapEvents)
+            {
+                A->BeginComponentOverlap(B);
+                B->BeginComponentOverlap(A);
+            }
+
+            if (A->bBlockComponent && B->bBlockComponent)
+            {
+                A->DispatchHit(B);
+                B->DispatchHit(A);
+            }
+            break;
+
+        case FImpl::EQueuedEventType::ContactEnd:
+        case FImpl::EQueuedEventType::TriggerEnd:
+            A->EndComponentOverlap(B);
+            B->EndComponentOverlap(A);
+            break;
+
+        case FImpl::EQueuedEventType::TriggerBegin:
+            if (A->bGenerateOverlapEvents && B->bGenerateOverlapEvents)
+            {
+                A->BeginComponentOverlap(B);
+                B->BeginComponentOverlap(A);
+            }
+            break;
+        }
     }
 }
 

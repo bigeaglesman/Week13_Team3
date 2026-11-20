@@ -40,6 +40,8 @@ public:
     bool IsInitialized() const;
 
 private:
+    bool BindBodyInternal(physx::PxRigidActor* Body, UPrimitiveComponent* Component);
+
     struct FImpl;
     TUniquePtr<FImpl> Impl;
 };

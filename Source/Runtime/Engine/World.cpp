@@ -6,6 +6,7 @@
 #include "Engine/Engine.h"
 #include "Physics/PhysXRuntime.h"
 #include "Physics/PhysXScene.h"
+#include "Physics/BodyInstance.h"
 
 #include "Core/EngineStatics.h"
 #include "GameFramework/Actor/StaticMeshActor.h"
@@ -1005,6 +1006,11 @@ void UWorld::BeginPlay()
 				{
 					BoxMesh->bBlockComponent = true;
 					PhysicsScene->BindBody(Body, BoxMesh);
+
+					if (FBodyInstance* BodyInstance = BoxMesh->GetBodyInstance())
+					{
+						HTR_LOG(Info, "[PhysX Test] BodyInstance Valid={}, Dynamic={}, Mass={}", BodyInstance->IsValid(), BodyInstance->IsDynamic(), BodyInstance->GetMass());
+					}
 
 					BoxMesh->OnComponentHit.Add([](UPrimitiveComponent*, AActor*, UPrimitiveComponent*)
 						{

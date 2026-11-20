@@ -12,6 +12,8 @@
 class FPrimitiveSceneProxy;
 class AActor;
 class UPrimitiveComponent;
+class FBodyInstance;
+class FPhysXScene;
 
 // (Self, Other, OtherComp). 담당: C
 DECLARE_DELEGATE(FComponentOverlapSignature, UPrimitiveComponent*, AActor*, UPrimitiveComponent*);
@@ -115,6 +117,9 @@ public:
 	void EndComponentOverlap(UPrimitiveComponent* OtherComp);
 	void DispatchHit(UPrimitiveComponent* OtherComp);
 
+	FBodyInstance* GetBodyInstance() { return BodyInstance.get(); }
+	const FBodyInstance* GetBodyInstance() const { return BodyInstance.get(); }
+	bool HasValidPhysicsState() const;
 protected:
 	virtual void OnUnregister() override;
 	TArray<FOverlapInfo> OverlapInfos;
@@ -133,5 +138,8 @@ protected:
 
 private:
 	friend class FScene;
+	friend class FPhysXScene;
+
+	TUniquePtr<FBodyInstance> BodyInstance;
 	FPrimitiveSceneProxy* SceneProxy = nullptr;
 };

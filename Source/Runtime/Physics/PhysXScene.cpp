@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "Physics/PhysXScene.h"
+#include "Physics/BodyInstance.h"
 #include "Components/SceneComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Math/Transform.h"
@@ -86,8 +87,11 @@ struct FPhysXScene::FImpl : physx::PxSimulationEventCallback
         if ((PairHeader.flags & physx::PxContactPairHeaderFlag::eREMOVED_ACTOR_0) || (PairHeader.flags & physx::PxContactPairHeaderFlag::eREMOVED_ACTOR_1))
             return;
 
-        UPrimitiveComponent* A = static_cast<UPrimitiveComponent*>(PairHeader.actors[0]->userData);
-        UPrimitiveComponent* B = static_cast<UPrimitiveComponent*>(PairHeader.actors[1]->userData);
+        FBodyInstance* BodyA = static_cast<FBodyInstance*>(PairHeader.actors[0]->userData);
+        FBodyInstance* BodyB = static_cast<FBodyInstance*>(PairHeader.actors[1]->userData);
+
+        UPrimitiveComponent* A = BodyA ? BodyA->GetOwnerComponent() : nullptr;
+        UPrimitiveComponent* B = BodyB ? BodyB->GetOwnerComponent() : nullptr;
 
         if (!A || !B)
             return;
@@ -117,8 +121,11 @@ struct FPhysXScene::FImpl : physx::PxSimulationEventCallback
             if ((Pair.flags & physx::PxTriggerPairFlag::eREMOVED_SHAPE_TRIGGER) || (Pair.flags & physx::PxTriggerPairFlag::eREMOVED_SHAPE_OTHER))
                 continue;
 
-            UPrimitiveComponent* A = static_cast<UPrimitiveComponent*>(Pair.triggerActor->userData);
-            UPrimitiveComponent* B = static_cast<UPrimitiveComponent*>(Pair.otherActor->userData);
+            FBodyInstance* BodyA = static_cast<FBodyInstance*>(Pair.triggerActor->userData);
+            FBodyInstance* BodyB = static_cast<FBodyInstance*>(Pair.otherActor->userData);
+
+            UPrimitiveComponent* A = BodyA ? BodyA->GetOwnerComponent() : nullptr;
+            UPrimitiveComponent* B = BodyB ? BodyB->GetOwnerComponent() : nullptr;
 
             if (Pair.status == physx::PxPairFlag::eNOTIFY_TOUCH_FOUND)
                 QueueEvent(A, B, EQueuedEventType::TriggerBegin);
@@ -238,6 +245,17 @@ void FPhysXScene::ClearActors()
     {
         if (Actor)
         {
+            FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Actor->userData);
+
+            if (BodyInstance)
+            {
+                UPrimitiveComponent* Component = BodyInstance->GetOwnerComponent();
+                BodyInstance->Terminate();
+
+                if (Component && Component->BodyInstance.get() == BodyInstance)
+                    Component->BodyInstance.reset();
+            }
+
             Actor->release();
         }
     }
@@ -287,20 +305,14 @@ void FPhysXScene::Simulate(float DeltaTime)
 
 void FPhysXScene::BindBody(physx::PxRigidStatic* Body, UPrimitiveComponent* Component)
 {
-    if (!IsInitialized() || !Body || !Component || Body->getScene() != Impl->Scene)
-        return;
-
-    Body->userData = Component;
-    HTR_LOG(Info, "[PhysX Test] Static Body Bound.");
+    if (BindBodyInternal(Body, Component))
+        HTR_LOG(Info, "[PhysX Test] Static Body Bound.");
 }
 
 void FPhysXScene::BindBody(physx::PxRigidDynamic* Body, UPrimitiveComponent* Component)
 {
-    if (!IsInitialized() || !Body || !Component || Body->getScene() != Impl->Scene)
-        return;
-
-    Body->userData = Component;
-    HTR_LOG(Info, "[PhysX Test] Dynamic Body Bound.");
+    if (BindBodyInternal(Body, Component))
+        HTR_LOG(Info, "[PhysX Test] Dynamic Body Bound.");
 }
 
 void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
@@ -316,11 +328,14 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
         Events.erase(std::remove_if(Events.begin(), Events.end(), [Component](const FImpl::FQueuedEvent& Event) {return Event.ComponentA == Component || Event.ComponentB == Component;}), Events.end());
     }
 
+    FBodyInstance* TargetInstance = Component->BodyInstance.get();
+
     for (auto It = Impl->Actors.begin(); It != Impl->Actors.end();)
     {
         physx::PxRigidActor* Actor = *It;
+        FBodyInstance* BodyInstance = Actor ? static_cast<FBodyInstance*>(Actor->userData) : nullptr;
 
-        if (Actor && Actor->userData == Component)
+        if (Actor && BodyInstance && (BodyInstance == TargetInstance || BodyInstance->GetOwnerComponent() == Component))
         {
             if (Impl->LastDynamicBody == Actor)
             {
@@ -328,12 +343,18 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
             }
 
             Actor->release();
+            BodyInstance->Terminate();
             It = Impl->Actors.erase(It);
         }
         else
         {
             ++It;
         }
+    }
+    if (Component->BodyInstance)
+    {
+        Component->BodyInstance->Terminate();
+        Component->BodyInstance.reset();
     }
 }
 
@@ -362,7 +383,8 @@ void FPhysXScene::SyncTransforms()
         }
 
         physx::PxRigidDynamic* Body = static_cast<physx::PxRigidDynamic*>(Actor);
-        UPrimitiveComponent* Component = static_cast<UPrimitiveComponent*>(Body->userData);
+        FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Body->userData);
+        UPrimitiveComponent* Component = BodyInstance ? BodyInstance->GetOwnerComponent() : nullptr;
 
         if (!Component || !Component->IsRegistered())
         {
@@ -535,5 +557,24 @@ physx::PxScene* FPhysXScene::GetNativeScene() const
 bool FPhysXScene::IsInitialized() const
 {
     return Impl && Impl->Physics && Impl->Scene && Impl->Dispatcher && Impl->DefaultMaterial;
+}
+
+bool FPhysXScene::BindBodyInternal(physx::PxRigidActor* Body, UPrimitiveComponent* Component)
+{
+    if (!IsInitialized() || !Body || !Component || Body->getScene() != Impl->Scene || Body->userData)
+    {
+        return false;
+    }
+
+    if (Component->BodyInstance && Component->BodyInstance->IsValid())
+    {
+        return false;
+    }
+
+    Component->BodyInstance.reset();
+    Component->BodyInstance = MakeUnique<FBodyInstance>();
+    Component->BodyInstance->Initialize(Body, Component);
+
+    return Component->BodyInstance->IsValid();
 }
 

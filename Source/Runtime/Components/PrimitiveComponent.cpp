@@ -9,6 +9,7 @@
 #include "Engine/Scene.h"
 #include "Engine/World.h"
 #include "Physics/PhysXScene.h"
+#include "Physics/BodyInstance.h"
 
 namespace
 {
@@ -48,6 +49,11 @@ UPrimitiveComponent::~UPrimitiveComponent()
 void UPrimitiveComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+bool UPrimitiveComponent::HasValidPhysicsState() const
+{
+	return BodyInstance && BodyInstance->IsValid();
 }
 
 void UPrimitiveComponent::OnUnregister()

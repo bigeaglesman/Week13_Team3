@@ -420,6 +420,19 @@ bool USkeletalMeshComponent::CreatePhysicsBodies()
 		HTR_LOG(Info, "[Ragdoll] Body created: Bone={}, Index={}, Shapes={}", BodySetup.BoneName, BoneIndex, BodySetup.Shapes.Num());
 	}
 
+	const TArray<FPhysicsConstraintSetup>& ConstraintSetups = ManagedPhysicsAsset->GetConstraintSetups();
+
+	for (const FPhysicsConstraintSetup& ConstraintSetup : ConstraintSetups)
+	{
+		if (!PhysicsScene->CreateRagdollConstraint(ConstraintSetup, this))
+		{
+			HTR_LOG(Error, "[Ragdoll] Failed to create constraint: {} <-> {}", ConstraintSetup.BoneNameA, ConstraintSetup.BoneNameB);
+			PhysicsScene->RemoveBodyForComponent(this);
+			return false;
+		}
+		HTR_LOG(Info, "[Ragdoll] Constraint created: {} <-> {}", ConstraintSetup.BoneNameA, ConstraintSetup.BoneNameB);
+	}
+
 	return true;
 }
 

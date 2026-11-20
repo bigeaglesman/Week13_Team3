@@ -11,6 +11,7 @@
 #include <cooking/PxCooking.h>
 #include <PxPhysicsAPI.h>
 #include <extensions/PxDefaultCpuDispatcher.h>
+#include <extensions/PxD6Joint.h>
 
 #include <algorithm>
 #include <vector>
@@ -31,6 +32,17 @@ namespace
         }
 
         return physx::PxFilterFlag::eDEFAULT;
+    }
+
+    physx::PxD6Motion::Enum ToPxD6Motion(EPhysicsConstraintMotion Motion)
+    {
+        switch (Motion)
+        {
+        case EPhysicsConstraintMotion::Locked: return physx::PxD6Motion::eLOCKED;
+        case EPhysicsConstraintMotion::Limited: return physx::PxD6Motion::eLIMITED;
+        case EPhysicsConstraintMotion::Free: return physx::PxD6Motion::eFREE;
+        default: return physx::PxD6Motion::eLOCKED;
+        }
     }
 }
 
@@ -57,7 +69,14 @@ struct FPhysXScene::FImpl : physx::PxSimulationEventCallback
     physx::PxDefaultCpuDispatcher* Dispatcher = nullptr;
     physx::PxMaterial* DefaultMaterial = nullptr;
 
+    struct FJointEntry
+    {
+        physx::PxJoint* Joint = nullptr;
+        USkeletalMeshComponent* Owner = nullptr;
+    };
+
     std::vector<physx::PxRigidActor*> Actors;
+    std::vector<FJointEntry> Joints;
 
     std::mutex EventMutex;
     std::vector<FQueuedEvent> PendingEvents;
@@ -243,6 +262,16 @@ void FPhysXScene::ClearActors()
         Impl->PendingEvents.clear();
     }
 
+    for (FImpl::FJointEntry& Entry : Impl->Joints)
+    {
+        if (Entry.Joint)
+        {
+            Entry.Joint->release();
+        }
+    }
+
+    Impl->Joints.clear();
+
     for (physx::PxRigidActor* Actor : Impl->Actors)
     {
         if (Actor)
@@ -356,6 +385,27 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
     }
 
     FBodyInstance* TargetInstance = Component->BodyInstance.get();
+
+    if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
+    {
+        for (auto It = Impl->Joints.begin(); It != Impl->Joints.end();)
+        {
+            if (It->Owner == SkeletalComponent)
+            {
+                if (It->Joint)
+                {
+                    It->Joint->release();
+                }
+
+                It = Impl->Joints.erase(It);
+            }
+            else
+            {
+                ++It;
+            }
+        }
+    }
+   
 
     for (auto It = Impl->Actors.begin(); It != Impl->Actors.end();)
     {
@@ -729,6 +779,126 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
     return true;
 }
 
+bool FPhysXScene::CreateRagdollConstraint(const FPhysicsConstraintSetup& ConstraintSetup, USkeletalMeshComponent* Component)
+{
+    if (!IsInitialized() || !Component)
+    {
+        return false;
+    }
+
+    const int32 BoneIndexA = Component->FindBoneIndex(ConstraintSetup.BoneNameA);
+    const int32 BoneIndexB = Component->FindBoneIndex(ConstraintSetup.BoneNameB);
+
+    if (BoneIndexA < 0 || BoneIndexB < 0 || BoneIndexA == BoneIndexB)
+    {
+        return false;
+    }
+
+    FBodyInstance* BodyInstanceA = nullptr;
+    FBodyInstance* BodyInstanceB = nullptr;
+
+    for (const TUniquePtr<FBodyInstance>& BodyInstance : Component->PhysicsBodies)
+    {
+        if (!BodyInstance || !BodyInstance->IsValid())
+        {
+            continue;
+        }
+
+        if (BodyInstance->GetBoneIndex() == BoneIndexA)
+        {
+            BodyInstanceA = BodyInstance.get();
+        }
+        else if (BodyInstance->GetBoneIndex() == BoneIndexB)
+        {
+            BodyInstanceB = BodyInstance.get();
+        }
+    }
+
+    if (!BodyInstanceA || !BodyInstanceB)
+    {
+        return false;
+    }
+
+    if (BodyInstanceA->Actor->getType() != physx::PxActorType::eRIGID_DYNAMIC ||
+        BodyInstanceB->Actor->getType() != physx::PxActorType::eRIGID_DYNAMIC)
+    {
+        return false;
+    }
+
+    physx::PxRigidDynamic* ActorA = static_cast<physx::PxRigidDynamic*>(BodyInstanceA->Actor);
+    physx::PxRigidDynamic* ActorB = static_cast<physx::PxRigidDynamic*>(BodyInstanceB->Actor);
+    
+    if (ActorA == ActorB || ActorA->getScene() != Impl->Scene || ActorB->getScene() != Impl->Scene)
+    {
+        return false;
+    }
+
+    const FVector& WorldScale = Component->GetWorldScale3D();
+    const FQuat RotationA = ConstraintSetup.FrameA.Rotation.Normalized();
+    const FQuat RotationB = ConstraintSetup.FrameB.Rotation.Normalized();
+
+    const physx::PxTransform LocalFrameA(
+        physx::PxVec3(ConstraintSetup.FrameA.Location.X * WorldScale.X, ConstraintSetup.FrameA.Location.Y * WorldScale.Y, ConstraintSetup.FrameA.Location.Z * WorldScale.Z),
+        physx::PxQuat(RotationA.X, RotationA.Y, RotationA.Z, RotationA.W)
+    );
+
+    const physx::PxTransform LocalFrameB(
+        physx::PxVec3(ConstraintSetup.FrameB.Location.X * WorldScale.X, ConstraintSetup.FrameB.Location.Y * WorldScale.Y, ConstraintSetup.FrameB.Location.Z * WorldScale.Z),
+        physx::PxQuat(RotationB.X, RotationB.Y, RotationB.Z, RotationB.W)
+    );
+
+    physx::PxD6Joint* Joint = physx::PxD6JointCreate(*Impl->Physics, ActorA, LocalFrameA, ActorB, LocalFrameB);
+
+    if (!Joint)
+    {
+        return false;
+    }
+
+    Joint->setMotion(physx::PxD6Axis::eX, ToPxD6Motion(ConstraintSetup.LinearX));
+    Joint->setMotion(physx::PxD6Axis::eY, ToPxD6Motion(ConstraintSetup.LinearY));
+    Joint->setMotion(physx::PxD6Axis::eZ, ToPxD6Motion(ConstraintSetup.LinearZ));
+
+    Joint->setMotion(physx::PxD6Axis::eSWING1, ToPxD6Motion(ConstraintSetup.Swing1));
+    Joint->setMotion(physx::PxD6Axis::eSWING2, ToPxD6Motion(ConstraintSetup.Swing2));
+    Joint->setMotion(physx::PxD6Axis::eTWIST, ToPxD6Motion(ConstraintSetup.Twist));
+
+    const physx::PxJointLinearLimitPair LinearLimit(Impl->Physics->getTolerancesScale(), -ConstraintSetup.LinearLimit, ConstraintSetup.LinearLimit);
+
+    if (ConstraintSetup.LinearX == EPhysicsConstraintMotion::Limited)
+    {
+        Joint->setLinearLimit(physx::PxD6Axis::eX, LinearLimit);
+    }
+
+    if (ConstraintSetup.LinearY == EPhysicsConstraintMotion::Limited)
+    {
+        Joint->setLinearLimit(physx::PxD6Axis::eY, LinearLimit);
+    }
+
+    if (ConstraintSetup.LinearZ == EPhysicsConstraintMotion::Limited)
+    {
+        Joint->setLinearLimit(physx::PxD6Axis::eZ, LinearLimit);
+    }
+
+    constexpr float DegreesToRadians = 0.017453292519943295f;
+
+    if (ConstraintSetup.Swing1 == EPhysicsConstraintMotion::Limited || ConstraintSetup.Swing2 == EPhysicsConstraintMotion::Limited)
+    {
+        const physx::PxJointLimitCone SwingLimit(ConstraintSetup.Swing1Limit * DegreesToRadians, ConstraintSetup.Swing2Limit * DegreesToRadians);
+        Joint->setSwingLimit(SwingLimit);
+    }
+
+    if (ConstraintSetup.Twist == EPhysicsConstraintMotion::Limited)
+    {
+        const float TwistLimit = ConstraintSetup.TwistLimit * DegreesToRadians;
+        Joint->setTwistLimit(physx::PxJointAngularLimitPair(-TwistLimit, TwistLimit));
+    }
+
+    Joint->setConstraintFlag(physx::PxConstraintFlag::eCOLLISION_ENABLED, false);
+
+    Impl->Joints.push_back({ Joint, Component });
+
+    return true;
+}
 
 physx::PxRigidStatic* FPhysXScene::CreateStaticTriangleMesh(const FStaticMeshData& MeshData, const FTransform& WorldTransform)
 {

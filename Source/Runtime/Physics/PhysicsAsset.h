@@ -63,6 +63,8 @@ struct FPhysicsConstraintSetup
     EPhysicsConstraintMotion LinearY = EPhysicsConstraintMotion::Locked;
     EPhysicsConstraintMotion LinearZ = EPhysicsConstraintMotion::Locked;
 
+    float LinearLimit = 0.1f;
+
     EPhysicsConstraintMotion Swing1 = EPhysicsConstraintMotion::Limited;
     EPhysicsConstraintMotion Swing2 = EPhysicsConstraintMotion::Limited;
     EPhysicsConstraintMotion Twist = EPhysicsConstraintMotion::Limited;

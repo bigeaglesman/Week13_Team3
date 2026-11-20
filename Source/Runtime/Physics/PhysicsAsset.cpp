@@ -113,6 +113,7 @@ namespace
         SerializeMotion(Record, "LinearX", Constraint.LinearX);
         SerializeMotion(Record, "LinearY", Constraint.LinearY);
         SerializeMotion(Record, "LinearZ", Constraint.LinearZ);
+        Record << SA_VALUE("LinearLimit", Constraint.LinearLimit);
         SerializeMotion(Record, "Swing1", Constraint.Swing1);
         SerializeMotion(Record, "Swing2", Constraint.Swing2);
         SerializeMotion(Record, "Twist", Constraint.Twist);
@@ -259,9 +260,18 @@ bool UPhysicsAsset::ValidateAgainstSkeletalMesh(const USkeletalMesh* SkeletalMes
             return false;
         }
 
-        if (!std::isfinite(Constraint.Swing1Limit) || Constraint.Swing1Limit < 0.0f ||
+        const bool bHasLimitedLinear = Constraint.LinearX == EPhysicsConstraintMotion::Limited ||
+            Constraint.LinearY == EPhysicsConstraintMotion::Limited ||
+            Constraint.LinearZ == EPhysicsConstraintMotion::Limited;
+
+        if (!std::isfinite(Constraint.LinearLimit) || Constraint.LinearLimit < 0.0f ||
+            (bHasLimitedLinear && Constraint.LinearLimit <= 0.0f) ||
+            !std::isfinite(Constraint.Swing1Limit) || Constraint.Swing1Limit < 0.0f ||
             !std::isfinite(Constraint.Swing2Limit) || Constraint.Swing2Limit < 0.0f ||
-            !std::isfinite(Constraint.TwistLimit) || Constraint.TwistLimit < 0.0f)
+            !std::isfinite(Constraint.TwistLimit) || Constraint.TwistLimit < 0.0f ||
+            (Constraint.Swing1 == EPhysicsConstraintMotion::Limited && (Constraint.Swing1Limit <= 0.0f || Constraint.Swing1Limit >= 180.0f)) ||
+            (Constraint.Swing2 == EPhysicsConstraintMotion::Limited && (Constraint.Swing2Limit <= 0.0f || Constraint.Swing2Limit >= 180.0f)) ||
+            (Constraint.Twist == EPhysicsConstraintMotion::Limited && (Constraint.TwistLimit <= 0.0f || Constraint.TwistLimit > 180.0f)))
         {
             OutError = "PhysicsAsset: Invalid constraint limits";
             return false;

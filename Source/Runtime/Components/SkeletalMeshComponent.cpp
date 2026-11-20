@@ -1,4 +1,8 @@
 #include "EnginePCH.h"
+#include "Engine/World.h"
+#include "Physics/PhysXScene.h"
+#include "Physics/PhysicsAsset.h"
+#include "Physics/PhysicsAssetFile.h"
 #include "SkeletalMeshComponent.h"
 #include "Serialization/MathSerialization.h"
 #include "Animation/BonePose.h"
@@ -46,6 +50,12 @@ void USkeletalMeshComponent::SetAnimInstance(UAnimInstance* InInstance)
 	}
 }
 
+void USkeletalMeshComponent::SetPhysicsAssetPath(const FString& Path)
+{
+	PhysicsAssetPath = Path;
+	ManagedPhysicsAsset.reset();
+}
+
 void USkeletalMeshComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -66,6 +76,10 @@ void USkeletalMeshComponent::BeginPlay()
 				Instance->SetPlaying(true);
 			}
 		}
+	}
+	if (!PhysicsAssetPath.empty() && LoadPhysicsAsset())
+	{
+		CreatePhysicsBodies();
 	}
 }
 
@@ -158,6 +172,29 @@ FMatrix USkeletalMeshComponent::GetBoneComponentMatrix(int32 BoneIndex) const
 FMatrix USkeletalMeshComponent::GetBoneWorldMatrix(int32 BoneIndex) const
 {
 	return GetBoneComponentMatrix(BoneIndex) * GetWorldMatrix();
+}
+
+FTransform USkeletalMeshComponent::GetBoneWorldTransform(int32 BoneIndex) const
+{
+	const TArray<FBoneInfo>& Bones = GetBones();
+
+	if (BoneIndex < 0 || BoneIndex >= Bones.Num() || BoneSpaceTransforms.Num() != Bones.Num())
+	{
+		return FTransform();
+	}
+
+	const FVector WorldLocation = GetBoneWorldMatrix(BoneIndex).TransformPosition(FVector::ZeroVector);
+
+	FQuat BoneRotation = FQuat::Identity();
+
+	for (int32 Index = BoneIndex; Index >= 0; Index = Bones[Index].ParentIndex)
+	{
+		BoneRotation = (BoneSpaceTransforms[Index].Rotation * BoneRotation).Normalized();
+	}
+
+	const FQuat WorldRotation = (GetWorldRotation().Quaternion() * BoneRotation).Normalized();
+
+	return FTransform(WorldRotation, WorldLocation, GetWorldScale3D());
 }
 
 void USkeletalMeshComponent::ResetPose()
@@ -283,6 +320,109 @@ void USkeletalMeshComponent::OnSkeletalMeshChanged()
 	for (const FBoneInfo& Bone : GetBones())
 		BoneSpaceTransforms.Add(Bone.LocalBindPose);
 }
+
+bool USkeletalMeshComponent::LoadPhysicsAsset()
+{
+	if (PhysicsAssetPath.empty() || !GetSkeletalMesh())
+	{
+		return false;
+	}
+
+	const FString FilePath = FAssetUtils::ResolveAssetFilePath(PhysicsAssetPath);
+
+	if (FilePath.empty())
+	{
+		HTR_LOG(Error, "[Ragdoll] PhysicsAsset path could not be resolved: {}", PhysicsAssetPath);
+		return false;
+	}
+
+	ManagedPhysicsAsset.reset(NewObject<UPhysicsAsset>(this));
+
+	if (!ManagedPhysicsAsset)
+	{
+		return false;
+	}
+
+	FString Error;
+
+	if (!PhysicsAssetFile::Read(FPaths::FromUtf8(FilePath), *ManagedPhysicsAsset, Error))
+	{
+		HTR_LOG(Error, "[Ragdoll] PhysicsAsset load failed: {}", Error);
+		ManagedPhysicsAsset.reset();
+		return false;
+	}
+
+	if (!ManagedPhysicsAsset->ValidateAgainstSkeletalMesh(GetSkeletalMesh(), Error))
+	{
+		HTR_LOG(Error, "[Ragdoll] PhysicsAsset validation failed: {}", Error);
+		ManagedPhysicsAsset.reset();
+		return false;
+	}
+
+	const FString AssetMeshPath = FAssetUtils::GetAssetKey(ManagedPhysicsAsset->GetSkeletalMeshPath());
+	const FString ComponentMeshPath = FAssetUtils::GetAssetKey(GetSkeletalMesh()->GetPath());
+
+	if (!AssetMeshPath.empty() && AssetMeshPath != ComponentMeshPath)
+	{
+		HTR_LOG(Error, "[Ragdoll] PhysicsAsset references a different SkeletalMesh.");
+		ManagedPhysicsAsset.reset();
+		return false;
+	}
+
+	return true;
+}
+
+bool USkeletalMeshComponent::CreatePhysicsBodies()
+{
+	if (!ManagedPhysicsAsset || !GetSkeletalMesh())
+	{
+		return false;
+	}
+
+	UWorld* World = GetWorld();
+	FPhysXScene* PhysicsScene = World ? World->GetPhysicsScene() : nullptr;
+
+	if (!PhysicsScene || !PhysicsScene->IsInitialized())
+	{
+		return false;
+	}
+
+	const TArray<FPhysicsBodySetup>& BodySetups = ManagedPhysicsAsset->GetBodySetups();
+
+	if (BodySetups.IsEmpty())
+	{
+		HTR_LOG(Warning, "[Ragdoll] PhysicsAsset contains no BodySetup.");
+		return false;
+	}
+
+	RefreshBoneTransformsNow();
+
+	for (const FPhysicsBodySetup& BodySetup : BodySetups)
+	{
+		const int32 BoneIndex = FindBoneIndex(BodySetup.BoneName);
+
+		if (BoneIndex < 0)
+		{
+			HTR_LOG(Error, "[Ragdoll] Bone not found: {}", BodySetup.BoneName);
+			PhysicsScene->RemoveBodyForComponent(this);
+			return false;
+		}
+
+		const FTransform BoneWorldTransform = GetBoneWorldTransform(BoneIndex);
+
+		if (!PhysicsScene->CreateRagdollBody(BodySetup, BoneWorldTransform, this, BoneIndex))
+		{
+			HTR_LOG(Error, "[Ragdoll] Failed to create body: {}", BodySetup.BoneName);
+			PhysicsScene->RemoveBodyForComponent(this);
+			return false;
+		}
+
+		HTR_LOG(Info, "[Ragdoll] Body created: Bone={}, Index={}, Shapes={}", BodySetup.BoneName, BoneIndex, BodySetup.Shapes.Num());
+	}
+
+	return true;
+}
+
 UAnimSingleNodeInstance* USkeletalMeshComponent::GetSingleNodeInstance() const
 {
 	return Cast<UAnimSingleNodeInstance>(AnimInstance);

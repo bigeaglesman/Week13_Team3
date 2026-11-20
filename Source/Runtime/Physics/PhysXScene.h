@@ -17,6 +17,7 @@ class UPrimitiveComponent;
 class USkeletalMeshComponent;
 struct FTransform;
 struct FStaticMeshData;
+struct FPhysicsBodySetup;
 
 class FPhysXScene
 {
@@ -40,6 +41,7 @@ public:
     physx::PxRigidStatic* CreateStaticBox(const FVector& Position, const FVector& HalfExtents);
     physx::PxRigidDynamic* CreateDynamicBox(const FVector& Position, const FVector& HalfExtents, float Density = 1.0f);
     physx::PxRigidDynamic* CreateDynamicBox(const FTransform& WorldTransform, const FVector& HalfExtents, float Density = 1.0f);
+    bool CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FTransform& WorldTransform, USkeletalMeshComponent* Component, int32 BoneIndex);
     physx::PxRigidStatic* CreateStaticTriangleMesh(const FStaticMeshData& MeshData, const FTransform& WorldTransform);
     physx::PxRigidDynamic* CreateDynamicConvexMesh(const FStaticMeshData& MeshData, const FTransform& WorldTransform, float Density = 1.0f);
 

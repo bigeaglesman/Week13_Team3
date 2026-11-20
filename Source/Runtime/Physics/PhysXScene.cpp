@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "Physics/PhysXScene.h"
 #include "Physics/BodyInstance.h"
+#include "Physics/PhysicsAsset.h"
 #include "Components/SceneComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -583,6 +584,149 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicBox(const FTransform& WorldTran
     Impl->Actors.push_back(Actor);
 
     return Actor;
+}
+
+bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FTransform& WorldTransform, USkeletalMeshComponent* Component, int32 BoneIndex)
+{
+    const FVector& WorldScale = WorldTransform.Scale;
+
+    if (!IsInitialized() || !Component || BoneIndex < 0 || BoneIndex >= Component->GetBones().Num() || BodySetup.Shapes.IsEmpty() ||
+        !std::isfinite(BodySetup.Mass) || BodySetup.Mass <= 0.0f ||
+        !std::isfinite(WorldScale.X) || !std::isfinite(WorldScale.Y) || !std::isfinite(WorldScale.Z) ||
+        std::abs(WorldScale.X) <= 1e-6f || std::abs(WorldScale.Y) <= 1e-6f || std::abs(WorldScale.Z) <= 1e-6f)
+    {
+        return false;
+    }
+
+    const FQuat Rotation = WorldTransform.Rotation.Normalized();
+    const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
+    const physx::PxTransform Pose(physx::PxVec3(WorldTransform.Location.X, WorldTransform.Location.Y, WorldTransform.Location.Z), PxRotation);
+
+    physx::PxRigidDynamic* Actor = Impl->Physics->createRigidDynamic(Pose);
+
+    if (!Actor)
+    {
+        return false;
+    }
+
+    for (const FPhysicsShapeSetup& ShapeSetup : BodySetup.Shapes)
+    {
+        const FVector& Dimensions = ShapeSetup.Dimensions;
+
+        const FVector ShapeScale(
+            WorldScale.X * ShapeSetup.LocalPose.Scale.X,
+            WorldScale.Y * ShapeSetup.LocalPose.Scale.Y,
+            WorldScale.Z * ShapeSetup.LocalPose.Scale.Z
+        );
+
+        const FVector AbsScale(std::abs(ShapeScale.X), std::abs(ShapeScale.Y), std::abs(ShapeScale.Z));
+
+        if (!std::isfinite(Dimensions.X) || !std::isfinite(Dimensions.Y) || !std::isfinite(Dimensions.Z) ||
+            !std::isfinite(ShapeScale.X) || !std::isfinite(ShapeScale.Y) || !std::isfinite(ShapeScale.Z) ||
+            AbsScale.X <= 1e-6f || AbsScale.Y <= 1e-6f || AbsScale.Z <= 1e-6f)
+        {
+            Actor->release();
+            return false;
+        }
+
+        physx::PxMaterial* Material = Impl->Physics->createMaterial(ShapeSetup.StaticFriction, ShapeSetup.DynamicFriction, ShapeSetup.Restitution);
+
+        if (!Material)
+        {
+            Actor->release();
+            return false;
+        }
+
+        physx::PxShape* Shape = nullptr;
+
+        switch (ShapeSetup.ShapeType)
+        {
+        case EPhysicsShapeType::Box:
+            if (Dimensions.X > 0.0f && Dimensions.Y > 0.0f && Dimensions.Z > 0.0f)
+            {
+                Shape = Impl->Physics->createShape(physx::PxBoxGeometry(Dimensions.X * AbsScale.X, Dimensions.Y * AbsScale.Y, Dimensions.Z * AbsScale.Z), *Material, true);
+            }
+            break;
+
+        case EPhysicsShapeType::Sphere:
+            if (Dimensions.X > 0.0f)
+            {
+                const float RadiusScale = std::max(AbsScale.X, std::max(AbsScale.Y, AbsScale.Z));
+                Shape = Impl->Physics->createShape(physx::PxSphereGeometry(Dimensions.X * RadiusScale), *Material, true);
+            }
+            break;
+
+        case EPhysicsShapeType::Capsule:
+            if (Dimensions.X > 0.0f && Dimensions.Z >= 0.0f)
+            {
+                const float RadiusScale = std::max(AbsScale.X, AbsScale.Y);
+                Shape = Impl->Physics->createShape(physx::PxCapsuleGeometry(Dimensions.X * RadiusScale, Dimensions.Z * AbsScale.Z), *Material, true);
+            }
+            break;
+        }
+
+        Material->release();
+
+        if (!Shape)
+        {
+            Actor->release();
+            return false;
+        }
+
+        const FVector& LocalLocation = ShapeSetup.LocalPose.Location;
+        const FQuat LocalRotation = ShapeSetup.LocalPose.Rotation.Normalized();
+        const physx::PxVec3 PxLocalPosition(
+            LocalLocation.X * WorldScale.X,
+            LocalLocation.Y * WorldScale.Y,
+            LocalLocation.Z * WorldScale.Z
+        );
+
+        physx::PxQuat PxLocalRotation(LocalRotation.X, LocalRotation.Y, LocalRotation.Z, LocalRotation.W);
+
+        if (ShapeSetup.ShapeType == EPhysicsShapeType::Capsule)
+        {
+            PxLocalRotation == PxLocalRotation * physx::PxQuat(1.57079632679f, physx::PxVec3(0.0f, 1.0f, 0.0f));
+        }
+
+        Shape->setLocalPose(physx::PxTransform(PxLocalPosition, PxLocalRotation));
+
+        if (!Actor->attachShape(*Shape))
+        {
+            Shape->release();
+            Actor->release();
+            return false;
+        }
+        Shape->release();
+    }
+
+    if (!physx::PxRigidBodyExt::setMassAndUpdateInertia(*Actor, BodySetup.Mass))
+    {
+        Actor->release();
+        return false;
+    }
+
+    Actor->setLinearDamping(BodySetup.LinearDamping);
+    Actor->setAngularDamping(BodySetup.AngularDamping);
+    Actor->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, BodySetup.bKinematic);
+    Actor->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, !BodySetup.bEnableGravity);
+
+    Impl->Scene->addActor(*Actor);
+
+    if (!BindBody(Actor, Component, BoneIndex))
+    {
+        Impl->Scene->removeActor(*Actor);
+        Actor->release();
+        return false;
+    }
+
+    Impl->Actors.push_back(Actor);
+
+    if (!BodySetup.bStartAwake)
+    {
+        Actor->putToSleep();
+    }
+
+    return true;
 }
 
 

@@ -19,6 +19,7 @@ class UAnimSingleNodeInstance;
 class UAnimGraphInstance;
 class FBodyInstance;
 class FPhysXScene;
+class UPhysicsAsset;
 
 UCLASS()
 class USkeletalMeshComponent : public USkinnedMeshComponent
@@ -47,6 +48,11 @@ public:
 	void SetBoneSpaceTransforms(const struct FCompactPose& Pose); // 애니메이션 평가 결과를 받는 입구
 	FMatrix GetBoneComponentMatrix(int32 BoneIndex) const;
 	FMatrix GetBoneWorldMatrix(int32 BoneIndex) const;
+
+	FTransform GetBoneWorldTransform(int32 BoneIndex) const;
+
+	void SetPhysicsAssetPath(const FString& Path);
+	const FString& GetPhysicsAssetPath() const { return PhysicsAssetPath; }
 
 	void ResetPose();
 	void RefreshBoneTransformsNow();
@@ -85,6 +91,9 @@ protected:
 	void OnSkeletalMeshChanged() override;
 
 private:
+	bool LoadPhysicsAsset();
+	bool CreatePhysicsBodies();
+
 	friend class FPhysXScene;
 
     UPROPERTY()
@@ -100,6 +109,11 @@ private:
 
 	TArray<FTransform> BoneSpaceTransforms;
 	TArray<TUniquePtr<FBodyInstance>> PhysicsBodies;
+
+	UPROPERTY(EditAnywhere)
+	FString PhysicsAssetPath;
+
+	TUniquePtr<UPhysicsAsset> ManagedPhysicsAsset;
 
 	FTransform PendingRootMotion;           // 월드 공간 누적값
 	bool bHasPendingRootMotion = false;

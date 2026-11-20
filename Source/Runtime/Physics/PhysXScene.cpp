@@ -3,6 +3,7 @@
 #include "Physics/BodyInstance.h"
 #include "Components/SceneComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Math/Transform.h"
 #include "Render/StaticMeshData.h"
 
@@ -253,7 +254,22 @@ void FPhysXScene::ClearActors()
                 BodyInstance->Terminate();
 
                 if (Component && Component->BodyInstance.get() == BodyInstance)
+                {
                     Component->BodyInstance.reset();
+                }
+                else if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
+                {
+                    TArray<TUniquePtr<FBodyInstance>>& Bodies = SkeletalComponent->PhysicsBodies;
+
+                    for (int32 Index = 0; Index < Bodies.Num(); ++Index)
+                    {
+                        if(Bodies[Index].get() == BodyInstance)
+                        {
+                            Bodies.RemoveAt(Index);
+                            break;
+                        }
+                    }
+                }
             }
 
             Actor->release();
@@ -301,6 +317,30 @@ void FPhysXScene::BindBody(physx::PxRigidDynamic* Body, UPrimitiveComponent* Com
     BindBodyInternal(Body, Component);
 }
 
+bool FPhysXScene::BindBody(physx::PxRigidDynamic* Body, USkeletalMeshComponent* Component, int32 BoneIndex)
+{
+    if (!IsInitialized() || !Body || !Component || Body->getScene() != Impl->Scene || Body->userData)
+    {
+        return false;
+    }
+
+    if (BoneIndex < 0 || BoneIndex >= Component->GetBones().Num())
+    {
+        return false;
+    }
+
+    auto BodyInstance = MakeUnique<FBodyInstance>();
+    BodyInstance->Initialize(Body, Component, BoneIndex);
+
+    if (!BodyInstance->IsValid())
+    {
+        return false;
+    }
+
+    Component->PhysicsBodies.Add(std::move(BodyInstance));
+    return true;
+}
+
 void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
 {
     if (!Component || !Impl)
@@ -324,6 +364,21 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
         if (Actor && BodyInstance && (BodyInstance == TargetInstance || BodyInstance->GetOwnerComponent() == Component))
         {
             BodyInstance->Terminate();
+
+            if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
+            {
+                TArray<TUniquePtr<FBodyInstance>>& Bodies = SkeletalComponent->PhysicsBodies;
+
+                for (int32 Index = 0; Index < Bodies.Num(); ++Index)
+                {
+                    if (Bodies[Index].get() == BodyInstance)
+                    {
+                        Bodies.RemoveAt(Index);
+                        break;
+                    }
+                }
+            }
+
             Actor->release();
             It = Impl->Actors.erase(It);
         }
@@ -366,8 +421,9 @@ void FPhysXScene::SyncTransforms()
         physx::PxRigidDynamic* Body = static_cast<physx::PxRigidDynamic*>(Actor);
         FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Body->userData);
         UPrimitiveComponent* Component = BodyInstance ? BodyInstance->GetOwnerComponent() : nullptr;
+        const int32 BoneIndex = BodyInstance ? BodyInstance->GetBoneIndex() : -1;
 
-        if (!Component || !Component->IsRegistered())
+        if (!Component || !Component->IsRegistered() || BoneIndex >= 0)
         {
             continue;
         }

@@ -14,6 +14,7 @@ namespace physx
 }
 
 class UPrimitiveComponent;
+class USkeletalMeshComponent;
 struct FTransform;
 struct FStaticMeshData;
 
@@ -30,6 +31,8 @@ public:
 
     void BindBody(physx::PxRigidStatic* Body, UPrimitiveComponent* Component);
     void BindBody(physx::PxRigidDynamic* Body, UPrimitiveComponent* Component);
+    bool BindBody(physx::PxRigidDynamic* Body, USkeletalMeshComponent* Component, int32 BoneIndex);
+
     void RemoveBodyForComponent(UPrimitiveComponent* Component);
     void SyncTransforms();
     void DispatchQueuedEvents();

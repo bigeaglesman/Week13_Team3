@@ -9,7 +9,7 @@ FBodyInstance::~FBodyInstance()
 	Terminate();
 }
 
-void FBodyInstance::Initialize(physx::PxRigidActor* InActor, UPrimitiveComponent* InOwnerComponent)
+void FBodyInstance::Initialize(physx::PxRigidActor* InActor, UPrimitiveComponent* InOwnerComponent, int32 InBoneIndex)
 {
 	if (!InActor || !InOwnerComponent)
 	{
@@ -18,6 +18,7 @@ void FBodyInstance::Initialize(physx::PxRigidActor* InActor, UPrimitiveComponent
 
 	Actor = InActor;
 	OwnerComponent = InOwnerComponent;
+	BoneIndex = InBoneIndex;
 	Actor->userData = this;
 }
 
@@ -30,6 +31,7 @@ void FBodyInstance::Terminate()
 
 	Actor = nullptr;
 	OwnerComponent = nullptr;
+	BoneIndex = -1;
 }
 
 physx::PxRigidDynamic* FBodyInstance::GetDynamicActor() const

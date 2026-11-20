@@ -17,6 +17,8 @@ extern bool GShowSkeletalRootDebug;
 class UAnimationAsset;
 class UAnimSingleNodeInstance;
 class UAnimGraphInstance;
+class FBodyInstance;
+class FPhysXScene;
 
 UCLASS()
 class USkeletalMeshComponent : public USkinnedMeshComponent
@@ -83,6 +85,8 @@ protected:
 	void OnSkeletalMeshChanged() override;
 
 private:
+	friend class FPhysXScene;
+
     UPROPERTY()
     FString AnimBlueprintPath;
 
@@ -95,6 +99,7 @@ private:
 	UAnimInstance* AnimInstance = nullptr;
 
 	TArray<FTransform> BoneSpaceTransforms;
+	TArray<TUniquePtr<FBodyInstance>> PhysicsBodies;
 
 	FTransform PendingRootMotion;           // 월드 공간 누적값
 	bool bHasPendingRootMotion = false;

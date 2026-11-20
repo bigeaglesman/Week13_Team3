@@ -21,7 +21,7 @@ public:
 	bool IsDynamic() const;
 
 	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent; }
-
+	int32 GetBoneIndex() const { return BoneIndex; }
 	float GetMass() const;
 
 	FVector GetLinearVelocity() const;
@@ -42,11 +42,12 @@ public:
 private:
 	friend class FPhysXScene;
 
-	void Initialize(physx::PxRigidActor* InActor, UPrimitiveComponent* InOwnerComponent);
+	void Initialize(physx::PxRigidActor* InActor, UPrimitiveComponent* InOwnerComponent, int32 InBoneIndex = -1);
 	void Terminate();
 
 	physx::PxRigidDynamic* GetDynamicActor() const;
 
 	physx::PxRigidActor* Actor = nullptr;
 	UPrimitiveComponent* OwnerComponent = nullptr;
+	int32 BoneIndex = -1;
 };

@@ -36,6 +36,45 @@ IncludeDir["lua"]   = "Source/ThirdParty/lua/src"
 IncludeDir["sol2"]  = "Source/ThirdParty/sol2/include"
 IncludeDir["miniaudio"]  = "Source/ThirdParty/miniaudio"
 IncludeDir["nanosvg"] = "Source/ThirdParty/nanosvg"
+IncludeDir["PhysX"] = "Source/ThirdParty/PhysX/include"
+
+-- PhysX 4.1 SDK. vc17win64 프리셋(/MD, v143)으로 빌드한 결과물을 lib/debug, lib/release에 둔다.
+-- 엔진은 정적 라이브러리라 여기서 링크하지 않고, exe 프로젝트(Editor, Game)가 PhysXLinkSettings()로 링크한다.
+-- 엔진에서 링크하면 임포트 라이브러리가 /WHOLEARCHIVE로 딸려 와 LNK2005가 난다(HitoriEngine 주석 참고).
+PhysXLibRoot = "Source/ThirdParty/PhysX/lib"
+
+function PhysXLinkSettings()
+	links
+	{
+		"PhysX_64",
+		"PhysXCommon_64",
+		"PhysXFoundation_64",
+		"PhysXCooking_64",
+		"PhysXExtensions_static_64",
+		"PhysXPvdSDK_static_64",
+		"PhysXVehicle_static_64",
+		"PhysXCharacterKinematic_static_64",
+	}
+
+	-- 정적 lib의 pdb는 저장소에 넣지 않으므로 "PDB를 찾을 수 없음" 경고를 끈다.
+	linkoptions { "/ignore:4099" }
+
+	for _, Config in ipairs({ "Debug", "Release", "Shipping", "ObjViewer", "Benchmark", "Benchmark_Debug", "DebugPublishSymbols", "ReleasePublishSymbols" }) do
+		local PhysXConfig = (Config == "Debug" or Config == "Benchmark_Debug" or Config == "DebugPublishSymbols") and "debug" or "release"
+		local PhysXLibDir = path.getabsolute(path.join(PhysXLibRoot, PhysXConfig))
+
+		filter ("configurations:" .. Config)
+			libdirs { PhysXLibDir }
+			postbuildcommands
+			{
+				'{COPYFILE} "' .. PhysXLibDir .. '/PhysX_64.dll" "%{cfg.targetdir}"',
+				'{COPYFILE} "' .. PhysXLibDir .. '/PhysXCommon_64.dll" "%{cfg.targetdir}"',
+				'{COPYFILE} "' .. PhysXLibDir .. '/PhysXFoundation_64.dll" "%{cfg.targetdir}"',
+				'{COPYFILE} "' .. PhysXLibDir .. '/PhysXCooking_64.dll" "%{cfg.targetdir}"',
+			}
+	end
+	filter {}
+end
 
 -- premake의 filter는 project()를 만나면 초기화된다.
 -- 두 프로젝트가 같은 런타임(/MDd vs /MD)으로 컴파일되지 않으면 링크가 실패하므로
@@ -213,6 +252,7 @@ project "HitoriEngine"
 		"%{IncludeDir.miniaudio}",
 		"%{IncludeDir.lua}",
 		"%{IncludeDir.sol2}",
+		"%{IncludeDir.PhysX}",
 	}
 
 	links { "Lua" }
@@ -303,7 +343,10 @@ project "HitoriEditor"
 		"%{IncludeDir.lua}",
 		"%{IncludeDir.sol2}",
 		"%{IncludeDir.nanosvg}",
+		"%{IncludeDir.PhysX}",
 	}
+
+	PhysXLinkSettings()
 
 	links
 	{
@@ -357,7 +400,10 @@ project "HitoriGame"
 		"%{IncludeDir.json}",
 		"%{IncludeDir.lua}",
 		"%{IncludeDir.sol2}",
+		"%{IncludeDir.PhysX}",
 	}
+
+	PhysXLinkSettings()
 
 	links
 	{

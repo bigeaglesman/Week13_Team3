@@ -388,6 +388,8 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
 
     if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
     {
+        SkeletalComponent->bRagdollActive = false;
+
         for (auto It = Impl->Joints.begin(); It != Impl->Joints.end();)
         {
             if (It->Owner == SkeletalComponent)
@@ -455,38 +457,130 @@ void FPhysXScene::SyncTransforms()
     physx::PxU32 ActiveActorCount = 0;
     physx::PxActor** ActiveActors = Impl->Scene->getActiveActors(ActiveActorCount);
 
-    if (!ActiveActors)
+    if(ActiveActors)
     {
-        return;
+        for (physx::PxU32 Index = 0; Index < ActiveActorCount; ++Index)
+        {
+            physx::PxActor* Actor = ActiveActors[Index];
+
+            if (!Actor || Actor->getType() != physx::PxActorType::eRIGID_DYNAMIC)
+            {
+                continue;
+            }
+
+            physx::PxRigidDynamic* Body = static_cast<physx::PxRigidDynamic*>(Actor);
+            FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Body->userData);
+            UPrimitiveComponent* Component = BodyInstance ? BodyInstance->GetOwnerComponent() : nullptr;
+            const int32 BoneIndex = BodyInstance ? BodyInstance->GetBoneIndex() : -1;
+
+            if (!Component || !Component->IsRegistered() || BoneIndex >= 0)
+            {
+                continue;
+            }
+
+            const physx::PxTransform Pose = Body->getGlobalPose();
+            const FTransform WorldTransform(
+                FQuat(Pose.q.x, Pose.q.y, Pose.q.z, Pose.q.w),
+                FVector(Pose.p.x, Pose.p.y, Pose.p.z),
+                Component->GetWorldScale3D()
+            );
+
+            Component->SetWorldTransform(WorldTransform.GetLocalMatrix(), false);
+        }
     }
 
-    for (physx::PxU32 Index = 0; Index < ActiveActorCount; ++Index)
-    {
-        physx::PxActor* Actor = ActiveActors[Index];
+    std::vector<USkeletalMeshComponent*> RagdollComponents;
 
+    for (physx::PxRigidActor* Actor : Impl->Actors)
+    {
         if (!Actor || Actor->getType() != physx::PxActorType::eRIGID_DYNAMIC)
         {
             continue;
         }
 
-        physx::PxRigidDynamic* Body = static_cast<physx::PxRigidDynamic*>(Actor);
-        FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Body->userData);
-        UPrimitiveComponent* Component = BodyInstance ? BodyInstance->GetOwnerComponent() : nullptr;
-        const int32 BoneIndex = BodyInstance ? BodyInstance->GetBoneIndex() : -1;
+        FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Actor->userData);
 
-        if (!Component || !Component->IsRegistered() || BoneIndex >= 0)
+        if (!BodyInstance || BodyInstance->GetBoneIndex() < 0)
         {
             continue;
         }
 
-        const physx::PxTransform Pose = Body->getGlobalPose();
-        const FTransform WorldTransform(
-            FQuat(Pose.q.x, Pose.q.y, Pose.q.z, Pose.q.w),
-            FVector(Pose.p.x, Pose.p.y, Pose.p.z),
-            Component->GetWorldScale3D()
+        USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(BodyInstance->GetOwnerComponent());
+
+        if (!SkeletalComponent || std::find(RagdollComponents.begin(), RagdollComponents.end(), SkeletalComponent) != RagdollComponents.end())
+        {
+            continue;
+        }
+
+        RagdollComponents.push_back(SkeletalComponent);
+    }
+
+    for (USkeletalMeshComponent* SkeletalComponent : RagdollComponents)
+    {
+        if (!SkeletalComponent->IsRegistered() || !SkeletalComponent->bRagdollActive)
+        {
+            continue;
+        }
+
+        const TArray<FBoneInfo>& Bones = SkeletalComponent->GetBones();
+
+        if (Bones.IsEmpty())
+        {
+            continue;
+        }
+
+        TArray<FTransform> BoneWorldTransforms;
+        BoneWorldTransforms.SetNum(Bones.Num());
+
+        const FTransform ComponentWorld(
+            FQuat(SkeletalComponent->GetWorldRotation()),
+            SkeletalComponent->GetWorldLocation(),
+            SkeletalComponent->GetWorldScale3D()
         );
 
-        Component->SetWorldTransform(WorldTransform.GetLocalMatrix(), false);
+        for (int32 BoneIndex = 0; BoneIndex < Bones.Num(); ++BoneIndex)
+        {
+            const int32 ParentIndex = Bones[BoneIndex].ParentIndex;
+            const FTransform ParentWorld = ParentIndex >= 0 && ParentIndex < BoneIndex ? BoneWorldTransforms[ParentIndex] : ComponentWorld;
+
+            FTransform LocalTransform = SkeletalComponent->GetBoneLocalTransform(BoneIndex);
+            FBodyInstance* BoneBody = nullptr;
+
+            for (const TUniquePtr<FBodyInstance>& Candidate : SkeletalComponent->PhysicsBodies)
+            {
+                if (Candidate && Candidate->IsValid() && Candidate->GetBoneIndex() == BoneIndex)
+                {
+                    BoneBody = Candidate.get();
+                    break;
+                }
+            }
+
+            if (BoneBody && BoneBody->Actor->getType() == physx::PxActorType::eRIGID_DYNAMIC)
+            {
+                const physx::PxTransform Pose = static_cast<physx::PxRigidDynamic*>(BoneBody->Actor)->getGlobalPose();
+
+                const FTransform PhysicsWorld(
+                    FQuat(Pose.q.x, Pose.q.y, Pose.q.z, Pose.q.w),
+                    FVector(Pose.p.x, Pose.p.y, Pose.p.z),
+                    ComponentWorld.Scale
+                );
+
+                LocalTransform = PhysicsWorld.GetRelativeTransform(ParentWorld);
+
+                SkeletalComponent->SetBoneLocalTransform(BoneIndex, LocalTransform);
+                BoneWorldTransforms[BoneIndex] = PhysicsWorld;
+            }
+            else
+            {
+                const FVector ScaledLocalLocation = LocalTransform.Location * ParentWorld.Scale;
+                const FVector WorldLocation = ParentWorld.Location + ParentWorld.Rotation.RotateVector(ScaledLocalLocation);
+                const FQuat WorldRotation = (ParentWorld.Rotation * LocalTransform.Rotation).Normalized();
+                const FVector WorldScale = LocalTransform.Scale * ParentWorld.Scale;
+
+                BoneWorldTransforms[BoneIndex] = FTransform(WorldRotation, WorldLocation, WorldScale);
+            }
+        }
+        SkeletalComponent->RefreshBoneTransformsNow();
     }
 }
 

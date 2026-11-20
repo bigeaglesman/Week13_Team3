@@ -114,6 +114,7 @@ private:
 	FString PhysicsAssetPath;
 
 	TUniquePtr<UPhysicsAsset> ManagedPhysicsAsset;
+	bool bRagdollActive = false;
 
 	FTransform PendingRootMotion;           // 월드 공간 누적값
 	bool bHasPendingRootMotion = false;

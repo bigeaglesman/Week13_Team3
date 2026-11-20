@@ -85,15 +85,15 @@ void USkeletalMeshComponent::BeginPlay()
 
 void USkeletalMeshComponent::TickComponent(float DeltaTime)
 {
-    if (bBlueprintReloadRequested)
-    {
-        bBlueprintReloadRequested = false;
-        ReloadAnimBlueprint();
-    }
-
-	if (AnimInstance && GetSkeletalMesh())
+	if (!bRagdollActive && bBlueprintReloadRequested)
 	{
-        bUpdatingAnimation = true;
+		bBlueprintReloadRequested = false;
+		ReloadAnimBlueprint();
+	}
+
+	if (!bRagdollActive && AnimInstance && GetSkeletalMesh())
+	{
+		bUpdatingAnimation = true;
 		if (auto* Instance = Cast<UAnimSingleNodeInstance>(AnimInstance))
 		{
 			Instance->SetBlendSpaceInput(BlendSpaceInput);
@@ -433,7 +433,8 @@ bool USkeletalMeshComponent::CreatePhysicsBodies()
 		HTR_LOG(Info, "[Ragdoll] Constraint created: {} <-> {}", ConstraintSetup.BoneNameA, ConstraintSetup.BoneNameB);
 	}
 
-	return true;
+	bRagdollActive = !PhysicsBodies.IsEmpty();
+	return bRagdollActive;
 }
 
 UAnimSingleNodeInstance* USkeletalMeshComponent::GetSingleNodeInstance() const

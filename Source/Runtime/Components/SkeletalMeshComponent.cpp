@@ -56,6 +56,84 @@ void USkeletalMeshComponent::SetPhysicsAssetPath(const FString& Path)
 	ManagedPhysicsAsset.reset();
 }
 
+bool USkeletalMeshComponent::StartRagdoll()
+{
+	if (bRagdollActive)
+	{
+		return true;
+	}
+
+	if (!GetSkeletalMesh())
+	{
+		HTR_LOG(Error, "[Ragdoll] Cannot start: SkeletalMesh is missing.");
+		return false;
+	}
+
+	if (!ManagedPhysicsAsset && !LoadPhysicsAsset())
+	{
+		HTR_LOG(Error, "[Ragdoll] Cannot start: PhysicsAsset loading failed.");
+		return false;
+	}
+
+	if (!PhysicsBodies.IsEmpty())
+	{
+		UWorld* World = GetWorld();
+		FPhysXScene* PhysicsScene = World ? World->GetPhysicsScene() : nullptr;
+
+		if (!PhysicsScene)
+		{
+			HTR_LOG(Error, "[Ragdoll] Cannot start: PhysicsScene is missing.");
+			return false;
+		}
+
+		PhysicsScene->RemoveBodyForComponent(this);
+	}
+	RefreshAnimationPose();
+
+	PendingRootMotion = FTransform();
+	bHasPendingRootMotion = false;
+
+	if (!CreatePhysicsBodies())
+	{
+		HTR_LOG(Error, "[Ragdoll] Failed to start.");
+		return false;
+	}
+
+	HTR_LOG(Info, "[Ragdoll] Started. Bodies={}, Constraints={}", PhysicsBodies.Num(), ManagedPhysicsAsset->GetConstraintSetups().Num());
+
+	return true;
+}
+
+void USkeletalMeshComponent::StopRagdoll()
+{
+	if (!bRagdollActive && PhysicsBodies.IsEmpty())
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	FPhysXScene* PhysicsScene = World ? World->GetPhysicsScene() : nullptr;
+
+	if (PhysicsScene)
+	{
+		PhysicsScene->RemoveBodyForComponent(this);
+	}
+	else if (!PhysicsBodies.IsEmpty())
+	{
+		HTR_LOG(Error, "[Ragdoll] Cannot stop: PhysicsScene is missing.");
+		return;
+	}
+
+	bRagdollActive = false;
+
+	PendingRootMotion = FTransform();
+	bHasPendingRootMotion = false;
+
+	RefreshAnimationPose();
+
+	HTR_LOG(Info, "[Ragdoll] Stopped.");
+}
+
 void USkeletalMeshComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -77,9 +155,9 @@ void USkeletalMeshComponent::BeginPlay()
 			}
 		}
 	}
-	if (!PhysicsAssetPath.empty() && LoadPhysicsAsset())
+	if (!PhysicsAssetPath.empty())
 	{
-		CreatePhysicsBodies();
+		LoadPhysicsAsset();
 	}
 }
 

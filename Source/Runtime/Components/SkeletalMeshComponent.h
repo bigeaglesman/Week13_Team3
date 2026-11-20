@@ -54,6 +54,10 @@ public:
 	void SetPhysicsAssetPath(const FString& Path);
 	const FString& GetPhysicsAssetPath() const { return PhysicsAssetPath; }
 
+	bool StartRagdoll();
+	void StopRagdoll();
+	bool IsRagdollActive() const { return bRagdollActive; }
+
 	void ResetPose();
 	void RefreshBoneTransformsNow();
 

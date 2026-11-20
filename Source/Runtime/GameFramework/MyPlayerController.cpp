@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "GameFramework/MyPlayerController.h"
 #include "GameFramework/Actor/MyCharacter.h"
+#include "Components/SkeletalMeshComponent.h"
 
 void AMyPlayerController::InputKey(int32 Key, bool bDown)
 {

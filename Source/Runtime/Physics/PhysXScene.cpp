@@ -20,8 +20,15 @@
 namespace
 {
     physx::PxFilterFlags PhysXSimulationFilterShader(physx::PxFilterObjectAttributes Attributes0,
-        physx::PxFilterData, physx::PxFilterObjectAttributes Attributes1, physx::PxFilterData, physx::PxPairFlags& PairFlags, const void*, physx::PxU32)
+        physx::PxFilterData FilterData0, physx::PxFilterObjectAttributes Attributes1, physx::PxFilterData FilterData1, physx::PxPairFlags& PairFlags, const void*, physx::PxU32)
     {
+        constexpr physx::PxU32 RagdollFilter = 1u;
+
+        if ((FilterData0.word0 & RagdollFilter) && (FilterData1.word0 & RagdollFilter))
+        {
+            return physx::PxFilterFlag::eSUPPRESS;
+        }
+
         if (physx::PxFilterObjectIsTrigger(Attributes0) || physx::PxFilterObjectIsTrigger(Attributes1))
         {
             PairFlags = physx::PxPairFlag::eTRIGGER_DEFAULT | physx::PxPairFlag::eNOTIFY_TOUCH_FOUND | physx::PxPairFlag::eNOTIFY_TOUCH_LOST;
@@ -836,6 +843,10 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
 
         Shape->setLocalPose(physx::PxTransform(PxLocalPosition, PxLocalRotation));
 
+        physx::PxFilterData FilterData;
+        FilterData.word0 = 1u;
+        Shape->setSimulationFilterData(FilterData);
+
         if (!Actor->attachShape(*Shape))
         {
             Shape->release();
@@ -853,6 +864,7 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
 
     Actor->setLinearDamping(BodySetup.LinearDamping);
     Actor->setAngularDamping(BodySetup.AngularDamping);
+    Actor->setSolverIterationCounts(16, 8);
     Actor->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, BodySetup.bKinematic);
     Actor->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, !BodySetup.bEnableGravity);
 

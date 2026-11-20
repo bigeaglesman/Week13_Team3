@@ -4,7 +4,9 @@
 #include "Components/SceneComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Math/Transform.h"
+#include "Render/StaticMeshData.h"
 
+#include <cooking/PxCooking.h>
 #include <PxPhysicsAPI.h>
 #include <extensions/PxDefaultCpuDispatcher.h>
 
@@ -48,6 +50,7 @@ struct FPhysXScene::FImpl : physx::PxSimulationEventCallback
     };
 
     physx::PxPhysics* Physics = nullptr;
+    physx::PxCooking* Cooking = nullptr;
     physx::PxScene* Scene = nullptr;
     physx::PxDefaultCpuDispatcher* Dispatcher = nullptr;
     physx::PxMaterial* DefaultMaterial = nullptr;
@@ -142,20 +145,20 @@ FPhysXScene::~FPhysXScene()
     Shutdown();
 }
 
-bool FPhysXScene::Initialize(physx::PxPhysics* InPhysics)
+bool FPhysXScene::Initialize(physx::PxPhysics* InPhysics, physx::PxCooking* InCooking)
 {
-    if (!InPhysics)
+    if (!InPhysics || !InCooking)
     {
         return false;
     }
 
     if (IsInitialized())
     {
-        return Impl->Physics == InPhysics;
+        return Impl->Physics == InPhysics && Impl->Cooking == InCooking;
     }
 
     Impl->Physics = InPhysics;
-
+    Impl->Cooking = InCooking;
     Impl->DefaultMaterial = InPhysics->createMaterial(0.5f, 0.5f, 0.5f);
 
     if (!Impl->DefaultMaterial)
@@ -222,6 +225,7 @@ void FPhysXScene::Shutdown()
     }
 
     Impl->Physics = nullptr;
+    Impl->Cooking = nullptr;
     Impl->Accumulator = 0.0f;
 }
 
@@ -525,6 +529,227 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicBox(const FTransform& WorldTran
     return Actor;
 }
 
+
+physx::PxRigidStatic* FPhysXScene::CreateStaticTriangleMesh(const FStaticMeshData& MeshData, const FTransform& WorldTransform)
+{
+    if (!IsInitialized() || MeshData.Vertices.Num() < 3 || MeshData.Indices.Num() < 3 || MeshData.Indices.Num() % 3 != 0)
+        return nullptr;
+
+    const FVector& Scale = WorldTransform.Scale;
+
+    if (!std::isfinite(Scale.X) || !std::isfinite(Scale.Y) || !std::isfinite(Scale.Z) ||
+        std::abs(Scale.X) <= 1e-6f || std::abs(Scale.Y) <= 1e-6f || std::abs(Scale.Z) <= 1e-6f)
+        return nullptr;
+
+    std::vector<physx::PxVec3> Vertices;
+    Vertices.reserve(MeshData.Vertices.Num());
+
+    for (const FVertex& Vertex : MeshData.Vertices)
+    {
+        const FVector& Position = Vertex.Position;
+        const physx::PxVec3 ScaledPosition(Position.X * Scale.X, Position.Y * Scale.Y, Position.Z * Scale.Z);
+
+        if (!ScaledPosition.isFinite())
+            return nullptr;
+
+        Vertices.push_back(ScaledPosition);
+    }
+
+    std::vector<physx::PxU32> Triangles;
+    Triangles.reserve(MeshData.Indices.Num());
+
+    const bool bReverseWinding = Scale.X * Scale.Y * Scale.Z < 0.0f;
+
+    for (int32 Index = 0; Index < MeshData.Indices.Num(); Index += 3)
+    {
+        const uint32 I0 = MeshData.Indices[Index];
+        const uint32 I1 = MeshData.Indices[Index + 1];
+        const uint32 I2 = MeshData.Indices[Index + 2];
+
+        if (I0 >= static_cast<uint32>(Vertices.size()) ||
+            I1 >= static_cast<uint32>(Vertices.size()) ||
+            I2 >= static_cast<uint32>(Vertices.size()))
+            return nullptr;
+
+        Triangles.push_back(I0);
+        Triangles.push_back(bReverseWinding ? I2 : I1);
+        Triangles.push_back(bReverseWinding ? I1 : I2);
+    }
+
+    physx::PxTriangleMeshDesc MeshDesc;
+    MeshDesc.points.count = static_cast<physx::PxU32>(Vertices.size());
+    MeshDesc.points.stride = sizeof(physx::PxVec3);
+    MeshDesc.points.data = Vertices.data();
+
+    MeshDesc.triangles.count = static_cast<physx::PxU32>(Triangles.size() / 3);
+    MeshDesc.triangles.stride = sizeof(physx::PxU32) * 3;
+    MeshDesc.triangles.data = Triangles.data();
+
+    if (!MeshDesc.isValid())
+    {
+        HTR_LOG(Error, "[PhysX] Static triangle mesh descriptor is invalid. Vertices={}, Triangles={}", MeshDesc.points.count, MeshDesc.triangles.count);
+        return nullptr;
+    }
+
+    physx::PxTriangleMeshCookingResult::Enum CookingResult = physx::PxTriangleMeshCookingResult::eSUCCESS;
+    physx::PxTriangleMesh* CookedMesh = Impl->Cooking->createTriangleMesh(MeshDesc, Impl->Physics->getPhysicsInsertionCallback(), &CookingResult);
+
+    if (!CookedMesh)
+    {
+        HTR_LOG(Error, "[PhysX] Static triangle mesh cooking failed. Result={}", static_cast<int32>(CookingResult));
+        return nullptr;
+    }
+
+    if (CookingResult == physx::PxTriangleMeshCookingResult::eLARGE_TRIANGLE)
+    {
+        HTR_LOG(Warning, "[PhysX] Static triangle mesh contains large triangles.");
+    }
+
+    if (!CookedMesh)
+    {
+        HTR_LOG(Error, "[PhysX] Static triangle mesh cooking failed.");
+        return nullptr;
+    }
+
+    const FQuat Rotation = WorldTransform.Rotation.Normalized();
+    const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
+    const physx::PxTransform Pose(physx::PxVec3(WorldTransform.Location.X, WorldTransform.Location.Y, WorldTransform.Location.Z), PxRotation);
+
+    physx::PxRigidStatic* Actor = Impl->Physics->createRigidStatic(Pose);
+
+    if (!Actor)
+    {
+        CookedMesh->release();
+        return nullptr;
+    }
+
+    const physx::PxTriangleMeshGeometry Geometry(CookedMesh);
+    physx::PxShape* Shape = Impl->Physics->createShape(Geometry, *Impl->DefaultMaterial, true);
+
+    if (!Shape)
+    {
+        CookedMesh->release();
+        Actor->release();
+        return nullptr;
+    }
+
+    if (!Actor->attachShape(*Shape))
+    {
+        Shape->release();
+        CookedMesh->release();
+        Actor->release();
+        return nullptr;
+    }
+
+    Shape->release();
+    CookedMesh->release();
+
+    Impl->Scene->addActor(*Actor);
+    Impl->Actors.push_back(Actor);
+
+    return Actor;
+}
+
+
+physx::PxRigidDynamic* FPhysXScene::CreateDynamicConvexMesh(const FStaticMeshData& MeshData, const FTransform& WorldTransform, float Density)
+{
+    if (!IsInitialized() || Density <= 0.0f || MeshData.Vertices.Num() < 4)
+    {
+        return nullptr;
+    }
+
+    const FVector& Scale = WorldTransform.Scale;
+
+    if (!std::isfinite(Scale.X) || !std::isfinite(Scale.Y) || !std::isfinite(Scale.Z) ||
+        std::abs(Scale.X) <= 1e-6f || std::abs(Scale.Y) <= 1e-6f || std::abs(Scale.Z) <= 1e-6f)
+    {
+        return nullptr;
+    }
+
+    std::vector<physx::PxVec3> Vertices;
+    Vertices.reserve(MeshData.Vertices.Num());
+
+    for (const FVertex& Vertex : MeshData.Vertices)
+    {
+        const FVector& Position = Vertex.Position;
+        const physx::PxVec3 ScaledPosition(Position.X * Scale.X, Position.Y * Scale.Y, Position.Z * Scale.Z);
+
+        if (!ScaledPosition.isFinite())
+        {
+            return nullptr;
+        }
+
+        Vertices.push_back(ScaledPosition);
+    }
+
+    physx::PxConvexMeshDesc MeshDesc;
+    MeshDesc.points.count = static_cast<physx::PxU32>(Vertices.size());
+    MeshDesc.points.stride = sizeof(physx::PxVec3);
+    MeshDesc.points.data = Vertices.data();
+    MeshDesc.flags |= physx::PxConvexFlag::eCOMPUTE_CONVEX;
+    MeshDesc.flags |= physx::PxConvexFlag::eSHIFT_VERTICES;
+    MeshDesc.vertexLimit = 255;
+
+    if (!MeshDesc.isValid())
+    {
+        return nullptr;
+    }
+
+    physx::PxConvexMesh* CookedMesh = Impl->Cooking->createConvexMesh(MeshDesc, Impl->Physics->getPhysicsInsertionCallback());
+
+    if (!CookedMesh)
+    {
+        HTR_LOG(Error, "[PhysX] Dynamic convex mesh cooking failed.");
+        return nullptr;
+    }
+
+    const FQuat Rotation = WorldTransform.Rotation.Normalized();
+    const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
+    const physx::PxTransform Pose(physx::PxVec3(WorldTransform.Location.X, WorldTransform.Location.Y, WorldTransform.Location.Z), PxRotation);
+
+    physx::PxRigidDynamic* Actor = Impl->Physics->createRigidDynamic(Pose);
+
+    if (!Actor)
+    {
+        CookedMesh->release();
+        return nullptr;
+    }
+
+    const physx::PxConvexMeshGeometry Geometry(CookedMesh);
+    physx::PxShape* Shape = Impl->Physics->createShape(Geometry, *Impl->DefaultMaterial, true);
+
+    if (!Shape)
+    {
+        CookedMesh->release();
+        Actor->release();
+        return nullptr;
+    }
+
+    if (!Actor->attachShape(*Shape))
+    {
+        Shape->release();
+        CookedMesh->release();
+        Actor->release();
+        return nullptr;
+    }
+
+    if (!physx::PxRigidBodyExt::updateMassAndInertia(*Actor, Density))
+    {
+        Shape->release();
+        CookedMesh->release();
+        Actor->release();
+        return nullptr;
+    }
+
+    Shape->release();
+    CookedMesh->release();
+
+    Impl->Scene->addActor(*Actor);
+    Impl->Actors.push_back(Actor);
+
+    return Actor;
+}
+
 physx::PxScene* FPhysXScene::GetNativeScene() const
 {
     return Impl ? Impl->Scene : nullptr;
@@ -532,7 +757,7 @@ physx::PxScene* FPhysXScene::GetNativeScene() const
 
 bool FPhysXScene::IsInitialized() const
 {
-    return Impl && Impl->Physics && Impl->Scene && Impl->Dispatcher && Impl->DefaultMaterial;
+    return Impl && Impl->Physics && Impl->Cooking && Impl->Scene && Impl->Dispatcher && Impl->DefaultMaterial;
 }
 
 bool FPhysXScene::BindBodyInternal(physx::PxRigidActor* Body, UPrimitiveComponent* Component)

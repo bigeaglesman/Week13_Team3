@@ -2,6 +2,7 @@
 #include "Physics/PhysXRuntime.h"
 
 #include <PxPhysicsAPI.h>
+#include <cooking/PxCooking.h>
 
 struct FPhysXRuntime::FImpl
 {
@@ -10,6 +11,7 @@ struct FPhysXRuntime::FImpl
 
     physx::PxFoundation* Foundation = nullptr;
     physx::PxPhysics* Physics = nullptr;
+    physx::PxCooking* Cooking = nullptr;
 
     bool bExtensionsInitialized = false;
 };
@@ -46,6 +48,19 @@ bool FPhysXRuntime::Initialize()
         return false;
     }
 
+    physx::PxCookingParams CookingParams(Impl->Physics->getTolerancesScale());
+    CookingParams.meshWeldTolerance = 1e-5f;
+    CookingParams.meshPreprocessParams |= physx::PxMeshPreprocessingFlag::eWELD_VERTICES;
+
+    Impl->Cooking = ::PxCreateCooking(PX_PHYSICS_VERSION, *Impl->Foundation, CookingParams);
+
+    if (!Impl->Cooking)
+    {
+        HTR_LOG(Error, "[PhysX] Failed to create Cooking.");
+        Shutdown();
+        return false;
+    }
+
     if (!PxInitExtensions(*Impl->Physics, nullptr))
     {
         HTR_LOG(Error, "[PhysX] Failed to initialize Extensions.");
@@ -71,6 +86,12 @@ void FPhysXRuntime::Shutdown()
         Impl->bExtensionsInitialized = false;
     }
 
+    if (Impl->Cooking)
+    {
+        Impl->Cooking->release();
+        Impl->Cooking = nullptr;
+    }
+
     if (Impl->Physics)
     {
         Impl->Physics->release();
@@ -86,10 +107,15 @@ void FPhysXRuntime::Shutdown()
 
 bool FPhysXRuntime::IsInitialized() const
 {
-    return Impl && Impl->Foundation && Impl->Physics && Impl->bExtensionsInitialized;
+    return Impl && Impl->Foundation && Impl->Physics && Impl->Cooking && Impl->bExtensionsInitialized;
 }
 
 physx::PxPhysics* FPhysXRuntime::GetPhysics() const
 {
     return Impl ? Impl->Physics : nullptr;
+}
+
+physx::PxCooking* FPhysXRuntime::GetCooking() const
+{
+    return Impl ? Impl->Cooking : nullptr;
 }

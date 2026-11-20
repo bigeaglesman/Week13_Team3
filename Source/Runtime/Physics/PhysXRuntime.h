@@ -5,6 +5,7 @@
 namespace physx
 {
 	class PxPhysics;
+    class PxCooking;
 }
 
 class FPhysXRuntime
@@ -18,6 +19,7 @@ public:
 
     bool IsInitialized() const;
     physx::PxPhysics* GetPhysics() const;
+    physx::PxCooking* GetCooking() const;
 
 private:
     struct FImpl;

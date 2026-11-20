@@ -83,7 +83,9 @@ UWorld::~UWorld()
 bool UWorld::Init()
 {
 	// PhysX Runtime이 먼저 초기화되어 있어야 한다.
-	if (!GEngine || !GEngine->GetPhysXRuntime() || !GEngine->GetPhysXRuntime()->IsInitialized())
+	FPhysXRuntime* PhysXRuntime = GEngine ? GEngine->GetPhysXRuntime() : nullptr;
+
+	if (!PhysXRuntime || !PhysXRuntime->IsInitialized())
 	{
 		HTR_LOG(Error, "[World] PhysX Runtime is not initialized.");
 		return false;
@@ -92,7 +94,7 @@ bool UWorld::Init()
 	// World마다 독립적인 Physics Scene 생성
 	PhysicsScene = MakeUnique<FPhysXScene>();
 
-	if (!PhysicsScene->Initialize(GEngine->GetPhysXRuntime()->GetPhysics()))
+	if (!PhysicsScene->Initialize(PhysXRuntime->GetPhysics(), PhysXRuntime->GetCooking()))
 	{
 		HTR_LOG(Error, "[World] Failed to initialize Physics Scene.");
 		PhysicsScene.reset();

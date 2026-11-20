@@ -35,6 +35,12 @@ public:
 private:
 	UPROPERTY(EditAnywhere)
 	UStaticMesh* StaticMesh = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	bool bEnablePhysics = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bSimulatePhysics = false;
 	// Mesh의 Section별 Material과 Texture를 보존해 각각의 렌더 패킷으로 제출한다.
 	//virtual void SubmitToRenderQueue(TQueue<FRenderPacket>& RenderQueue) override;
 

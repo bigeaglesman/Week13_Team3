@@ -6,6 +6,7 @@
 namespace physx
 {
     class PxPhysics;
+    class PxCooking;
     class PxScene;
     class PxRigidActor;
     class PxRigidStatic;
@@ -14,6 +15,7 @@ namespace physx
 
 class UPrimitiveComponent;
 struct FTransform;
+struct FStaticMeshData;
 
 class FPhysXScene
 {
@@ -21,7 +23,7 @@ public:
     FPhysXScene();
     ~FPhysXScene();
 
-    bool Initialize(physx::PxPhysics* InPhysics);
+    bool Initialize(physx::PxPhysics* InPhysics, physx::PxCooking* InCooking);
     void Shutdown();
     void ClearActors();
     void Simulate(float DeltaTime);
@@ -35,6 +37,8 @@ public:
     physx::PxRigidStatic* CreateStaticBox(const FVector& Position, const FVector& HalfExtents);
     physx::PxRigidDynamic* CreateDynamicBox(const FVector& Position, const FVector& HalfExtents, float Density = 1.0f);
     physx::PxRigidDynamic* CreateDynamicBox(const FTransform& WorldTransform, const FVector& HalfExtents, float Density = 1.0f);
+    physx::PxRigidStatic* CreateStaticTriangleMesh(const FStaticMeshData& MeshData, const FTransform& WorldTransform);
+    physx::PxRigidDynamic* CreateDynamicConvexMesh(const FStaticMeshData& MeshData, const FTransform& WorldTransform, float Density = 1.0f);
 
     physx::PxScene* GetNativeScene() const;
     bool IsInitialized() const;

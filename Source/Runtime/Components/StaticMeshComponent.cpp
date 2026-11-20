@@ -1,4 +1,6 @@
 #include "EnginePCH.h"
+#include "Engine/World.h"
+#include "Physics/PhysXScene.h"
 #include "StaticMeshComponent.h"
 #include "Asset/AssetManager.h"
 #include "Render/RenderCommand.h"
@@ -22,6 +24,47 @@ UStaticMeshComponent::~UStaticMeshComponent()
 void UStaticMeshComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (!bEnablePhysics)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	FPhysXScene* PhysicsScene = World ? World->GetPhysicsScene() : nullptr;
+	const FStaticMeshData* MeshData = GetMeshData();
+
+	if (!PhysicsScene || !MeshData)
+	{
+		return;
+	}
+
+	const FTransform WorldTransform(GetWorldRotation(), GetWorldLocation(), GetWorldScale3D());
+
+	if (bSimulatePhysics)
+	{
+		auto* Body = PhysicsScene->CreateDynamicConvexMesh(*MeshData, WorldTransform, 1.0f);
+
+		if (!Body)
+		{
+			HTR_LOG(Error, "[PhysX] Failed to create Dynamic Convex Mesh.");
+			return;
+		}
+
+		PhysicsScene->BindBody(Body, this);
+	}
+	else
+	{
+		auto* Body = PhysicsScene->CreateStaticTriangleMesh(*MeshData, WorldTransform);
+
+		if (!Body)
+		{
+			HTR_LOG(Error, "[PhysX] Failed to create Static Triangle Mesh.");
+			return;
+		}
+
+		PhysicsScene->BindBody(Body, this);
+	}
 }
 
 // 부모 컴포넌트의 프레임 갱신을 호출한다.

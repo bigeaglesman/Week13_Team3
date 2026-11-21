@@ -26,6 +26,10 @@ if not FbxSdkRoot or FbxSdkRoot == "" then
 end
 FbxSdkRoot = path.translate(FbxSdkRoot, "/")
 
+-- PhysX SDK 5.5.1. 미리 빌드한 static lib(/MD, vc143)를 저장소에 넣어 두었다 (UE의 ThirdParty/PhysX3와 같은 방식).
+-- include/ 와 lib/{debug,release}/ 는 SDK의 physx/include, physx/bin/win.x86_64.vc143.md/ 에서 복사했다.
+local PhysXSdkRoot = "Source/ThirdParty/PhysX"
+
 IncludeDir = {}
 IncludeDir["ImGui"] = "Source/ThirdParty/ImGui"
 IncludeDir["ImGuiNodeEditor"] = "Source/ThirdParty/ImGuiNodeEditor"
@@ -121,6 +125,43 @@ function CommonSettings()
 	filter {}
 end
 
+-- PhysX를 쓰는 프로젝트가 CommonSettings() 바로 다음에 호출한다 (UE의 PhysX.Build.cs 역할).
+-- bLink: true면 lib까지 링크한다. exe 프로젝트만 true로 한다.
+-- HitoriEngine(StaticLib)이 링크하면 lib가 엔진 lib 안에 묶이고 /WHOLEARCHIVE가 통째로 끌어온다.
+function PhysXSettings(bLink)
+	includedirs { path.join(PhysXSdkRoot, "include") }
+	-- 없으면 PhysX 헤더가 함수를 __declspec(dllimport)로 선언해 static lib와 링크되지 않는다.
+	defines { "PX_PHYSX_STATIC_LIB" }
+
+	if not bLink then
+		return
+	end
+
+	links
+	{
+		"PhysX_static_64.lib",
+		"PhysXCommon_static_64.lib",
+		"PhysXFoundation_static_64.lib",
+		"PhysXExtensions_static_64.lib",
+		"PhysXCooking_static_64.lib",
+		"PhysXPvdSDK_static_64.lib",
+	}
+
+	-- PhysX pdb는 저장소에 넣지 않는다(.gitignore의 *.pdb). 없다는 경고(LNK4099)만 끈다.
+	linkoptions { "/ignore:4099" }
+
+	-- lib는 /MD로 빌드했다. debug 폴더는 /MDd 구성, release 폴더는 /MD 구성과 맞는다.
+	local PhysXLibDir = path.join(PhysXSdkRoot, "lib")
+
+	filter "configurations:Debug or Benchmark_Debug or DebugPublishSymbols"
+		libdirs { path.join(PhysXLibDir, "debug") }
+
+	filter "configurations:Release or Shipping or ObjViewer or Benchmark or ReleasePublishSymbols"
+		libdirs { path.join(PhysXLibDir, "release") }
+
+	filter {}
+end
+
 
 -- 외부 라이브러리. 별도 프로젝트로 두면 에디터의 소스 루트가 Source/Editor 하나로 좁혀져
 -- Solution Explorer의 "모든 파일 표시"에서 폴더 구조가 그대로 보인다.
@@ -190,6 +231,7 @@ project "HitoriEngine"
 	location "Source/Runtime"
 	kind     "StaticLib"
 	CommonSettings()
+	PhysXSettings(false)   -- 헤더와 define만. lib는 exe가 링크한다.
 
 	pchheader "EnginePCH.h"
 	pchsource "Source/Runtime/EnginePCH.cpp"
@@ -242,6 +284,7 @@ project "HitoriEditor"
 	location "Source/Editor"
 	kind     "WindowedApp"
 	CommonSettings()
+	PhysXSettings(true)
 
 	-- FBX 해석은 Editor에서 수행하고 Runtime/Game은 SDK에 의존하지 않는다.
 	includedirs { path.join(FbxSdkRoot, "include") }
@@ -330,6 +373,7 @@ project "HitoriGame"
 	location "Source/Game"
 	kind     "WindowedApp"
 	CommonSettings()
+	PhysXSettings(true)
 	targetname "HitoriGame"
 
 	pchheader "EnginePCH.h"

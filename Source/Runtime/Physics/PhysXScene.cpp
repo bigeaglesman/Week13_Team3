@@ -461,39 +461,33 @@ void FPhysXScene::SyncTransforms()
         return;
     }
 
-    physx::PxU32 ActiveActorCount = 0;
-    physx::PxActor** ActiveActors = Impl->Scene->getActiveActors(ActiveActorCount);
-
-    if(ActiveActors)
+    for (physx::PxRigidActor* Actor : Impl->Actors)
     {
-        for (physx::PxU32 Index = 0; Index < ActiveActorCount; ++Index)
+        if (!Actor || Actor->getType() != physx::PxActorType::eRIGID_DYNAMIC)
         {
-            physx::PxActor* Actor = ActiveActors[Index];
-
-            if (!Actor || Actor->getType() != physx::PxActorType::eRIGID_DYNAMIC)
-            {
-                continue;
-            }
-
-            physx::PxRigidDynamic* Body = static_cast<physx::PxRigidDynamic*>(Actor);
-            FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Body->userData);
-            UPrimitiveComponent* Component = BodyInstance ? BodyInstance->GetOwnerComponent() : nullptr;
-            const int32 BoneIndex = BodyInstance ? BodyInstance->GetBoneIndex() : -1;
-
-            if (!Component || !Component->IsRegistered() || BoneIndex >= 0)
-            {
-                continue;
-            }
-
-            const physx::PxTransform Pose = Body->getGlobalPose();
-            const FTransform WorldTransform(
-                FQuat(Pose.q.x, Pose.q.y, Pose.q.z, Pose.q.w),
-                FVector(Pose.p.x, Pose.p.y, Pose.p.z),
-                Component->GetWorldScale3D()
-            );
-
-            Component->SetWorldTransform(WorldTransform.GetLocalMatrix(), false);
+            continue;
         }
+
+        physx::PxRigidDynamic* Body = static_cast<physx::PxRigidDynamic*>(Actor);
+
+        if (Body->isSleeping())
+        {
+            continue;
+        }
+
+        FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Body->userData);
+        UPrimitiveComponent* Component = BodyInstance ? BodyInstance->GetOwnerComponent() : nullptr;
+        const int32 BoneIndex = BodyInstance ? BodyInstance->GetBoneIndex() : -1;
+
+        if (!Component || !Component->IsRegistered() || BoneIndex >= 0)
+        {
+            continue;
+        }
+
+        const physx::PxTransform Pose = Body->getGlobalPose();
+        const FTransform WorldTransform(FQuat(Pose.q.x, Pose.q.y, Pose.q.z, Pose.q.w), FVector(Pose.p.x, Pose.p.y, Pose.p.z), Component->GetWorldScale3D());
+
+        Component->SetWorldTransform(WorldTransform.GetLocalMatrix(), false);
     }
 
     std::vector<USkeletalMeshComponent*> RagdollComponents;

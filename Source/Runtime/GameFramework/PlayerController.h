@@ -15,7 +15,6 @@ class APlayerController : public AActor
 public:
 	APlayerController();
 	void Tick(float DeltaTime) override;
-	void ProcessPlayerInput(float DeltaTime);
 	void Possess(APawn* InPawn);
 	void UnPossess();
 	APawn* GetPawn() const { return PossessedPawn; }
@@ -35,7 +34,4 @@ private:
 	APlayerCameraManager* PlayerCameraManager = nullptr;
 	APawn* PossessedPawn = nullptr;
 	bool bKeyDown[256]{};
-	float MouseAxisX = 0.0f;
-	float MouseAxisY = 0.0f;
-	float LookSensitivity = 0.1f;
 };

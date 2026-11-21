@@ -9,6 +9,8 @@
 #include "Components/ParticleSubUVComponent.h"
 #include "Core/EngineTimer.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/InputSystem.h"
 #include "Script/LuaActorRef.h"
@@ -197,7 +199,9 @@ namespace
 			"yaw", &FRotator::Yaw,
 			"roll", &FRotator::Roll,
 
-			"LookDirection", &FRotator::LookDirection,
+			"LookDirection", & FRotator::LookDirection,
+			"GetForwardVector", [](const FRotator& R) { return R.Quaternion().GetForwardVector(); },
+			"GetRightVector", [](const FRotator& R) { return R.Quaternion().GetRightVector(); },
 			sol::meta_function::to_string, [](const FRotator& R)
 			{ return std::format("(P={:.1f}, Y={:.1f}, R={:.1f})", R.Pitch, R.Yaw, R.Roll); }
 		);
@@ -255,6 +259,55 @@ namespace
 			"UUID", sol::property([](const FLuaActorRef& Ref) { return Ref.UUID; }),
 			"IsValid", [](const FLuaActorRef& Ref) { return Ref.Get() != nullptr; },
 			"Name", sol::property([](const FLuaActorRef& Ref) { return Deref(Ref).GetName(); }),
+			"AddMovementInput", [](const FLuaActorRef& Ref, const FVector& Direction, sol::optional<float> Scale)
+			{
+				APawn* Pawn = Cast<APawn>(&Deref(Ref));
+				if (!Pawn) throw sol::error("AddMovementInput can only be called on a Pawn.");
+				Pawn->AddMovementInput(Direction, Scale.value_or(1.0f));
+			},
+			"Jump", [](const FLuaActorRef& Ref)
+			{
+				ACharacter* Character = Cast<ACharacter>(&Deref(Ref));
+				if (!Character) throw sol::error("Jump can only be called on a Character.");
+				Character->Jump();
+			},
+			"GetController", [](const FLuaActorRef& Ref) -> sol::optional<FLuaActorRef>
+			{
+				APawn* Pawn = Cast<APawn>(&Deref(Ref));
+				if (!Pawn) throw sol::error("GetController can only be called on a Pawn.");
+				APlayerController* Controller = Pawn->GetController();
+				return Controller ? sol::optional<FLuaActorRef>(FLuaActorRef::Make(Controller)) : sol::nullopt;
+			},
+			"GetControlRotation", [](const FLuaActorRef& Ref)
+			{
+				APlayerController* Controller = Cast<APlayerController>(&Deref(Ref));
+				if (!Controller) throw sol::error("GetControlRotation can only be called on a PlayerController.");
+				return Controller->ControlRotation;
+			},
+			"SetControlRotation", [](const FLuaActorRef& Ref, const FRotator& Rotation)
+			{
+				APlayerController* Controller = Cast<APlayerController>(&Deref(Ref));
+				if (!Controller) throw sol::error("SetControlRotation can only be called on a PlayerController.");
+				Controller->ControlRotation = Rotation;
+			},
+			"StartRagdoll", [](const FLuaActorRef& Ref)
+			{
+				for (UActorComponent* Component : Deref(Ref).GetComponents())
+					if (USkeletalMeshComponent* Mesh = Cast<USkeletalMeshComponent>(Component)) return Mesh->StartRagdoll();
+				throw sol::error("Actor does not have a SkeletalMeshComponent.");
+			},
+			"StopRagdoll", [](const FLuaActorRef& Ref)
+			{
+				for (UActorComponent* Component : Deref(Ref).GetComponents())
+					if (USkeletalMeshComponent* Mesh = Cast<USkeletalMeshComponent>(Component)) { Mesh->StopRagdoll(); return; }
+				throw sol::error("Actor does not have a SkeletalMeshComponent.");
+			},
+			"IsRagdollActive", [](const FLuaActorRef& Ref)
+			{
+				for (UActorComponent* Component : Deref(Ref).GetComponents())
+					if (USkeletalMeshComponent* Mesh = Cast<USkeletalMeshComponent>(Component)) return Mesh->IsRagdollActive();
+				throw sol::error("Actor does not have a SkeletalMeshComponent.");
+			},
 			"HasComponent", [](const FLuaActorRef& Ref, const FString& ClassName)
 			{
 				for (UActorComponent* Component : Deref(Ref).GetComponents())
@@ -603,6 +656,10 @@ namespace
 
 		Lua.set_function("IsRightMouseButtonPressed", []() {
 			return FInputSystem::IsMousePressed(EMouseButton::Right);
+			});
+
+		Lua.set_function("GetMouseDelta", []() {
+			return std::make_tuple(static_cast<float>(FInputSystem::GetMouseDeltaX()), static_cast<float>(FInputSystem::GetMouseDeltaY()));
 			});
 
 		// Viewport 포지션을 반환한다.

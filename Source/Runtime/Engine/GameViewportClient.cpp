@@ -4,7 +4,6 @@
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/Pawn.h"
-#include "GameFramework/DefaultPawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
@@ -123,8 +122,6 @@ UCameraComponent* FGameViewportClient::FindPlayerCamera() const
 	if (!World) return nullptr;
 	if (APawn* Pawn = World->GetPlayerPawn())
 	{
-		if (ADefaultPawn* DefaultPawn = Cast<ADefaultPawn>(Pawn))
-			if (UCameraComponent* Camera = DefaultPawn->GetCameraComponent()) return Camera;
 		for (UActorComponent* Component : Pawn->GetComponents())
 			if (UCameraComponent* Camera = Cast<UCameraComponent>(Component)) return Camera;
 	}

@@ -12,9 +12,7 @@
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Pawn.h"
-#include "GameFramework/DefaultPawn.h"
 #include "GameFramework/PlayerController.h"
-#include "GameFramework/MyPlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/InputSystem.h"
 
@@ -934,13 +932,9 @@ void UWorld::BeginPlay()
 			if (APawn* Pawn = Cast<APawn>(Actor)) { PlayerPawn = Pawn; break; }
 		}
 	}
-	if (!PlayerPawn)
-	{
-		FTransform Transform = MainCamera ? MainCamera->GetActorTransform() : FTransform::Identity;
-		PlayerPawn = SpawnActor<ADefaultPawn>(NAME_None, &Transform);
-	}
-	if (!PlayerController) 
-		PlayerController = SpawnActor<AMyPlayerController>();
+
+	if (PlayerPawn && !PlayerController)
+		PlayerController = SpawnActor<APlayerController>();
 	
 	if (PlayerController)
 		PlayerController->SpawnPlayerCameraManager();

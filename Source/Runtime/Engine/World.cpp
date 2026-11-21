@@ -44,6 +44,7 @@
 
 #include "Script/LuaBindings.h"
 #include "Physics/Collision.h"
+#include "Physics/PhysScene.h"
 #include "Components/ShapeComponent.h"
 #include "Particles/ParticleEventManager.h"
 
@@ -99,6 +100,9 @@ bool UWorld::Init()
 	// 디버그 선 도구를 만든다. FLineBatcher::Init의 렌더러 인자는 쓰이지 않는다.
 	LineBatcher = MakeUnique<FLineBatcher>();
 	LineBatcher->Init(nullptr, this);
+
+	// 이 월드의 PhysX 물리 씬을 생성한다.
+	PhysicsScene = MakeUnique<FPhysScene>(this);
 
 	return true;
 }
@@ -212,6 +216,12 @@ void UWorld::GameWorldTick(float DeltaTime)
 
 	// 코루틴 Tick
 	CoroutineScheduler.Tick(DeltaTime);
+
+	// PhysX 물리 시뮬레이션 (고정 timestep)
+	if (PhysicsScene)
+	{
+		PhysicsScene->Tick(DeltaTime);
+	}
 
 	// ShapeComponent 충돌 처리
 	UpdateOverlaps();

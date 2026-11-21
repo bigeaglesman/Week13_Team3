@@ -8,7 +8,6 @@
 APlayerController::APlayerController()
 	: ControlRotation(FRotator::Identitiy)
 {
-	PrimaryActorTick.bCanEverTick = true;
 }
 
 void APlayerController::Possess(APawn* InPawn)

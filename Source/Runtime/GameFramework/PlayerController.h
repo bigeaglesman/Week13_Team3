@@ -14,7 +14,6 @@ class APlayerController : public AActor
 	GENERATED_BODY()
 public:
 	APlayerController();
-	void Tick(float DeltaTime) override;
 	void Possess(APawn* InPawn);
 	void UnPossess();
 	APawn* GetPawn() const { return PossessedPawn; }

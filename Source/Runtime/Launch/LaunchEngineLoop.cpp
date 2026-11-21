@@ -29,6 +29,7 @@
 #include "Render/RealtimeGPUProfiler.h"
 
 #include "UObject/UObjectGlobals.h"
+#include "Physics/PhysicsCore.h"
 
 namespace
 {
@@ -157,6 +158,15 @@ bool FEngineLoop::PreInit(HINSTANCE hInstance, UClass* EngineClass)
 	{
 		FLoadStageTimer Timer{ "Phase/RenderResourceManager::Init" };
 		FRenderResourceManager::Init();
+	}
+
+	{
+		FLoadStageTimer Timer{ "Phase/InitGamePhys" };
+		if (!InitGamePhys())
+		{
+			FSplashScreen::Hide();
+			return false;
+		}
 	}
 
 	constexpr float AssetStart = 0.1f;
@@ -301,6 +311,8 @@ void FEngineLoop::Exit()
 	DestroyAllObjectsExceptEngine();
 	delete GEngine;
 	GEngine = nullptr;
+
+	TermGamePhys();
 
 	DepthBuffer.reset();
 	Swapchain.reset();

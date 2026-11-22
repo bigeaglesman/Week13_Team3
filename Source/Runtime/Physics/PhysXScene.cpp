@@ -1115,12 +1115,6 @@ physx::PxRigidStatic* FPhysXScene::CreateStaticTriangleMesh(const FStaticMeshDat
         HTR_LOG(Warning, "[PhysX] Static triangle mesh contains large triangles.");
     }
 
-    if (!CookedMesh)
-    {
-        HTR_LOG(Error, "[PhysX] Static triangle mesh cooking failed.");
-        return nullptr;
-    }
-
     const physx::PxTransform Pose = FPhysXTypeConverter::ToPxTransform(WorldTransform);
 
     physx::PxRigidStatic* Actor = Impl->Physics->createRigidStatic(Pose);
@@ -1214,8 +1208,6 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicConvexMesh(const FStaticMeshDat
         return nullptr;
     }
 
-    const FQuat Rotation = WorldTransform.Rotation.Normalized();
-    const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
     const physx::PxTransform Pose = FPhysXTypeConverter::ToPxTransform(WorldTransform);
 
     physx::PxRigidDynamic* Actor = Impl->Physics->createRigidDynamic(Pose);

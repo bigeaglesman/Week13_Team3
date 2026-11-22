@@ -9,6 +9,23 @@ FConstraintInstance::~FConstraintInstance()
     Terminate();
 }
 
+void FConstraintInstance::Initialize(physx::PxJoint* InJoint, physx::PxScene* InScene)
+{
+    if (!InJoint || !InScene || Scene.load(std::memory_order_acquire) != nullptr)
+    {
+        return;
+    }
+
+    physx::PxSceneWriteLock SceneLock(*InScene);
+
+    if (Scene.load(std::memory_order_acquire) != nullptr || Joint != nullptr)
+    {
+        return;
+    }
+
+    Initialize_NoLock(InJoint, InScene);
+}
+
 void FConstraintInstance::Initialize_NoLock(physx::PxJoint* InJoint, physx::PxScene* InScene)
 {
     if (!InJoint || !InScene)

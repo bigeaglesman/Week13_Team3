@@ -270,12 +270,12 @@ void FPhysXScene::ClearActors()
         return;
     }
 
+    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+
     {
         std::lock_guard<std::mutex> Lock(Impl->EventMutex);
         Impl->PendingEvents.clear();
     }
-
-    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
 
     for (FImpl::FJointEntry& Entry : Impl->Joints)
     {
@@ -400,13 +400,13 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
         return;
     }
 
+    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+
     {
         std::lock_guard<std::mutex> Lock(Impl->EventMutex);
         auto& Events = Impl->PendingEvents;
         Events.erase(std::remove_if(Events.begin(), Events.end(), [Component](const FImpl::FQueuedEvent& Event) { return Event.ComponentA == Component || Event.ComponentB == Component; }), Events.end());
     }
-
-    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
 
     FBodyInstance* TargetInstance = Component->BodyInstance.get();
     USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component);
@@ -678,7 +678,7 @@ physx::PxRigidStatic* FPhysXScene::CreateStaticBox(const FVector& Position, cons
     if (!IsInitialized() || HalfExtents.X <= 0.0f || HalfExtents.Y <= 0.0f || HalfExtents.Z <= 0.0f)
         return nullptr;
 
-    const physx::PxTransform Pose(physx::PxVec3(Position.X, Position.Y, Position.Z));
+    const physx::PxTransform Pose(FPhysXTypeConverter::ToPxVector(Position));
 
     physx::PxRigidStatic* Actor = Impl->Physics->createRigidStatic(Pose);
 
@@ -780,9 +780,7 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
         return false;
     }
 
-    const FQuat Rotation = WorldTransform.Rotation.Normalized();
-    const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
-    const physx::PxTransform Pose(physx::PxVec3(WorldTransform.Location.X, WorldTransform.Location.Y, WorldTransform.Location.Z), PxRotation);
+    const physx::PxTransform Pose = FPhysXTypeConverter::ToPxTransform(WorldTransform);
 
     physx::PxRigidDynamic* Actor = Impl->Physics->createRigidDynamic(Pose);
 
@@ -857,13 +855,8 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
 
         const FVector& LocalLocation = ShapeSetup.LocalPose.Location;
         const FQuat LocalRotation = ShapeSetup.LocalPose.Rotation.Normalized();
-        const physx::PxVec3 PxLocalPosition(
-            LocalLocation.X * WorldScale.X,
-            LocalLocation.Y * WorldScale.Y,
-            LocalLocation.Z * WorldScale.Z
-        );
-
-        physx::PxQuat PxLocalRotation(LocalRotation.X, LocalRotation.Y, LocalRotation.Z, LocalRotation.W);
+        const physx::PxVec3 PxLocalPosition = FPhysXTypeConverter::ToPxVector(FVector(LocalLocation.X * WorldScale.X, LocalLocation.Y * WorldScale.Y, LocalLocation.Z * WorldScale.Z));
+        physx::PxQuat PxLocalRotation = FPhysXTypeConverter::ToPxQuat(LocalRotation);
 
         if (ShapeSetup.ShapeType == EPhysicsShapeType::Capsule)
         {
@@ -982,15 +975,11 @@ bool FPhysXScene::CreateRagdollConstraint(const FPhysicsConstraintSetup& Constra
     const FQuat RotationA = ConstraintSetup.FrameA.Rotation.Normalized();
     const FQuat RotationB = ConstraintSetup.FrameB.Rotation.Normalized();
 
-    const physx::PxTransform LocalFrameA(
-        physx::PxVec3(ConstraintSetup.FrameA.Location.X * WorldScaleA.X, ConstraintSetup.FrameA.Location.Y * WorldScaleA.Y, ConstraintSetup.FrameA.Location.Z * WorldScaleA.Z),
-        physx::PxQuat(RotationA.X, RotationA.Y, RotationA.Z, RotationA.W)
-    );
+    const FTransform FrameTransformA(RotationA, FVector(ConstraintSetup.FrameA.Location.X * WorldScaleA.X, ConstraintSetup.FrameA.Location.Y * WorldScaleA.Y, ConstraintSetup.FrameA.Location.Z * WorldScaleA.Z), FVector(1.0f, 1.0f, 1.0f));
+    const FTransform FrameTransformB(RotationB, FVector(ConstraintSetup.FrameB.Location.X * WorldScaleB.X, ConstraintSetup.FrameB.Location.Y * WorldScaleB.Y, ConstraintSetup.FrameB.Location.Z * WorldScaleB.Z), FVector(1.0f, 1.0f, 1.0f));
 
-    const physx::PxTransform LocalFrameB(
-        physx::PxVec3(ConstraintSetup.FrameB.Location.X * WorldScaleB.X, ConstraintSetup.FrameB.Location.Y * WorldScaleB.Y, ConstraintSetup.FrameB.Location.Z * WorldScaleB.Z),
-        physx::PxQuat(RotationB.X, RotationB.Y, RotationB.Z, RotationB.W)
-    );
+    const physx::PxTransform LocalFrameA = FPhysXTypeConverter::ToPxTransform(FrameTransformA);
+    const physx::PxTransform LocalFrameB = FPhysXTypeConverter::ToPxTransform(FrameTransformB);
 
     physx::PxD6Joint* Joint = physx::PxD6JointCreate(*Impl->Physics, ActorA, LocalFrameA, ActorB, LocalFrameB);
 
@@ -1068,7 +1057,7 @@ physx::PxRigidStatic* FPhysXScene::CreateStaticTriangleMesh(const FStaticMeshDat
     for (const FVertex& Vertex : MeshData.Vertices)
     {
         const FVector& Position = Vertex.Position;
-        const physx::PxVec3 ScaledPosition(Position.X * Scale.X, Position.Y * Scale.Y, Position.Z * Scale.Z);
+        const physx::PxVec3 ScaledPosition = FPhysXTypeConverter::ToPxVector(FVector(Position.X * Scale.X, Position.Y * Scale.Y, Position.Z * Scale.Z));
 
         if (!ScaledPosition.isFinite())
             return nullptr;
@@ -1134,7 +1123,7 @@ physx::PxRigidStatic* FPhysXScene::CreateStaticTriangleMesh(const FStaticMeshDat
 
     const FQuat Rotation = WorldTransform.Rotation.Normalized();
     const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
-    const physx::PxTransform Pose(physx::PxVec3(WorldTransform.Location.X, WorldTransform.Location.Y, WorldTransform.Location.Z), PxRotation);
+    const physx::PxTransform Pose = FPhysXTypeConverter::ToPxTransform(WorldTransform);
 
     physx::PxRigidStatic* Actor = Impl->Physics->createRigidStatic(Pose);
 
@@ -1196,7 +1185,7 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicConvexMesh(const FStaticMeshDat
     for (const FVertex& Vertex : MeshData.Vertices)
     {
         const FVector& Position = Vertex.Position;
-        const physx::PxVec3 ScaledPosition(Position.X * Scale.X, Position.Y * Scale.Y, Position.Z * Scale.Z);
+        const physx::PxVec3 ScaledPosition = FPhysXTypeConverter::ToPxVector(FVector(Position.X * Scale.X, Position.Y * Scale.Y, Position.Z * Scale.Z));
 
         if (!ScaledPosition.isFinite())
         {
@@ -1229,7 +1218,7 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicConvexMesh(const FStaticMeshDat
 
     const FQuat Rotation = WorldTransform.Rotation.Normalized();
     const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
-    const physx::PxTransform Pose(physx::PxVec3(WorldTransform.Location.X, WorldTransform.Location.Y, WorldTransform.Location.Z), PxRotation);
+    const physx::PxTransform Pose = FPhysXTypeConverter::ToPxTransform(WorldTransform);
 
     physx::PxRigidDynamic* Actor = Impl->Physics->createRigidDynamic(Pose);
 

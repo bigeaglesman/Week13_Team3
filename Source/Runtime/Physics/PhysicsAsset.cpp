@@ -110,12 +110,6 @@ namespace
             Shape.PhysicalMaterial->DynamicFriction = Shape.DynamicFriction;
             Shape.PhysicalMaterial->Restitution = Shape.Restitution;
         }
-        else if (Ar.IsLoading() && Shape.PhysicalMaterial)
-        {
-            Shape.PhysicalMaterial->StaticFriction = Shape.StaticFriction;
-            Shape.PhysicalMaterial->DynamicFriction = Shape.DynamicFriction;
-            Shape.PhysicalMaterial->Restitution = Shape.Restitution;
-        }
     }
 
     void SerializeBodySetup(FStructuredArchive::FRecord Record, FPhysicsBodySetup& Body, UObject* Outer)

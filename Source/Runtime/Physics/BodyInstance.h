@@ -45,6 +45,7 @@ public:
 	bool IsStatic() const;
 private:
 	friend class FPhysXScene;
+	void Terminate();
 
 	void Initialize_NoLock(physx::PxRigidActor* InActor, physx::PxScene* InScene, UPrimitiveComponent* InOwnerComponent, int32 InBoneIndex = -1);
 	void Terminate_NoLock();

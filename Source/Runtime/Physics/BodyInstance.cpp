@@ -8,7 +8,25 @@
 
 FBodyInstance::~FBodyInstance()
 {
-    Terminate_NoLock();
+    Terminate();
+}
+
+void FBodyInstance::Terminate()
+{
+    physx::PxScene* ScenePtr = Scene.load(std::memory_order_acquire);
+
+    if (!ScenePtr)
+    {
+        Terminate_NoLock();
+        return;
+    }
+
+    physx::PxSceneWriteLock SceneLock(*ScenePtr);
+
+    if (Scene.load(std::memory_order_acquire) == ScenePtr)
+    {
+        Terminate_NoLock();
+    }
 }
 
 void FBodyInstance::Initialize_NoLock(physx::PxRigidActor* InActor, physx::PxScene* InScene, UPrimitiveComponent* InOwnerComponent, int32 InBoneIndex)
@@ -194,7 +212,7 @@ void FBodyInstance::AddForce(const FVector& Force, bool bAutoWake)
 
     if (physx::PxRigidDynamic* Dynamic = GetDynamicActor_NoLock())
     {
-        Dynamic->addForce(physx::PxVec3(Force.X, Force.Y, Force.Z), physx::PxForceMode::eFORCE, bAutoWake);
+        Dynamic->addForce(FPhysXTypeConverter::ToPxVector(Force), physx::PxForceMode::eFORCE, bAutoWake);
     }
 }
 

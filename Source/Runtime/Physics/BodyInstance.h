@@ -2,9 +2,11 @@
 
 #include "Core/Types.h"
 #include "Math/EngineMath.h"
+#include <atomic>
 
 namespace physx
 {
+	class PxScene;
 	class PxRigidActor;
 	class PxRigidDynamic;
 }
@@ -17,7 +19,7 @@ class FBodyInstance
 public:
 	~FBodyInstance();
 
-	bool IsValid() const { return Actor != nullptr; }
+	bool IsValid() const;
 	bool IsDynamic() const;
 
 	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent; }
@@ -42,11 +44,12 @@ public:
 private:
 	friend class FPhysXScene;
 
-	void Initialize(physx::PxRigidActor* InActor, UPrimitiveComponent* InOwnerComponent, int32 InBoneIndex = -1);
+	void Initialize(physx::PxRigidActor* InActor, physx::PxScene* InScene, UPrimitiveComponent* InOwnerComponent, int32 InBoneIndex = -1);
 	void Terminate();
 
 	physx::PxRigidDynamic* GetDynamicActor() const;
 
+	std::atomic<physx::PxScene*> Scene{ nullptr };
 	physx::PxRigidActor* Actor = nullptr;
 	UPrimitiveComponent* OwnerComponent = nullptr;
 	int32 BoneIndex = -1;

@@ -10,6 +10,7 @@
 
 #include <cooking/PxCooking.h>
 #include <PxPhysicsAPI.h>
+#include <PxSceneLock.h>
 #include <extensions/PxDefaultCpuDispatcher.h>
 #include <extensions/PxD6Joint.h>
 
@@ -211,6 +212,7 @@ bool FPhysXScene::Initialize(physx::PxPhysics* InPhysics, physx::PxCooking* InCo
     SceneDesc.simulationEventCallback = Impl.get();
 
     SceneDesc.flags |= physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS;
+    SceneDesc.flags |= physx::PxSceneFlag::eREQUIRE_RW_LOCK;
 
     Impl->Scene = InPhysics->createScene(SceneDesc);
 
@@ -323,6 +325,8 @@ void FPhysXScene::Simulate(float DeltaTime)
         return;
     }
 
+    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+
     constexpr float FixedDeltaTime = 1.0f / 60.0f;
     constexpr uint32 MaxSubSteps = 4;
 
@@ -367,7 +371,7 @@ bool FPhysXScene::BindBody(physx::PxRigidDynamic* Body, USkeletalMeshComponent* 
     }
 
     auto BodyInstance = MakeUnique<FBodyInstance>();
-    BodyInstance->Initialize(Body, Component, BoneIndex);
+    BodyInstance->Initialize(Body, Impl->Scene, Component, BoneIndex);
 
     if (!BodyInstance->IsValid())
     {
@@ -460,6 +464,8 @@ void FPhysXScene::SyncTransforms()
     {
         return;
     }
+
+    physx::PxSceneReadLock SceneLock(*Impl->Scene);
 
     for (physx::PxRigidActor* Actor : Impl->Actors)
     {
@@ -671,8 +677,11 @@ physx::PxRigidStatic* FPhysXScene::CreateStaticBox(const FVector& Position, cons
 
     Shape->release();
 
-    Impl->Scene->addActor(*Actor);
-    Impl->Actors.push_back(Actor);
+    {
+        physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+        Impl->Scene->addActor(*Actor);
+        Impl->Actors.push_back(Actor);
+    }
 
     return Actor;
 }
@@ -727,8 +736,11 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicBox(const FTransform& WorldTran
 
     Shape->release();
 
-    Impl->Scene->addActor(*Actor);
-    Impl->Actors.push_back(Actor);
+    {
+        physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+        Impl->Scene->addActor(*Actor);
+        Impl->Actors.push_back(Actor);
+    }
 
     return Actor;
 }
@@ -862,20 +874,24 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
     Actor->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, BodySetup.bKinematic);
     Actor->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, !BodySetup.bEnableGravity);
 
-    Impl->Scene->addActor(*Actor);
 
-    if (!BindBody(Actor, Component, BoneIndex))
     {
-        Impl->Scene->removeActor(*Actor);
-        Actor->release();
-        return false;
-    }
+        physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+        Impl->Scene->addActor(*Actor);
 
-    Impl->Actors.push_back(Actor);
+        if (!BindBody(Actor, Component, BoneIndex))
+        {
+            Impl->Scene->removeActor(*Actor);
+            Actor->release();
+            return false;
+        }
 
-    if (!BodySetup.bStartAwake)
-    {
-        Actor->putToSleep();
+        Impl->Actors.push_back(Actor);
+
+        if (!BodySetup.bStartAwake)
+        {
+            Actor->putToSleep();
+        }
     }
 
     return true;
@@ -1121,8 +1137,11 @@ physx::PxRigidStatic* FPhysXScene::CreateStaticTriangleMesh(const FStaticMeshDat
     Shape->release();
     CookedMesh->release();
 
-    Impl->Scene->addActor(*Actor);
-    Impl->Actors.push_back(Actor);
+    {
+        physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+        Impl->Scene->addActor(*Actor);
+        Impl->Actors.push_back(Actor);
+    }
 
     return Actor;
 }
@@ -1221,8 +1240,11 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicConvexMesh(const FStaticMeshDat
     Shape->release();
     CookedMesh->release();
 
-    Impl->Scene->addActor(*Actor);
-    Impl->Actors.push_back(Actor);
+    {
+        physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+        Impl->Scene->addActor(*Actor);
+        Impl->Actors.push_back(Actor);
+    }
 
     return Actor;
 }
@@ -1251,7 +1273,7 @@ bool FPhysXScene::BindBodyInternal(physx::PxRigidActor* Body, UPrimitiveComponen
 
     Component->BodyInstance.reset();
     Component->BodyInstance = MakeUnique<FBodyInstance>();
-    Component->BodyInstance->Initialize(Body, Component);
+    Component->BodyInstance->Initialize(Body, Impl->Scene, Component);
 
     return Component->BodyInstance->IsValid();
 }

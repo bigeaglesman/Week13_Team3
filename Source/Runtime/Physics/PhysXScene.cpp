@@ -2,6 +2,7 @@
 #include "Physics/PhysXScene.h"
 #include "Physics/BodyInstance.h"
 #include "Physics/PhysicsAsset.h"
+#include "Physics/PhysicsTypes.h"
 #include "Components/SceneComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -23,9 +24,10 @@ namespace
     physx::PxFilterFlags PhysXSimulationFilterShader(physx::PxFilterObjectAttributes Attributes0,
         physx::PxFilterData FilterData0, physx::PxFilterObjectAttributes Attributes1, physx::PxFilterData FilterData1, physx::PxPairFlags& PairFlags, const void*, physx::PxU32)
     {
-        constexpr physx::PxU32 RagdollFilter = 1u;
+        const FMaskFilter Filter0 = FMaskFilter::FromPhysX(FilterData0);
+        const FMaskFilter Filter1 = FMaskFilter::FromPhysX(FilterData1);
 
-        if ((FilterData0.word0 & RagdollFilter) && (FilterData1.word0 & RagdollFilter))
+        if (Filter0.HasRagdollFlag() && Filter1.HasRagdollFlag())
         {
             return physx::PxFilterFlag::eSUPPRESS;
         }
@@ -849,9 +851,7 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
 
         Shape->setLocalPose(physx::PxTransform(PxLocalPosition, PxLocalRotation));
 
-        physx::PxFilterData FilterData;
-        FilterData.word0 = 1u;
-        Shape->setSimulationFilterData(FilterData);
+        Shape->setSimulationFilterData(FMaskFilter::MakeRagdoll().ToPhysX());
 
         if (!Actor->attachShape(*Shape))
         {

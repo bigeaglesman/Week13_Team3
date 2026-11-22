@@ -2,6 +2,7 @@
 #include "Core/Types.h"
 #include "Math/Vector.h"
 
+class AActor;
 class UPrimitiveComponent;
 
 struct FHitResult
@@ -50,3 +51,13 @@ struct FHitResult
 		TraceEnd = End;
 	}
 };
+
+struct FOverlapResult
+{
+	AActor* Actor = nullptr;
+	UPrimitiveComponent* Component = nullptr;
+	int32 ItemIndex = -1;
+	bool bBlockingHit = false;
+};
+
+using FSweepResult = FHitResult;

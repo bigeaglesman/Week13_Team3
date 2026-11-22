@@ -30,7 +30,12 @@ public:
 	void SubmitToRenderQueue(FRenderQueue& Queue, uint32 LODIndex);
 
 	bool IsEditorIcon() const { return bEditorIcon; }
-	void SetEditorIcon(bool IsEditorIcon) { bEditorIcon = IsEditorIcon; }
+	void SetEditorIcon(bool IsEditorIcon);
+
+	virtual void PostEditChangeProperty(const FProperty& Property) override;
+
+protected:
+	virtual bool BuildBodyShapeDesc(FBodyShapeDesc& OutDesc) const override;
 
 private:
 	UPROPERTY(EditAnywhere)

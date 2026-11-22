@@ -93,6 +93,19 @@ void UPrimitiveComponent::OnTransformDirty()
 {
 	if (SceneProxy)
 		SceneProxy->GetScene()->MarkDirty(SceneProxy);
+
+	if (IsPhysicsStateCreated())
+	{
+		const FVector CurrentScale = GetWorldScale3D().GetAbs();
+		if ((CurrentScale - CachedBodyScale).SizeSquared() > SMALL_NUMBER)
+		{
+			RecreatePhysicsState();
+		}
+		else if (BodyInstance.IsValidBodyInstance())
+		{
+			BodyInstance.SetBodyTransform(GetWorldTransform());
+		}
+	}
 }
 
 bool UPrimitiveComponent::MoveComponent(const FVector& Delta, const FRotator& NewRotation, bool bSweep, FHitResult* Hit)
@@ -137,6 +150,34 @@ void UPrimitiveComponent::DestroyRenderState()
 {
 	GetWorld()->GetScene().RemovePrimitive(this);
 	Super::DestroyRenderState();
+}
+
+void UPrimitiveComponent::OnCreatePhysicsState()
+{
+	Super::OnCreatePhysicsState();
+
+	UWorld* World = GetWorld();
+	FPhysScene* PhysScene = World ? World->GetPhysicsScene() : nullptr;
+	if (!PhysScene)
+	{
+		return;
+	}
+
+	CachedBodyScale = GetWorldScale3D().GetAbs();
+
+	FBodyShapeDesc ShapeDesc;
+	if (!BuildBodyShapeDesc(ShapeDesc))
+	{
+		return;
+	}
+
+	BodyInstance.InitBody(ShapeDesc, GetWorldTransform(), this, PhysScene);
+}
+
+void UPrimitiveComponent::OnDestroyPhysicsState()
+{
+	BodyInstance.TermBody();
+	Super::OnDestroyPhysicsState();
 }
 
 bool UPrimitiveComponent::TraceMesh(const FRay& WorldRay, const FStaticMeshData& Mesh, const FMatrix& WorldMatrix, FHitResult& OutResult)

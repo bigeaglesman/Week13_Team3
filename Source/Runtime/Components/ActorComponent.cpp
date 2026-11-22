@@ -150,10 +150,32 @@ void UActorComponent::CreateRenderState()
 {
 	bRenderStateCreated = true;
 }
-
 void UActorComponent::DestroyRenderState()
 {
 	bRenderStateCreated = false;
+}
+
+void UActorComponent::OnCreatePhysicsState()
+{
+	bPhysicsStateCreated = true;
+}
+
+void UActorComponent::OnDestroyPhysicsState()
+{
+	bPhysicsStateCreated = false;
+}
+
+void UActorComponent::RecreatePhysicsState()
+{
+	if (bPhysicsStateCreated)
+	{
+		OnDestroyPhysicsState();
+	}
+
+	if (IsRegistered() && ShouldCreatePhysicsState())
+	{
+		OnCreatePhysicsState();
+	}
 }
 
 void UActorComponent::ExecuteRegisterEvents()
@@ -168,10 +190,19 @@ void UActorComponent::ExecuteRegisterEvents()
 		CreateRenderState();
 		assert(bRenderStateCreated && "Forgot to Call CreateRenderState: Super ");
 	}
+	if (!bPhysicsStateCreated && ShouldCreatePhysicsState())
+	{
+		OnCreatePhysicsState();
+		assert(bPhysicsStateCreated && "Forgot to Call OnCreatePhysicsState: Super ");
+	}
 }
 
 void UActorComponent::ExecuteUnregisterEvents()
 {
+	if (bPhysicsStateCreated)
+	{
+		OnDestroyPhysicsState();
+	}
 	if (bRenderStateCreated)
 	{
 		DestroyRenderState();

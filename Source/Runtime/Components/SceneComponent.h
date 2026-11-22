@@ -71,8 +71,10 @@ public:
 
 	FVector GetWorldLocation() const;
 	FRotator GetWorldRotation() const;
+	FQuat GetWorldRotationQuat() const;
 	FVector GetWorldScale3D() const;
 	FMatrix GetWorldMatrix() const;
+	FTransform GetWorldTransform() const;
 	
 	void SetWorldLocation(FVector NewLocation, bool bSweep);
 	void SetWorldRotation(FRotator NewRotation, bool bSweep);

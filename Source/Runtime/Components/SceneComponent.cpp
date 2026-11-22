@@ -167,6 +167,16 @@ FRotator USceneComponent::GetWorldRotation() const
 	return GetRelativeRotation();
 }
 
+FQuat USceneComponent::GetWorldRotationQuat() const
+{
+	if (AttachParent)
+	{
+		return AttachParent->GetWorldRotationQuat() * Transform.GetOrientation();
+	}
+
+	return Transform.GetOrientation();
+}
+
 FVector USceneComponent::GetWorldLocation() const
 {
 	FMatrix WorldMatrix = GetWorldMatrix();
@@ -207,6 +217,11 @@ FMatrix USceneComponent::GetWorldMatrix() const
 		Transform.Scale * AttachParent->GetWorldScale3D();
 
 	return FTransform(WorldRotation, WorldLocation, WorldScale).GetLocalMatrix();
+}
+
+FTransform USceneComponent::GetWorldTransform() const
+{
+	return FTransform(GetWorldRotationQuat(), GetWorldLocation(), GetWorldScale3D());
 }
 
 void USceneComponent::SetWorldTransform(const FMatrix& InWorldMatrix, bool bSweep)

@@ -39,6 +39,55 @@ void UStaticMeshComponent::SetStaticMesh(UStaticMesh* InStaticMesh)
 	ClearOverrideMaterials();
 	MarkRenderStateDirty();
 	OnTransformDirty();
+	RecreatePhysicsState();
+}
+
+void UStaticMeshComponent::SetEditorIcon(bool IsEditorIcon)
+{
+	if (bEditorIcon == IsEditorIcon)
+		return;
+
+	bEditorIcon = IsEditorIcon;
+	RecreatePhysicsState();
+}
+
+void UStaticMeshComponent::PostEditChangeProperty(const FProperty& Property)
+{
+	Super::PostEditChangeProperty(Property);
+	if (Property.Name == "StaticMesh")
+	{
+		RecreatePhysicsState();
+	}
+}
+
+bool UStaticMeshComponent::BuildBodyShapeDesc(FBodyShapeDesc& OutDesc) const
+{
+	if (bEditorIcon || !StaticMesh)
+	{
+		return false;
+	}
+
+	const FBox& LocalBounds = StaticMesh->GetMeshData().AABB;
+	const FVector LocalExtent = (LocalBounds.Max - LocalBounds.Min) * 0.5f;
+	if (LocalExtent.SizeSquared() <= SMALL_NUMBER)
+	{
+		return false;
+	}
+
+	const FVector LocalCenter = (LocalBounds.Min + LocalBounds.Max) * 0.5f;
+	const FVector WorldScale = GetWorldScale3D();
+	const FVector AbsScale = WorldScale.GetAbs();
+
+	OutDesc.Type = EBodyShapeType::Box;
+	OutDesc.HalfExtent = FVector(
+		LocalExtent.X * AbsScale.X,
+		LocalExtent.Y * AbsScale.Y,
+		LocalExtent.Z * AbsScale.Z);
+	OutDesc.LocalOffset = FVector(
+		LocalCenter.X * WorldScale.X,
+		LocalCenter.Y * WorldScale.Y,
+		LocalCenter.Z * WorldScale.Z);
+	return true;
 }
 
 int32 UStaticMeshComponent::GetNumMaterials() const

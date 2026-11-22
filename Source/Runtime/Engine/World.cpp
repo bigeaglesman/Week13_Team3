@@ -101,8 +101,11 @@ bool UWorld::Init()
 	LineBatcher = MakeUnique<FLineBatcher>();
 	LineBatcher->Init(nullptr, this);
 
-	// 이 월드의 PhysX 물리 씬을 생성한다.
-	PhysicsScene = MakeUnique<FPhysScene>(this);
+	// Game/PIE 월드에서만 PhysX 물리 씬을 생성한다 (Editor/Preview 다중 PxScene으로 인한 PVD 혼선 방지).
+	if (WorldType == EWorldType::Game || WorldType == EWorldType::PIE)
+	{
+		PhysicsScene = MakeUnique<FPhysScene>(this);
+	}
 
 	return true;
 }

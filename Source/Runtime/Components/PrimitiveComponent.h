@@ -6,6 +6,7 @@
 #include "Render/RenderPacket.h"
 #include "Render/GeometryGenerator.h"
 #include "Collision/HitResult.h"
+#include "Physics/BodyInstance.h"
 #include "Core/Delegate/Delegate.h"
 #include "PrimitiveComponent.generated.h"
 
@@ -115,11 +116,15 @@ public:
 	void EndComponentOverlap(UPrimitiveComponent* OtherComp);
 	void DispatchHit(UPrimitiveComponent* OtherComp);
 
+	FBodyInstance BodyInstance;
+	FBodyInstance* GetBodyInstance() { return &BodyInstance; }
+	const FBodyInstance* GetBodyInstance() const { return &BodyInstance; }
+
 protected:
 	virtual void OnUnregister() override;
 	TArray<FOverlapInfo> OverlapInfos;
 
-	virtual bool ShouldCreateRenderState() const override
+	virtual bool ShouldCreateRenderState() const override	
 	{
 		return true;
 	}
@@ -127,6 +132,10 @@ protected:
 	virtual void CreateRenderState() override;
 	virtual void DestroyRenderState() override;
 
+	virtual bool ShouldCreatePhysicsState() const override { return true; }
+	virtual bool BuildBodyShapeDesc(FBodyShapeDesc& OutDesc) const { return false; }
+	virtual void OnCreatePhysicsState() override;
+	virtual void OnDestroyPhysicsState() override;
 
 	bool TraceMesh(const FRay& WorldRay, const FStaticMeshData& Mesh, const FMatrix& WorldMatrix, FHitResult& OutResult);
 	bool TraceMeshLocal(const FRay& LocalRay, const FStaticMeshData& Mesh, float& OutT);
@@ -134,4 +143,5 @@ protected:
 private:
 	friend class FScene;
 	FPrimitiveSceneProxy* SceneProxy = nullptr;
+	FVector CachedBodyScale = FVector::OneVector;
 };

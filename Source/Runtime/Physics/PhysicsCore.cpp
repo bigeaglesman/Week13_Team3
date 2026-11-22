@@ -72,7 +72,7 @@ bool InitGamePhys()
 	if (GPhysXVisualDebugger)
 	{
 		PxPvdTransport* Transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
-		if (Transport && GPhysXVisualDebugger->connect(*Transport, PxPvdInstrumentationFlag::eALL))
+		if (Transport && GPhysXVisualDebugger->connect(*Transport, PxPvdInstrumentationFlag::eDEBUG))
 		{
 			HTR_LOG(Info, "[PhysX] PVD connected (127.0.0.1:5425)");
 		}

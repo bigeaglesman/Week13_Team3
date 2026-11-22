@@ -63,6 +63,8 @@ public:
 
 	bool IsRegistered() const { return bRegistered; }
 	bool IsRenderStateCreated() const { return bRenderStateCreated; }
+	bool IsPhysicsStateCreated() const { return bPhysicsStateCreated; }
+	void RecreatePhysicsState();
 
 	UWorld* GetWorld() const { return WorldPrivate; }
 protected:
@@ -75,8 +77,13 @@ protected:
 	}
 	
 	//원래는 _Concurrent 병렬처리 -> 현재 엔진에서는 멀티 스레드 사용 X 
+	//원래는 _Concurrent 병렬처리 -> 현재 엔진에서는 멀티 스레드 사용 X 
 	virtual void CreateRenderState();
 	virtual void DestroyRenderState();
+
+	virtual bool ShouldCreatePhysicsState() const { return false; }
+	virtual void OnCreatePhysicsState();
+	virtual void OnDestroyPhysicsState();
 	UPROPERTY(EditAnywhere)
 	bool bAutoActivate = true;
 	UPROPERTY(EditAnywhere)
@@ -97,4 +104,5 @@ private:
 
 	UWorld* WorldPrivate = nullptr;
 	bool bRenderStateCreated = false;
+	bool bPhysicsStateCreated = false;
 };

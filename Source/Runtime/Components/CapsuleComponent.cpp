@@ -44,3 +44,20 @@ void UCapsuleComponent::DrawDebug(FLineBatcher* LineBatcher, const FVector4& Col
 	for (const FVector& Side : { X, X * -1.0f, Y, Y * -1.0f })
 		LineBatcher->AddLine(Cap.A + Side * R, Cap.B + Side * R, Color);
 }
+
+void UCapsuleComponent::PostEditChangeProperty(const FProperty& Property)
+{
+	Super::PostEditChangeProperty(Property);
+	if (Property.Name == "CapsuleHalfHeight" || Property.Name == "CapsuleRadius")
+	{
+		RecreatePhysicsState();
+	}
+}
+
+bool UCapsuleComponent::BuildBodyShapeDesc(FBodyShapeDesc& OutDesc) const
+{
+	OutDesc.Type = EBodyShapeType::Capsule;
+	OutDesc.Radius = GetScaledCapsuleRadius();
+	OutDesc.HalfHeight = GetScaledCapsuleHalfHeight();
+	return true;
+}

@@ -19,3 +19,19 @@ void UBoxComponent::DrawDebug(FLineBatcher* LineBatcher, const FVector4& Color) 
 	// 엔진에 이미 있는 함수. 로컬 박스의 8꼭짓점을 월드 행렬(회전·스케일 포함)로 옮겨 그린다
 	LineBatcher->AddOrientedBox(FBox{ BoxExtent * -1.0f, BoxExtent }, GetWorldMatrix(), Color);
 }
+
+void UBoxComponent::PostEditChangeProperty(const FProperty& Property)
+{
+	Super::PostEditChangeProperty(Property);
+	if (Property.Name == "BoxExtent")
+	{
+		RecreatePhysicsState();
+	}
+}
+
+bool UBoxComponent::BuildBodyShapeDesc(FBodyShapeDesc& OutDesc) const
+{
+	OutDesc.Type = EBodyShapeType::Box;
+	OutDesc.HalfExtent = GetScaledBoxExtent();
+	return true;
+}

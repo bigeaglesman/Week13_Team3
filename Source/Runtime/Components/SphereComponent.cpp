@@ -24,3 +24,19 @@ void USphereComponent::DrawDebug(FLineBatcher* LineBatcher, const FVector4& Colo
 	AddWireArc(LineBatcher, C, FVector(1, 0, 0), FVector(0, 0, 1), R, 0, TwoPi, Color);
 	AddWireArc(LineBatcher, C, FVector(0, 1, 0), FVector(0, 0, 1), R, 0, TwoPi, Color);
 }
+
+void USphereComponent::PostEditChangeProperty(const FProperty& Property)
+{
+	Super::PostEditChangeProperty(Property);
+	if (Property.Name == "SphereRadius")
+	{
+		RecreatePhysicsState();
+	}
+}
+
+bool USphereComponent::BuildBodyShapeDesc(FBodyShapeDesc& OutDesc) const
+{
+	OutDesc.Type = EBodyShapeType::Sphere;
+	OutDesc.Radius = GetScaledSphereRadius();
+	return true;
+}

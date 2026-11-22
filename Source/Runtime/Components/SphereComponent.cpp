@@ -1,12 +1,21 @@
 #include "EnginePCH.h"
 #include "SphereComponent.h"
 #include "Physics/Collision.h"
+#include "Physics/AggregateGeom.h"
 #include "Render/LineBatcher.h"
 
 float USphereComponent::GetScaledSphereRadius() const
 {
 	const FVector S = GetWorldScale3D().GetAbs(); 
 	return SphereRadius * std::max({S.X, S.Y, S.Z}); // 비균일 스케일이면 가장 큰 축
+}
+
+bool USphereComponent::GetBodyGeometry(FKAggregateGeom& OutGeom) const
+{
+	FKSphereElem Elem;
+	Elem.Radius = GetScaledSphereRadius();
+	OutGeom.SphereElems.Add(Elem);
+	return true;
 }
 
 FBox USphereComponent::CalcLocalBounds() const

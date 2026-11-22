@@ -2,6 +2,7 @@
 #include "Physics/PhysicsScene.h"
 #include "Physics/PhysicsCore.h"
 #include "Physics/PhysXConversion.h"
+#include "Physics/BodyInstance.h"
 #include "Render/LineBatcher.h"
 #include "Core/Stats/LightweightStats.h"
 
@@ -11,6 +12,7 @@ using namespace physx;
 
 DECLARE_CYCLE_STAT("Physics: Simulate", STAT_PhysicsSimulate);
 DECLARE_CYCLE_STAT("Physics: FetchResults", STAT_PhysicsFetchResults);
+DECLARE_CYCLE_STAT("Physics: Sync Bodies", STAT_PhysicsSyncBodies);
 
 namespace
 {
@@ -76,7 +78,26 @@ void FPhysicsScene::Tick(float DeltaTime)
 		Accumulator = 0.0f;
 	}
 
-	// TODO(2단계): getActiveActors()로 움직인 바디만 컴포넌트 트랜스폼에 되돌려 쓴다.
+	if (Steps > 0)
+	{
+		SyncActiveBodiesToComponents();
+	}
+}
+
+void FPhysicsScene::SyncActiveBodiesToComponents()
+{
+	SCOPE_CYCLE_COUNTER(STAT_PhysicsSyncBodies);
+
+	// 마지막 simulate에서 움직인 액터만 온다 (eENABLE_ACTIVE_ACTORS). 잠든 바디와 바닥은 빠진다.
+	PxU32 NumActive = 0;
+	PxActor** ActiveActors = Scene->getActiveActors(NumActive);
+	for (PxU32 i = 0; i < NumActive; ++i)
+	{
+		if (FBodyInstance* Body = static_cast<FBodyInstance*>(ActiveActors[i]->userData))
+		{
+			Body->SyncComponentToBody();
+		}
+	}
 }
 
 void FPhysicsScene::StepOnce(float Step)

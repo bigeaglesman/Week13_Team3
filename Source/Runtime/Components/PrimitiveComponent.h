@@ -7,9 +7,11 @@
 #include "Render/GeometryGenerator.h"
 #include "Collision/HitResult.h"
 #include "Core/Delegate/Delegate.h"
+#include "Physics/BodyInstance.h"
 #include "PrimitiveComponent.generated.h"
 
 class FPrimitiveSceneProxy;
+struct FKAggregateGeom;
 class AActor;
 class UPrimitiveComponent;
 
@@ -114,6 +116,18 @@ public:
 	void BeginComponentOverlap(UPrimitiveComponent* OtherComp);
 	void EndComponentOverlap(UPrimitiveComponent* OtherComp);
 	void DispatchHit(UPrimitiveComponent* OtherComp);
+
+	// ---- 물리 (PhysX) ----
+	UPROPERTY(EditAnywhere)
+	FBodyInstance BodyInstance;
+
+	// 물리 바디의 도형. 도형이 없는 컴포넌트는 false를 돌려 바디를 만들지 않는다.
+	// 2단계: Shape 컴포넌트가 채운다. 3단계: UBodySetup에서 가져온다.
+	virtual bool GetBodyGeometry(FKAggregateGeom& OutGeom) const { return false; }
+
+	// BeginPlay에서 만들고 OnUnregister에서 지운다. 물리 씬은 게임 월드에만 있다. (UE의 OnCreatePhysicsState)
+	void CreatePhysicsState();
+	void DestroyPhysicsState();
 
 protected:
 	virtual void OnUnregister() override;

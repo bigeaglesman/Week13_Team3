@@ -8,6 +8,7 @@
 #include "Engine/PrimitiveSceneProxy.h"
 #include "Engine/Scene.h"
 #include "Engine/World.h"
+#include "Physics/AggregateGeom.h"
 
 namespace
 {
@@ -44,13 +45,55 @@ UPrimitiveComponent::~UPrimitiveComponent()
 
 }
 
+namespace
+{
+	// PhysX 바디 포즈용 월드 트랜스폼. 스케일은 도형 크기에 들어가므로 뺀다.
+	FTransform GetBodyWorldTransform(const UPrimitiveComponent* Component)
+	{
+		const FQuat Rotation = Component->GetAttachParent()
+			? Component->GetWorldRotation().Quaternion()
+			: Component->GetRelativeRotationQuat();   // 부모가 없으면 쿼터니언을 그대로 쓴다
+		return FTransform(Rotation, Component->GetWorldLocation());
+	}
+}
+
 void UPrimitiveComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	CreatePhysicsState();
+}
+
+void UPrimitiveComponent::CreatePhysicsState()
+{
+	if (BodyInstance.IsValidBodyInstance() || !BodyInstance.ShouldCreateBody())
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	FPhysicsScene* PhysicsScene = World ? World->GetPhysicsScene() : nullptr;
+	if (!PhysicsScene)
+	{
+		return;
+	}
+
+	FKAggregateGeom Geom;
+	if (!GetBodyGeometry(Geom))
+	{
+		return;
+	}
+
+	BodyInstance.InitBody(this, Geom, GetBodyWorldTransform(this), PhysicsScene);
+}
+
+void UPrimitiveComponent::DestroyPhysicsState()
+{
+	BodyInstance.TermBody();
 }
 
 void UPrimitiveComponent::OnUnregister()
 {
+	DestroyPhysicsState();
 	Super::OnUnregister();
 	// 삭제/등록 해제된 도형을 상대의 OverlapInfos에 남기지 않는다.
 	while (!OverlapInfos.IsEmpty())
@@ -93,6 +136,10 @@ void UPrimitiveComponent::OnTransformDirty()
 {
 	if (SceneProxy)
 		SceneProxy->GetScene()->MarkDirty(SceneProxy);
+
+	// 키네마틱 바디는 컴포넌트를 따라간다. 시뮬레이션 중인 바디는 SetBodyTransform이 무시한다.
+	if (BodyInstance.IsValidBodyInstance())
+		BodyInstance.SetBodyTransform(GetBodyWorldTransform(this));
 }
 
 bool UPrimitiveComponent::MoveComponent(const FVector& Delta, const FRotator& NewRotation, bool bSweep, FHitResult* Hit)

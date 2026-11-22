@@ -37,6 +37,9 @@ public:
 private:
 	void StepOnce(float Step);
 
+	// 시뮬레이션 결과(움직인 바디의 위치·회전)를 컴포넌트에 되돌려 쓴다. UE의 SyncComponentsToBodies 자리
+	void SyncActiveBodiesToComponents();
+
 	UWorld*         Owner = nullptr;
 	physx::PxScene* Scene = nullptr;
 	float           Accumulator = 0.0f;

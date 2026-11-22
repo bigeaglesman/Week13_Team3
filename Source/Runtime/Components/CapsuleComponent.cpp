@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "CapsuleComponent.h"
 #include "Physics/Collision.h"
+#include "Physics/AggregateGeom.h"
 #include "Render/LineBatcher.h"
 
 float UCapsuleComponent::GetScaledCapsuleHalfHeight() const
@@ -13,6 +14,16 @@ float UCapsuleComponent::GetScaledCapsuleRadius() const
 {
 	const FVector S = GetWorldScale3D().GetAbs(); 
 	return CapsuleRadius * std::max(S.X, S.Y); // 반지름은 축에 수직인 X·Y 중 큰 쪽
+}
+
+bool UCapsuleComponent::GetBodyGeometry(FKAggregateGeom& OutGeom) const
+{
+	// 엔진 HalfHeight는 반구 끝까지, Sphyl Length는 원기둥 부분만
+	FKSphylElem Elem;
+	Elem.Radius = GetScaledCapsuleRadius();
+	Elem.Length = 2.0f * (GetScaledCapsuleHalfHeight() - Elem.Radius);
+	OutGeom.SphylElems.Add(Elem);
+	return true;
 }
 
 FBox UCapsuleComponent::CalcLocalBounds() const

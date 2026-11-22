@@ -1121,8 +1121,6 @@ physx::PxRigidStatic* FPhysXScene::CreateStaticTriangleMesh(const FStaticMeshDat
         return nullptr;
     }
 
-    const FQuat Rotation = WorldTransform.Rotation.Normalized();
-    const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
     const physx::PxTransform Pose = FPhysXTypeConverter::ToPxTransform(WorldTransform);
 
     physx::PxRigidStatic* Actor = Impl->Physics->createRigidStatic(Pose);

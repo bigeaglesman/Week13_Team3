@@ -161,8 +161,7 @@ FVector FBodyInstance::GetAngularVelocity() const
         return FVector();
     }
 
-    const physx::PxVec3 Velocity = Dynamic->getAngularVelocity();
-    return FVector(Velocity.x, Velocity.y, Velocity.z);
+    return FPhysXTypeConverter::FromPxVector(Dynamic->getAngularVelocity());
 }
 
 void FBodyInstance::SetLinearVelocity(const FVector& Velocity, bool bAutoWake)
@@ -195,7 +194,7 @@ void FBodyInstance::SetAngularVelocity(const FVector& Velocity, bool bAutoWake)
 
     if (physx::PxRigidDynamic* Dynamic = GetDynamicActor_NoLock())
     {
-        Dynamic->setAngularVelocity(physx::PxVec3(Velocity.X, Velocity.Y, Velocity.Z), bAutoWake);
+        Dynamic->setAngularVelocity(FPhysXTypeConverter::ToPxVector(Velocity), bAutoWake);
     }
 }
 
@@ -229,7 +228,7 @@ void FBodyInstance::AddImpulse(const FVector& Impulse, bool bAutoWake)
 
     if (physx::PxRigidDynamic* Dynamic = GetDynamicActor_NoLock())
     {
-        Dynamic->addForce(physx::PxVec3(Impulse.X, Impulse.Y, Impulse.Z), physx::PxForceMode::eIMPULSE, bAutoWake);
+        Dynamic->addForce(FPhysXTypeConverter::ToPxVector(Impulse), physx::PxForceMode::eIMPULSE, bAutoWake);
     }
 }
 
@@ -246,7 +245,7 @@ void FBodyInstance::AddTorque(const FVector& Torque, bool bAutoWake)
 
     if (physx::PxRigidDynamic* Dynamic = GetDynamicActor_NoLock())
     {
-        Dynamic->addTorque(physx::PxVec3(Torque.X, Torque.Y, Torque.Z), physx::PxForceMode::eFORCE, bAutoWake);
+        Dynamic->addTorque(FPhysXTypeConverter::ToPxVector(Torque), physx::PxForceMode::eFORCE, bAutoWake);
     }
 }
 

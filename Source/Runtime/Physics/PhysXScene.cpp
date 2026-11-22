@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "Physics/PhysXScene.h"
 #include "Physics/BodyInstance.h"
+#include "Physics/ConstraintInstance.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsTypes.h"
 #include "Components/SceneComponent.h"
@@ -81,7 +82,7 @@ struct FPhysXScene::FImpl : physx::PxSimulationEventCallback
 
     struct FJointEntry
     {
-        physx::PxJoint* Joint = nullptr;
+        TUniquePtr<FConstraintInstance> Constraint;
         USkeletalMeshComponent* Owner = nullptr;
     };
 
@@ -275,9 +276,25 @@ void FPhysXScene::ClearActors()
 
     for (FImpl::FJointEntry& Entry : Impl->Joints)
     {
-        if (Entry.Joint)
+        FConstraintInstance* Constraint = Entry.Constraint.get();
+
+        if (Constraint)
         {
-            Entry.Joint->release();
+            Constraint->Terminate();
+
+            if (Entry.Owner)
+            {
+                TArray<FConstraintInstance*>& Constraints = Entry.Owner->PhysicsConstraints;
+
+                for (int32 Index = 0; Index < Constraints.Num(); ++Index)
+                {
+                    if (Constraints[Index] == Constraint)
+                    {
+                        Constraints.RemoveAt(Index);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -407,9 +424,22 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
         {
             if (It->Owner == SkeletalComponent)
             {
-                if (It->Joint)
+                FConstraintInstance* Constraint = It->Constraint.get();
+
+                if (Constraint)
                 {
-                    It->Joint->release();
+                    Constraint->Terminate();
+
+                    TArray<FConstraintInstance*>& Constraints = SkeletalComponent->PhysicsConstraints;
+
+                    for (int32 Index = 0; Index < Constraints.Num(); ++Index)
+                    {
+                        if (Constraints[Index] == Constraint)
+                        {
+                            Constraints.RemoveAt(Index);
+                            break;
+                        }
+                    }
                 }
 
                 It = Impl->Joints.erase(It);
@@ -1018,7 +1048,13 @@ bool FPhysXScene::CreateRagdollConstraint(const FPhysicsConstraintSetup& Constra
 
     Joint->setConstraintFlag(physx::PxConstraintFlag::eCOLLISION_ENABLED, false);
 
-    Impl->Joints.push_back({ Joint, Component });
+    auto Constraint = MakeUnique<FConstraintInstance>();
+    Constraint->Initialize(Joint, Impl->Scene);
+
+    FConstraintInstance* ConstraintPtr = Constraint.get();
+
+    Impl->Joints.push_back({ std::move(Constraint), Component });
+    Component->PhysicsConstraints.Add(ConstraintPtr);
 
     return true;
 }

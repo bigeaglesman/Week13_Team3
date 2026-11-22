@@ -18,6 +18,7 @@ class UAnimationAsset;
 class UAnimSingleNodeInstance;
 class UAnimGraphInstance;
 class FBodyInstance;
+class FConstraintInstance;
 class FPhysXScene;
 class UPhysicsAsset;
 
@@ -113,6 +114,7 @@ private:
 
 	TArray<FTransform> BoneSpaceTransforms;
 	TArray<TUniquePtr<FBodyInstance>> PhysicsBodies;
+	TArray<FConstraintInstance*> PhysicsConstraints;
 
 	UPROPERTY(EditAnywhere)
 	FString PhysicsAssetPath;

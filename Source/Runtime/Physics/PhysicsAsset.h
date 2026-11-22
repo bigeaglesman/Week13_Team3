@@ -5,7 +5,7 @@
 #include "PhysicsAsset.generated.h"
 
 class USkeletalMesh;
-
+class UPhysicalMaterial;
 enum class EPhysicsShapeType : uint8
 {
     Box,
@@ -35,6 +35,8 @@ struct FPhysicsShapeSetup
     float StaticFriction = 0.5f;
     float DynamicFriction = 0.5f;
     float Restitution = 0.0f;
+
+    UPhysicalMaterial* PhysicalMaterial = nullptr;
 };
 
 struct FPhysicsBodySetup

@@ -1,6 +1,7 @@
 
 #include "EnginePCH.h"
 #include "Physics/PhysicsAsset.h"
+#include "Physics/PhysicalMaterial.h"
 #include "Render/SkeletalMesh.h"
 #include "Serialization/MathSerialization.h"
 #include "Serialization/StructuredArchiveSlots.h"
@@ -62,7 +63,7 @@ namespace
             Ar.SetError();
     }
 
-    void SerializeShape(FStructuredArchive::FRecord Record, FPhysicsShapeSetup& Shape)
+    void SerializeShape(FStructuredArchive::FRecord Record, FPhysicsShapeSetup& Shape, UObject* Outer)
     {
         FArchive& Ar = Record.GetUnderlyingArchive();
 
@@ -77,9 +78,31 @@ namespace
 
         if (Ar.IsLoading() && !ParseShapeType(TypeName, Shape.ShapeType))
             Ar.SetError();
+
+        if (Ar.IsLoading())
+        {
+            Shape.PhysicalMaterial = NewObject<UPhysicalMaterial>(Outer);
+        }
+
+        const bool bHasPhysicalMaterial = Ar.IsSaving() && Shape.PhysicalMaterial != nullptr;
+        if (TOptional<FStructuredArchive::FSlot> MaterialSlot = Record.TryEnterField("PhysicalMaterial", bHasPhysicalMaterial))
+        {
+            if (Ar.IsLoading())
+            {
+                Shape.PhysicalMaterial = NewObject<UPhysicalMaterial>(Outer);
+            }
+
+            Shape.PhysicalMaterial->Serialize(MaterialSlot.GetValue().EnterRecord());
+        }
+        else if (Ar.IsLoading() && Shape.PhysicalMaterial)
+        {
+            Shape.PhysicalMaterial->StaticFriction = Shape.StaticFriction;
+            Shape.PhysicalMaterial->DynamicFriction = Shape.DynamicFriction;
+            Shape.PhysicalMaterial->Restitution = Shape.Restitution;
+        }
     }
 
-    void SerializeBodySetup(FStructuredArchive::FRecord Record, FPhysicsBodySetup& Body)
+    void SerializeBodySetup(FStructuredArchive::FRecord Record, FPhysicsBodySetup& Body, UObject* Outer)
     {
         FArchive& Ar = Record.GetUnderlyingArchive();
 
@@ -98,7 +121,7 @@ namespace
             Body.Shapes.SetNum(ShapeCount);
 
         for (int32 Index = 0; Index < ShapeCount; ++Index)
-            SerializeShape(Shapes.EnterElement().EnterRecord(), Body.Shapes[Index]);
+            SerializeShape(Shapes.EnterElement().EnterRecord(), Body.Shapes[Index], Outer);
     }
 
     void SerializeConstraintSetup(FStructuredArchive::FRecord Record, FPhysicsConstraintSetup& Constraint)
@@ -149,7 +172,7 @@ void UPhysicsAsset::Serialize(FStructuredArchive::FRecord Record)
         BodySetups.SetNum(BodyCount);
 
     for (int32 Index = 0; Index < BodyCount; ++Index)
-        SerializeBodySetup(Bodies.EnterElement().EnterRecord(), BodySetups[Index]);
+        SerializeBodySetup(Bodies.EnterElement().EnterRecord(), BodySetups[Index], this);
 
     int32 ConstraintCount = Ar.IsSaving() ? ConstraintSetups.Num() : 0;
     auto Constraints = Record.EnterArray("Constraints", ConstraintCount);
@@ -215,7 +238,15 @@ bool UPhysicsAsset::ValidateAgainstSkeletalMesh(const USkeletalMesh* SkeletalMes
 
         for (const FPhysicsShapeSetup& Shape : Body.Shapes)
         {
-            if (!std::isfinite(Shape.StaticFriction) || Shape.StaticFriction < 0.0f ||
+            if (Shape.PhysicalMaterial)
+            {
+                if (!Shape.PhysicalMaterial->IsValid())
+                {
+                    OutError = "PhysicsAsset: Invalid physical material";
+                    return false;
+                }
+            }
+            else if (!std::isfinite(Shape.StaticFriction) || Shape.StaticFriction < 0.0f ||
                 !std::isfinite(Shape.DynamicFriction) || Shape.DynamicFriction < 0.0f ||
                 !std::isfinite(Shape.Restitution) || Shape.Restitution < 0.0f || Shape.Restitution > 1.0f)
             {

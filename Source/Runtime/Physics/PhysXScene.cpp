@@ -4,6 +4,7 @@
 #include "Physics/ConstraintInstance.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsTypes.h"
+#include "Physics/PhysicalMaterial.h"
 #include "Components/SceneComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -820,7 +821,7 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
             return false;
         }
 
-        physx::PxMaterial* Material = Impl->Physics->createMaterial(ShapeSetup.StaticFriction, ShapeSetup.DynamicFriction, ShapeSetup.Restitution);
+        physx::PxMaterial* Material = ShapeSetup.PhysicalMaterial ? ShapeSetup.PhysicalMaterial->CreatePhysXMaterial(Impl->Physics) : Impl->Physics->createMaterial(ShapeSetup.StaticFriction, ShapeSetup.DynamicFriction, ShapeSetup.Restitution);
 
         if (!Material)
         {

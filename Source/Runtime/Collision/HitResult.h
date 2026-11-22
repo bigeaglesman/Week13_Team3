@@ -7,49 +7,56 @@ class UPrimitiveComponent;
 
 struct FHitResult
 {
-	int32 FaceIndex; // Hitted face index
+    int32 FaceIndex = -1;
 
-	float Time; // For swept
-	float Distance = FLT_MAX;
+    float Time = 1.0f;
+    float Distance = FLT_MAX;
 
-	FVector Location = FVector(); // For swept
-	FVector ImpactPoint = FVector();
-	FVector Normal; //For swept
-	FVector ImpactNormal;
+    FVector Location = FVector();
+    FVector ImpactPoint = FVector();
+    FVector Normal = FVector();
+    FVector ImpactNormal = FVector();
 
-	FVector TraceStart;
-	FVector TraceEnd;
+    FVector TraceStart = FVector();
+    FVector TraceEnd = FVector();
 
-	float PenetrationDepth;
+    float PenetrationDepth = 0.0f;
 
-	bool bBlockingHit = false;
-	bool bStartPentrating = false;
+    bool bBlockingHit = false;
+    bool bStartPenetrating = false;
 
-	UPrimitiveComponent* HitComponent = nullptr;
+    UPrimitiveComponent* HitComponent = nullptr;
 
-	FHitResult()
-	{
-		Init();
-	}
+    FHitResult() = default;
 
-	explicit FHitResult(float InTime)
-	{
-		Init();
-		Time = InTime;
-	}
+    explicit FHitResult(float InTime)
+        : Time(InTime)
+    {
+    }
 
-	// Initailize empty hit result
-	inline void Init()
-	{
-		Time = 1.0f;		
-	}
+    void Init()
+    {
+        FaceIndex = -1;
+        Time = 1.0f;
+        Distance = FLT_MAX;
+        Location = FVector();
+        ImpactPoint = FVector();
+        Normal = FVector();
+        ImpactNormal = FVector();
+        TraceStart = FVector();
+        TraceEnd = FVector();
+        PenetrationDepth = 0.0f;
+        bBlockingHit = false;
+        bStartPenetrating = false;
+        HitComponent = nullptr;
+    }
 
-	inline void Init(FVector Start, FVector End)
-	{
-		Time = 1.0f;
-		TraceStart = Start;
-		TraceEnd = End;
-	}
+    void Init(FVector Start, FVector End)
+    {
+        Init();
+        TraceStart = Start;
+        TraceEnd = End;
+    }
 };
 
 struct FOverlapResult

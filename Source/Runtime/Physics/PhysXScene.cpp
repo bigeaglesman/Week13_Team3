@@ -265,7 +265,7 @@ void FPhysXScene::Shutdown()
 
 void FPhysXScene::ClearActors()
 {
-    if (!Impl)
+    if (!Impl || !Impl->Scene)
     {
         return;
     }
@@ -275,13 +275,15 @@ void FPhysXScene::ClearActors()
         Impl->PendingEvents.clear();
     }
 
+    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+
     for (FImpl::FJointEntry& Entry : Impl->Joints)
     {
         FConstraintInstance* Constraint = Entry.Constraint.get();
 
         if (Constraint)
         {
-            Constraint->Terminate();
+            Constraint->Terminate_NoLock();
 
             if (Entry.Owner)
             {
@@ -303,36 +305,38 @@ void FPhysXScene::ClearActors()
 
     for (physx::PxRigidActor* Actor : Impl->Actors)
     {
-        if (Actor)
+        if (!Actor)
         {
-            FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Actor->userData);
+            continue;
+        }
 
-            if (BodyInstance)
+        FBodyInstance* BodyInstance = static_cast<FBodyInstance*>(Actor->userData);
+
+        if (BodyInstance)
+        {
+            UPrimitiveComponent* Component = BodyInstance->GetOwnerComponent();
+            BodyInstance->Terminate_NoLock();
+
+            if (Component && Component->BodyInstance.get() == BodyInstance)
             {
-                UPrimitiveComponent* Component = BodyInstance->GetOwnerComponent();
-                BodyInstance->Terminate();
+                Component->BodyInstance.reset();
+            }
+            else if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
+            {
+                TArray<TUniquePtr<FBodyInstance>>& Bodies = SkeletalComponent->PhysicsBodies;
 
-                if (Component && Component->BodyInstance.get() == BodyInstance)
+                for (int32 Index = 0; Index < Bodies.Num(); ++Index)
                 {
-                    Component->BodyInstance.reset();
-                }
-                else if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
-                {
-                    TArray<TUniquePtr<FBodyInstance>>& Bodies = SkeletalComponent->PhysicsBodies;
-
-                    for (int32 Index = 0; Index < Bodies.Num(); ++Index)
+                    if (Bodies[Index].get() == BodyInstance)
                     {
-                        if(Bodies[Index].get() == BodyInstance)
-                        {
-                            Bodies.RemoveAt(Index);
-                            break;
-                        }
+                        Bodies.RemoveAt(Index);
+                        break;
                     }
                 }
             }
-
-            Actor->release();
         }
+
+        Actor->release();
     }
 
     Impl->Actors.clear();
@@ -380,31 +384,18 @@ void FPhysXScene::BindBody(physx::PxRigidDynamic* Body, UPrimitiveComponent* Com
 
 bool FPhysXScene::BindBody(physx::PxRigidDynamic* Body, USkeletalMeshComponent* Component, int32 BoneIndex)
 {
-    if (!IsInitialized() || !Body || !Component || Body->getScene() != Impl->Scene || Body->userData)
+    if (!IsInitialized())
     {
         return false;
     }
 
-    if (BoneIndex < 0 || BoneIndex >= Component->GetBones().Num())
-    {
-        return false;
-    }
-
-    auto BodyInstance = MakeUnique<FBodyInstance>();
-    BodyInstance->Initialize(Body, Impl->Scene, Component, BoneIndex);
-
-    if (!BodyInstance->IsValid())
-    {
-        return false;
-    }
-
-    Component->PhysicsBodies.Add(std::move(BodyInstance));
-    return true;
+    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+    return BindSkeletalBodyInternal_NoLock(Body, Component, BoneIndex);
 }
 
 void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
 {
-    if (!Component || !Impl)
+    if (!Component || !Impl || !Impl->Scene)
     {
         return;
     }
@@ -412,12 +403,15 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
     {
         std::lock_guard<std::mutex> Lock(Impl->EventMutex);
         auto& Events = Impl->PendingEvents;
-        Events.erase(std::remove_if(Events.begin(), Events.end(), [Component](const FImpl::FQueuedEvent& Event) {return Event.ComponentA == Component || Event.ComponentB == Component;}), Events.end());
+        Events.erase(std::remove_if(Events.begin(), Events.end(), [Component](const FImpl::FQueuedEvent& Event) { return Event.ComponentA == Component || Event.ComponentB == Component; }), Events.end());
     }
 
-    FBodyInstance* TargetInstance = Component->BodyInstance.get();
+    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
 
-    if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
+    FBodyInstance* TargetInstance = Component->BodyInstance.get();
+    USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component);
+
+    if (SkeletalComponent)
     {
         SkeletalComponent->bRagdollActive = false;
 
@@ -429,7 +423,7 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
 
                 if (Constraint)
                 {
-                    Constraint->Terminate();
+                    Constraint->Terminate_NoLock();
 
                     TArray<FConstraintInstance*>& Constraints = SkeletalComponent->PhysicsConstraints;
 
@@ -451,7 +445,6 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
             }
         }
     }
-   
 
     for (auto It = Impl->Actors.begin(); It != Impl->Actors.end();)
     {
@@ -460,9 +453,9 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
 
         if (Actor && BodyInstance && (BodyInstance == TargetInstance || BodyInstance->GetOwnerComponent() == Component))
         {
-            BodyInstance->Terminate();
+            BodyInstance->Terminate_NoLock();
 
-            if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
+            if (SkeletalComponent)
             {
                 TArray<TUniquePtr<FBodyInstance>>& Bodies = SkeletalComponent->PhysicsBodies;
 
@@ -484,9 +477,10 @@ void FPhysXScene::RemoveBodyForComponent(UPrimitiveComponent* Component)
             ++It;
         }
     }
+
     if (Component->BodyInstance)
     {
-        Component->BodyInstance->Terminate();
+        Component->BodyInstance->Terminate_NoLock();
         Component->BodyInstance.reset();
     }
 }
@@ -524,7 +518,7 @@ void FPhysXScene::SyncTransforms()
         }
 
         const physx::PxTransform Pose = Body->getGlobalPose();
-        const FTransform WorldTransform(FQuat(Pose.q.x, Pose.q.y, Pose.q.z, Pose.q.w), FVector(Pose.p.x, Pose.p.y, Pose.p.z), Component->GetWorldScale3D());
+        const FTransform WorldTransform = FPhysXTypeConverter::FromPxTransform(Pose, Component->GetWorldScale3D());
 
         Component->SetWorldTransform(WorldTransform.GetLocalMatrix(), false);
     }
@@ -588,24 +582,22 @@ void FPhysXScene::SyncTransforms()
 
             for (const TUniquePtr<FBodyInstance>& Candidate : SkeletalComponent->PhysicsBodies)
             {
-                if (Candidate && Candidate->IsValid() && Candidate->GetBoneIndex() == BoneIndex)
+                if (Candidate && Candidate->IsValid_NoLock() && Candidate->GetBoneIndex() == BoneIndex)
                 {
                     BoneBody = Candidate.get();
                     break;
                 }
             }
 
-            if (BoneBody && BoneBody->Actor->getType() == physx::PxActorType::eRIGID_DYNAMIC)
+            physx::PxRigidDynamic* DynamicBody = BoneBody ? BoneBody->GetDynamicActor_NoLock() : nullptr;
+
+            if (DynamicBody)
             {
-                const physx::PxTransform Pose = static_cast<physx::PxRigidDynamic*>(BoneBody->Actor)->getGlobalPose();
+                const physx::PxTransform Pose = DynamicBody->getGlobalPose();
 
                 const FVector PhysicsWorldScale = ParentWorld.Scale * LocalTransform.Scale;
 
-                const FTransform PhysicsWorld(
-                    FQuat(Pose.q.x, Pose.q.y, Pose.q.z, Pose.q.w),
-                    FVector(Pose.p.x, Pose.p.y, Pose.p.z),
-                    PhysicsWorldScale
-                );
+                const FTransform PhysicsWorld = FPhysXTypeConverter::FromPxTransform(Pose, PhysicsWorldScale);
 
                 LocalTransform = PhysicsWorld.GetRelativeTransform(ParentWorld);
 
@@ -736,9 +728,7 @@ physx::PxRigidDynamic* FPhysXScene::CreateDynamicBox(const FTransform& WorldTran
     if (!IsInitialized() || Density <= 0.0f || ScaledHalfExtents.X <= 0.0f || ScaledHalfExtents.Y <= 0.0f || ScaledHalfExtents.Z <= 0.0f)
         return nullptr;
 
-    const FQuat Rotation = WorldTransform.Rotation.Normalized();
-    const physx::PxQuat PxRotation(Rotation.X, Rotation.Y, Rotation.Z, Rotation.W);
-    const physx::PxTransform Pose(physx::PxVec3(WorldTransform.Location.X, WorldTransform.Location.Y, WorldTransform.Location.Z), PxRotation);
+    const physx::PxTransform Pose = FPhysXTypeConverter::ToPxTransform(WorldTransform);
 
     physx::PxRigidDynamic* Actor = Impl->Physics->createRigidDynamic(Pose);
 
@@ -910,7 +900,7 @@ bool FPhysXScene::CreateRagdollBody(const FPhysicsBodySetup& BodySetup, const FT
         physx::PxSceneWriteLock SceneLock(*Impl->Scene);
         Impl->Scene->addActor(*Actor);
 
-        if (!BindBody(Actor, Component, BoneIndex))
+        if (!BindSkeletalBodyInternal_NoLock(Actor, Component, BoneIndex))
         {
             Impl->Scene->removeActor(*Actor);
             Actor->release();
@@ -935,6 +925,8 @@ bool FPhysXScene::CreateRagdollConstraint(const FPhysicsConstraintSetup& Constra
         return false;
     }
 
+    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+
     const int32 BoneIndexA = Component->FindBoneIndex(ConstraintSetup.BoneNameA);
     const int32 BoneIndexB = Component->FindBoneIndex(ConstraintSetup.BoneNameB);
 
@@ -948,7 +940,7 @@ bool FPhysXScene::CreateRagdollConstraint(const FPhysicsConstraintSetup& Constra
 
     for (const TUniquePtr<FBodyInstance>& BodyInstance : Component->PhysicsBodies)
     {
-        if (!BodyInstance || !BodyInstance->IsValid())
+        if (!BodyInstance || !BodyInstance->IsValid_NoLock())
         {
             continue;
         }
@@ -968,14 +960,13 @@ bool FPhysXScene::CreateRagdollConstraint(const FPhysicsConstraintSetup& Constra
         return false;
     }
 
-    if (BodyInstanceA->Actor->getType() != physx::PxActorType::eRIGID_DYNAMIC ||
-        BodyInstanceB->Actor->getType() != physx::PxActorType::eRIGID_DYNAMIC)
+    physx::PxRigidDynamic* ActorA = BodyInstanceA->GetDynamicActor_NoLock();
+    physx::PxRigidDynamic* ActorB = BodyInstanceB->GetDynamicActor_NoLock();
+
+    if (!ActorA || !ActorB)
     {
         return false;
     }
-
-    physx::PxRigidDynamic* ActorA = static_cast<physx::PxRigidDynamic*>(BodyInstanceA->Actor);
-    physx::PxRigidDynamic* ActorB = static_cast<physx::PxRigidDynamic*>(BodyInstanceB->Actor);
     
     if (ActorA == ActorB || ActorA->getScene() != Impl->Scene || ActorB->getScene() != Impl->Scene)
     {
@@ -1050,7 +1041,7 @@ bool FPhysXScene::CreateRagdollConstraint(const FPhysicsConstraintSetup& Constra
     Joint->setConstraintFlag(physx::PxConstraintFlag::eCOLLISION_ENABLED, false);
 
     auto Constraint = MakeUnique<FConstraintInstance>();
-    Constraint->Initialize(Joint, Impl->Scene);
+    Constraint->Initialize_NoLock(Joint, Impl->Scene);
 
     FConstraintInstance* ConstraintPtr = Constraint.get();
 
@@ -1298,20 +1289,60 @@ bool FPhysXScene::IsInitialized() const
 
 bool FPhysXScene::BindBodyInternal(physx::PxRigidActor* Body, UPrimitiveComponent* Component)
 {
-    if (!IsInitialized() || !Body || !Component || Body->getScene() != Impl->Scene || Body->userData)
+    if (!IsInitialized())
     {
         return false;
     }
 
-    if (Component->BodyInstance && Component->BodyInstance->IsValid())
-    {
-        return false;
-    }
-
-    Component->BodyInstance.reset();
-    Component->BodyInstance = MakeUnique<FBodyInstance>();
-    Component->BodyInstance->Initialize(Body, Impl->Scene, Component);
-
-    return Component->BodyInstance->IsValid();
+    physx::PxSceneWriteLock SceneLock(*Impl->Scene);
+    return BindBodyInternal_NoLock(Body, Component);
 }
 
+bool FPhysXScene::BindBodyInternal_NoLock(physx::PxRigidActor* Body, UPrimitiveComponent* Component)
+{
+    if (!Body || !Component || Body->getScene() != Impl->Scene || Body->userData)
+    {
+        return false;
+    }
+
+    if (Component->BodyInstance)
+    {
+        if (Component->BodyInstance->IsValid_NoLock())
+        {
+            return false;
+        }
+
+        Component->BodyInstance->Terminate_NoLock();
+        Component->BodyInstance.reset();
+    }
+
+    Component->BodyInstance = MakeUnique<FBodyInstance>();
+    Component->BodyInstance->Initialize_NoLock(Body, Impl->Scene, Component);
+
+    return Component->BodyInstance->IsValid_NoLock();
+}
+
+bool FPhysXScene::BindSkeletalBodyInternal_NoLock(physx::PxRigidDynamic* Body, USkeletalMeshComponent* Component, int32 BoneIndex)
+{
+    if (!Impl || !Impl->Scene || !Body || !Component || Body->getScene() != Impl->Scene || Body->userData)
+    {
+        return false;
+    }
+
+    if (BoneIndex < 0 || BoneIndex >= Component->GetBones().Num())
+    {
+        return false;
+    }
+
+    auto BodyInstance = MakeUnique<FBodyInstance>();
+    BodyInstance->Initialize_NoLock(Body, Impl->Scene, Component, BoneIndex);
+
+    if (!BodyInstance->IsValid_NoLock())
+    {
+        BodyInstance->Terminate_NoLock();
+        return false;
+    }
+
+    Component->PhysicsBodies.Add(std::move(BodyInstance));
+    return true;
+}

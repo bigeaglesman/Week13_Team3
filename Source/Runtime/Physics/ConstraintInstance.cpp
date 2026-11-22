@@ -6,40 +6,61 @@
 
 FConstraintInstance::~FConstraintInstance()
 {
-	Terminate();
+    Terminate();
 }
 
-void FConstraintInstance::Initialize(physx::PxJoint* InJoint, physx::PxScene* InScene)
+void FConstraintInstance::Initialize_NoLock(physx::PxJoint* InJoint, physx::PxScene* InScene)
 {
-	Terminate();
+    if (!InJoint || !InScene)
+    {
+        return;
+    }
 
-	if (!InJoint || !InScene)
-	{
-		return;
-	}
+    Joint = InJoint;
+    Scene.store(InScene, std::memory_order_release);
+}
 
-	Joint = InJoint;
-	Scene = InScene;
+void FConstraintInstance::Terminate_NoLock()
+{
+    physx::PxJoint* JointToRelease = Joint;
+
+    Joint = nullptr;
+    Scene.store(nullptr, std::memory_order_release);
+
+    if (JointToRelease)
+    {
+        JointToRelease->release();
+    }
 }
 
 void FConstraintInstance::Terminate()
 {
-	if (!Joint)
-	{
-		Scene = nullptr;
-		return;
-	}
+    physx::PxScene* ScenePtr = Scene.load(std::memory_order_acquire);
 
-	if (Scene)
-	{
-		physx::PxSceneWriteLock SceneLock(*Scene);
-		Joint->release();
-	}
-	else
-	{
-		Joint->release();
-	}
+    if (ScenePtr)
+    {
+        physx::PxSceneWriteLock SceneLock(*ScenePtr);
 
-	Joint = nullptr;
-	Scene = nullptr;
+        if (Scene.load(std::memory_order_acquire) == ScenePtr)
+        {
+            Terminate_NoLock();
+        }
+
+        return;
+    }
+
+    Terminate_NoLock();
+}
+
+bool FConstraintInstance::IsValid() const
+{
+    physx::PxScene* ScenePtr = Scene.load(std::memory_order_acquire);
+
+    if (!ScenePtr)
+    {
+        return false;
+    }
+
+    physx::PxSceneReadLock SceneLock(*ScenePtr);
+    return Scene.load(std::memory_order_acquire) == ScenePtr && Joint != nullptr;
 }

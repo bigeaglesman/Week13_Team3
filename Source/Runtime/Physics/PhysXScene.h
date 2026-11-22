@@ -53,6 +53,9 @@ public:
 private:
     bool BindBodyInternal(physx::PxRigidActor* Body, UPrimitiveComponent* Component);
 
+    bool BindBodyInternal_NoLock(physx::PxRigidActor* Body, UPrimitiveComponent* Component);
+    bool BindSkeletalBodyInternal_NoLock(physx::PxRigidDynamic* Body, USkeletalMeshComponent* Component, int32 BoneIndex);
+
     struct FImpl;
     TUniquePtr<FImpl> Impl;
 };

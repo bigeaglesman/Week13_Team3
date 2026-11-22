@@ -97,7 +97,7 @@ public:
 	bool LineTraceSingle(const FRay& WorldRay, FHitResult& OutHit,
 		FBillboardTraceTransform ResolveBillboard = nullptr, const void* ViewContext = nullptr);
 	// bBlockingOnly: bBlockComponent인 도형/메시만 검사한다. 기본값은 기존 투사체 동작을 유지한다.
-	bool SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, FHitResult& OutHit, AActor* IgnoreActor = nullptr,
+	bool SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, FSweepResult& OutHit, AActor* IgnoreActor = nullptr,
 		bool bBlockingOnly = false);
 
 	void BeginPlay();

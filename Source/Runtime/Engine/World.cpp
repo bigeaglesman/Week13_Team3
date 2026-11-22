@@ -747,7 +747,7 @@ bool UWorld::SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, 
 			if (!bIntersects) continue;
 			NearestT = Enter;
 			OutHit.bBlockingHit = true;
-			OutHit.bStartPentrating = Enter == 0.0f;
+			OutHit.bStartPenetrating = Enter == 0.0f;
 			OutHit.HitComponent = Component;
 			OutHit.Distance = Enter;
 			OutHit.Time = Enter / MaxDistance;

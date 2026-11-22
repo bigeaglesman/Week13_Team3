@@ -22,8 +22,8 @@ public:
 	bool IsValid() const;
 	bool IsDynamic() const;
 
-	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent; }
-	int32 GetBoneIndex() const { return BoneIndex; }
+	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent.load(std::memory_order_acquire); }
+	int32 GetBoneIndex() const { return BoneIndex.load(std::memory_order_acquire); }
 	float GetMass() const;
 
 	FVector GetLinearVelocity() const;
@@ -41,16 +41,19 @@ public:
 
 	void SetKinematic(bool bEnable);
 	void SetGravityEnabled(bool bEnable);
+
+	bool IsStatic() const;
 private:
 	friend class FPhysXScene;
 
-	void Initialize(physx::PxRigidActor* InActor, physx::PxScene* InScene, UPrimitiveComponent* InOwnerComponent, int32 InBoneIndex = -1);
-	void Terminate();
+	void Initialize_NoLock(physx::PxRigidActor* InActor, physx::PxScene* InScene, UPrimitiveComponent* InOwnerComponent, int32 InBoneIndex = -1);
+	void Terminate_NoLock();
+	bool IsValid_NoLock() const;
 
-	physx::PxRigidDynamic* GetDynamicActor() const;
+	physx::PxRigidDynamic* GetDynamicActor_NoLock() const;
 
 	std::atomic<physx::PxScene*> Scene{ nullptr };
 	physx::PxRigidActor* Actor = nullptr;
-	UPrimitiveComponent* OwnerComponent = nullptr;
-	int32 BoneIndex = -1;
+	std::atomic<UPrimitiveComponent*> OwnerComponent{ nullptr };
+	std::atomic<int32> BoneIndex{ -1 };
 };

@@ -79,12 +79,8 @@ namespace
         if (Ar.IsLoading() && !ParseShapeType(TypeName, Shape.ShapeType))
             Ar.SetError();
 
-        if (Ar.IsLoading())
-        {
-            Shape.PhysicalMaterial = NewObject<UPhysicalMaterial>(Outer);
-        }
-
         const bool bHasPhysicalMaterial = Ar.IsSaving() && Shape.PhysicalMaterial != nullptr;
+
         if (TOptional<FStructuredArchive::FSlot> MaterialSlot = Record.TryEnterField("PhysicalMaterial", bHasPhysicalMaterial))
         {
             if (Ar.IsLoading())
@@ -92,7 +88,27 @@ namespace
                 Shape.PhysicalMaterial = NewObject<UPhysicalMaterial>(Outer);
             }
 
+            if (!Shape.PhysicalMaterial)
+            {
+                Ar.SetError();
+                return;
+            }
+
             Shape.PhysicalMaterial->Serialize(MaterialSlot.GetValue().EnterRecord());
+        }
+        else if (Ar.IsLoading())
+        {
+            Shape.PhysicalMaterial = NewObject<UPhysicalMaterial>(Outer);
+
+            if (!Shape.PhysicalMaterial)
+            {
+                Ar.SetError();
+                return;
+            }
+
+            Shape.PhysicalMaterial->StaticFriction = Shape.StaticFriction;
+            Shape.PhysicalMaterial->DynamicFriction = Shape.DynamicFriction;
+            Shape.PhysicalMaterial->Restitution = Shape.Restitution;
         }
         else if (Ar.IsLoading() && Shape.PhysicalMaterial)
         {

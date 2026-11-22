@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Types.h"
+#include <atomic>
 
 namespace physx
 {
@@ -20,9 +21,14 @@ public:
 	void Initialize(physx::PxJoint* InJoint, physx::PxScene* InScene);
 	void Terminate();
 
-	bool IsValid() const { return Joint != nullptr; }
-	physx::PxJoint* GetNativeJoint() const { return Joint; }
+	bool IsValid() const;
+
 private:
+	friend class FPhysXScene;
+
+	void Initialize_NoLock(physx::PxJoint* InJoint, physx::PxScene* InScene);
+	void Terminate_NoLock();
+
 	physx::PxJoint* Joint = nullptr;
-	physx::PxScene* Scene = nullptr;
+	std::atomic<physx::PxScene*> Scene{ nullptr };
 };

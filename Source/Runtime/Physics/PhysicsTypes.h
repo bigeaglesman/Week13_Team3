@@ -1,9 +1,13 @@
 #pragma once
 
 #include "Core/Types.h"
+#include "Math/Transform.h"
 
 namespace physx
 {
+	class PxVec3;
+	class PxQuat;
+	class PxTransform;
 	struct PxFilterData;
 }
 
@@ -26,4 +30,16 @@ struct FMaskFilter
 
 	physx::PxFilterData ToPhysX() const;
 	static FMaskFilter FromPhysX(const physx::PxFilterData& FilterData);
+};
+
+struct FPhysXTypeConverter
+{
+	static physx::PxVec3 ToPxVector(const FVector& Value);
+	static FVector FromPxVector(const physx::PxVec3& Value);
+
+	static physx::PxQuat ToPxQuat(const FQuat& Value);
+	static FQuat FromPxQuat(const physx::PxQuat& Value);
+
+	static physx::PxTransform ToPxTransform(const FTransform& Value);
+	static FTransform FromPxTransform(const physx::PxTransform& Value, const FVector& Scale = FVector(1.0f, 1.0f, 1.0f));
 };

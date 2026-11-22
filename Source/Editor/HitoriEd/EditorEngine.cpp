@@ -80,6 +80,7 @@ namespace
 #include "GameFramework/Actor/ExponentialHeightFogActor.h"
 #include "GameFramework/Character.h"
 #include "LevelSequence/LevelSequenceActor.h"
+#include "Physics/PhysicsScene.h"
 
 // 에디터 엔진을 가리키는 전역 포인터. UE의 GEditor와 같다. Init에서 채우고 PreExit에서 비운다.
 UEditorEngine* GEditor = nullptr;
@@ -704,6 +705,7 @@ void UEditorEngine::Tick(const float DeltaTime)
 					ShowFlags.Vignette = S.bShowVignette;
 					ShowFlags.CameraOverlay = S.bShowCameraOverlay;
 					ShowFlags.SkeletalMeshes = S.bShowSkeletalMesh;
+					ShowFlags.Collision = S.bShowCollision;
 				}
 			}
 		}
@@ -1175,10 +1177,22 @@ void UEditorEngine::DrawPIEDebug(UWorld* World, const FMatrix& ViewProjection)
 	const FEditorSettings& Settings = SettingsPanel->GetSettings();
 	GShowSkeletalRootDebug = Settings.bShowRootDebug;  // 런타임 "root" 라벨 표시용
 
+	FWorldContext* PIEContext = GetPIEWorldContext();
+	const bool bShowCollision = PIEContext && PIEContext->GameViewport
+		? PIEContext->GameViewport->EngineShowFlags.Collision
+		: Settings.bShowCollision;
+
 	FLineBatcher* LineBatcher = World->LineBatcher.get();
 	LineBatcher->BeginFrame();
-	if (Settings.bShowCollision)
+	if (bShowCollision)
 		DrawCollisionShapes(World, LineBatcher, nullptr);
+
+	// 디버깅용 Physic Body 렌더링 (PhysX 충돌 도형, 조인트 프레임·리밋)
+	if (FPhysicsScene* Physics = World->GetPhysicsScene())
+	{
+		Physics->SetDebugVisualization(bShowCollision);
+		Physics->DrawDebug(*LineBatcher);
+	}
 	LineBatcher->OnRender(ViewProjection);
 
 	// root는 바닥 높이라 가려지기 쉬우므로 깊이 테스트 없이 따로 그린다 (항상 위에 보임)

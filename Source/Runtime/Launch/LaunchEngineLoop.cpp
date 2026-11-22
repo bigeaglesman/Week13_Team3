@@ -27,6 +27,7 @@
 #include "Tasks/Tasks.h"
 
 #include "Render/RealtimeGPUProfiler.h"
+#include "Physics/PhysicsCore.h"
 
 #include "UObject/UObjectGlobals.h"
 
@@ -301,6 +302,9 @@ void FEngineLoop::Exit()
 	DestroyAllObjectsExceptEngine();
 	delete GEngine;
 	GEngine = nullptr;
+
+	// 모든 UWorld(= 모든 PxScene)가 사라진 다음에 PhysX 공용 객체를 내린다. (UE의 TermGamePhysCore)
+	FPhysicsCore::Get().Shutdown();
 
 	DepthBuffer.reset();
 	Swapchain.reset();

@@ -5,6 +5,7 @@
 #include "Engine/Level.h"
 #include "Camera/CameraActor.h"
 #include "Audio/AudioDevice.h"
+#include "Physics/PhysicsCore.h"
 
 #include "Serialization/JsonArchive.h"
 
@@ -14,6 +15,12 @@ bool UEngine::Init()
 {
 	// 모든 엔진 모드가 공통으로 쓰는 것만 여기서 준비한다. 월드와 뷰포트는 서브클래스의 Init이 만든다.
 	InitializeAudioDevice();          // 실패해도 엔진은 계속 (UE도 장치가 없으면 Null 디바이스로 돈다)
+
+	// PhysX 공용 객체. 실패하면 물리 씬이 만들어지지 않을 뿐 엔진은 계속 돈다. (UE의 InitGamePhysCore)
+	if (!FPhysicsCore::Get().Init())
+	{
+		HTR_LOG(Warning, "[PhysX] Init failed. Physics disabled.");
+	}
 	return true;
 }
 

@@ -24,6 +24,7 @@ class UBillboardComponent;
 class APawn;
 class APlayerController;
 class AParticleEventManager;
+class FPhysicsScene;
 
 struct FViewContext;
 
@@ -108,6 +109,8 @@ public:
 	void SetPaused(bool bPaused) { bIsPaused = bPaused; }
 
 	FScene& GetScene() { return Scene; }
+	// 게임 월드(Game/PIE)에서 BeginPlay 때 만드는 물리 씬. 없으면 nullptr. UE의 UWorld::GetPhysicsScene과 같은 자리다.
+	FPhysicsScene* GetPhysicsScene() const { return PhysicsScene.get(); }
 	FTickTaskManager& GetTickTaskManager() { return TickTaskManager; }
 	FCoroutineScheduler& GetCoroutineScheduler() { return CoroutineScheduler; }
 
@@ -142,7 +145,11 @@ private:
 	void EditorWorldTick(float DeltaTime);
 	void PreviewWorldTick(float DeltaTime);
 
+	void InitPhysicsScene();
+
 	EWorldType WorldType = EWorldType::None;
+
+	TUniquePtr<FPhysicsScene> PhysicsScene;
 
 	struct alignas(64) FGatherChunk
 	{

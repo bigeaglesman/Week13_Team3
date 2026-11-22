@@ -44,6 +44,7 @@
 
 #include "Script/LuaBindings.h"
 #include "Physics/Collision.h"
+#include "Physics/PhysicsScene.h"
 #include "Components/ShapeComponent.h"
 #include "Particles/ParticleEventManager.h"
 
@@ -74,7 +75,21 @@ UWorld::UWorld()
 
 UWorld::~UWorld()
 {
+	PhysicsScene.reset();
+}
 
+void UWorld::InitPhysicsScene()
+{
+	if (PhysicsScene)
+	{
+		return;
+	}
+
+	PhysicsScene = MakeUnique<FPhysicsScene>(this);
+	if (!PhysicsScene->IsValid())
+	{
+		PhysicsScene.reset();
+	}
 }
 
 bool UWorld::Init()
@@ -204,10 +219,23 @@ void UWorld::GameWorldTick(float DeltaTime)
 		return;
 	}
 
-	// 모든 Actor를 도는 대신 등록된 Tick 함수만 실행한다
+	// 모든 Actor를 도는 대신 등록된 Tick 함수만 실행한다.
+	// 물리는 PrePhysics 그룹과 나머지 그룹 사이에 돈다. (UE의 TG_StartPhysics ~ TG_EndPhysics 자리)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_ActorTick);
-		TickTaskManager.RunAllTickGroups(DeltaTime);
+		TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, DeltaTime);
+	}
+
+	if (PhysicsScene)
+	{
+		PhysicsScene->Tick(DeltaTime);
+	}
+
+	{
+		SCOPE_CYCLE_COUNTER(STAT_ActorTick);
+		TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, DeltaTime);
+		TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, DeltaTime);
+		TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, DeltaTime);
 	}
 
 	// 코루틴 Tick
@@ -892,6 +920,8 @@ bool UWorld::LineTraceSingle(const FRay& WorldRay, FHitResult& OutHit,
 void UWorld::BeginPlay()
 {
 	if (!IsGameWorld() || bBegunPlay) return;
+
+	InitPhysicsScene();
 
 	//TODO : PlayerPawn, PlayerController Class 설정을 GameMode로 옮겨 수정 가능하게 바꿔야 한다.
 	if (!PlayerPawn)

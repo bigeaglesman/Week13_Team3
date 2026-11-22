@@ -6,7 +6,7 @@
 
 // 바디 하나를 이루는 충돌 도형들. 위치와 회전은 바디(컴포넌트) 기준 로컬이고, 크기에는 스케일이 이미 곱해져 있다.
 // UE 4.27의 FKAggregateGeom / FKSphereElem / FKBoxElem / FKSphylElem 자리다.
-// 2단계에서는 Shape 컴포넌트가 매번 채우고, 3단계에서 UBodySetup이 이걸 에셋으로 들고 간다.
+// Shape 컴포넌트가 매번 채우고, UBodySetup이 이걸 에셋으로 들고 간다.
 
 struct FKSphereElem
 {

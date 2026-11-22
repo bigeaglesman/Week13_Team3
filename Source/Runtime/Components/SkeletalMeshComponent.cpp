@@ -18,6 +18,130 @@
 #include "Animation/BlendSpace1D.h"
 #include "Animation/BlendSpaceFile.h"
 #include "Asset/AssetManager.h"
+#include "Engine/World.h"
+#include "Physics/AggregateGeom.h"
+#include "Physics/BodySetup.h"
+#include "Physics/PhysicsAsset.h"
+#include "Physics/PhysicsAssetUtils.h"
+
+namespace
+{
+	// Physics Asset 도형은 메시 원본 단위다. 컴포넌트 월드 스케일을 곱해 실제 크기로 만든다.
+	// 캡슐·구는 비균일 스케일을 표현할 수 없어 가장 큰 축 하나로 키운다.
+	FKAggregateGeom ScaleAggregateGeom(const FKAggregateGeom& Source, float Scale)
+	{
+		FKAggregateGeom Result = Source;
+		for (FKSphereElem& Elem : Result.SphereElems)
+		{
+			Elem.Center = Elem.Center * Scale;
+			Elem.Radius *= Scale;
+		}
+		for (FKBoxElem& Elem : Result.BoxElems)
+		{
+			Elem.Center = Elem.Center * Scale;
+			Elem.HalfExtent = Elem.HalfExtent * Scale;
+		}
+		for (FKSphylElem& Elem : Result.SphylElems)
+		{
+			Elem.Center = Elem.Center * Scale;
+			Elem.Radius *= Scale;
+			Elem.Length *= Scale;
+		}
+		return Result;
+	}
+}
+
+void USkeletalMeshComponent::CreatePhysicsState()
+{
+	if (!Bodies.IsEmpty() || !BodyInstance.ShouldCreateBody())
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	FPhysicsScene* PhysicsScene = World ? World->GetPhysicsScene() : nullptr;
+	USkeletalMesh* Mesh = GetSkeletalMesh();
+	if (!PhysicsScene || !Mesh)
+	{
+		return;
+	}
+
+	// 에디터에서 만든 Physics Asset이 없으면 뼈 모양으로 자동 생성한다. 메시가 소유하므로 다음부터는 재사용된다.
+	if (!Mesh->GetPhysicsAsset())
+	{
+		Mesh->SetPhysicsAsset(FPhysicsAssetUtils::CreateFromSkeletalMesh(Mesh));
+	}
+
+	if (UPhysicsAsset* PhysicsAsset = Mesh->GetPhysicsAsset())
+	{
+		InitArticulated(PhysicsScene, PhysicsAsset);
+	}
+}
+
+void USkeletalMeshComponent::DestroyPhysicsState()
+{
+	TermArticulated();
+	Super::DestroyPhysicsState();
+}
+
+void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysicsAsset* PhysicsAsset)
+{
+	// 바디를 지금 포즈 자리에 만든다. BeginPlay 시점엔 뼈 행렬이 아직 안 만들어졌을 수 있다.
+	RefreshBoneTransformsNow();
+
+	const FVector WorldScale = GetWorldScale3D().GetAbs();
+	const float Scale = std::max({ WorldScale.X, WorldScale.Y, WorldScale.Z });
+
+	for (UBodySetup* Setup : PhysicsAsset->BodySetups)
+	{
+		if (!Setup)
+		{
+			continue;
+		}
+
+		const int32 BoneIndex = FindBoneIndex(Setup->BoneName);
+		if (BoneIndex < 0)
+		{
+			continue;
+		}
+
+		// 에셋의 기본 설정을 복사해 이 컴포넌트 전용 바디를 만든다 (UE와 같은 DefaultInstance 방식)
+		FBodyInstance* Body = new FBodyInstance(Setup->DefaultInstance);
+		Body->InstanceBoneIndex = BoneIndex;
+
+		// 시뮬레이션 없이 애니메이션 뼈를 따라가기만 한다 (키네마틱).
+		Body->bSimulatePhysics = false;
+		Body->bEnablePhysicsCollision = true;
+
+		Body->InitBody(this, ScaleAggregateGeom(Setup->AggGeom, Scale), MatrixToBodyTransform(GetBoneWorldMatrix(BoneIndex)), PhysicsScene);
+		if (Body->IsValidBodyInstance())
+		{
+			Bodies.Add(Body);
+		}
+		else
+		{
+			delete Body;
+		}
+	}
+}
+
+void USkeletalMeshComponent::TermArticulated()
+{
+	for (FBodyInstance* Body : Bodies)
+	{
+		Body->TermBody();
+		delete Body;
+	}
+	Bodies.Empty();
+}
+
+void USkeletalMeshComponent::UpdateKinematicBonesToAnim()
+{
+	for (FBodyInstance* Body : Bodies)
+	{
+		Body->SetBodyTransform(MatrixToBodyTransform(GetBoneWorldMatrix(Body->InstanceBoneIndex)));
+	}
+}
 
 void USkeletalMeshComponent::SetAnimInstance(UAnimInstance* InInstance)
 {
@@ -102,6 +226,9 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
         bUpdatingAnimation = false;
 	}
 	Super::TickComponent(DeltaTime);
+
+	// 뼈 행렬이 갱신된 뒤에 바디를 옮긴다. PrePhysics 틱이라 이번 프레임 simulate에 반영된다.
+	UpdateKinematicBonesToAnim();
 }
 
 const TArray<FBoneInfo>& USkeletalMeshComponent::GetBones() const

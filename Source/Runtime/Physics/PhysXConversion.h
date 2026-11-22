@@ -6,10 +6,12 @@
 #include <foundation/PxVec3.h>
 #include <foundation/PxQuat.h>
 #include <foundation/PxTransform.h>
+#include <foundation/PxMat33.h>
 
 #include "Math/Vector.h"
 #include "Math/Quat.h"
 #include "Math/Transform.h"
+#include "Math/Matrix.h"
 
 inline physx::PxVec3 ToPx(const FVector& V)            { return physx::PxVec3(V.X, V.Y, V.Z); }
 inline FVector       ToFVector(const physx::PxVec3& V) { return FVector(V.x, V.y, V.z); }
@@ -26,4 +28,17 @@ inline physx::PxTransform ToPx(const FTransform& T)
 inline FTransform ToFTransform(const physx::PxTransform& T, const FVector& Scale = FVector(1.0f, 1.0f, 1.0f))
 {
 	return FTransform(ToFQuat(T.q), ToFVector(T.p), Scale);
+}
+
+// 행렬(뼈 월드 행렬 등) → 위치 + 회전. 축 길이(스케일)는 버린다.
+// 엔진 FMatrix는 row-vector라 M[0..2]행이 X·Y·Z축, M[3]행이 위치다. PxMat33은 열이 축이다.
+inline physx::PxTransform ToPxNoScale(const FMatrix& M)
+{
+	physx::PxVec3 X(M.M[0][0], M.M[0][1], M.M[0][2]);
+	physx::PxVec3 Y(M.M[1][0], M.M[1][1], M.M[1][2]);
+	physx::PxVec3 Z(M.M[2][0], M.M[2][1], M.M[2][2]);
+	X.normalize();
+	Y.normalize();
+	Z.normalize();
+	return physx::PxTransform(physx::PxVec3(M.M[3][0], M.M[3][1], M.M[3][2]), physx::PxQuat(physx::PxMat33(X, Y, Z)).getNormalized());
 }

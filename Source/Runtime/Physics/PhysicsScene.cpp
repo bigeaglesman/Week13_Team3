@@ -37,8 +37,8 @@ FPhysicsScene::FPhysicsScene(UWorld* InOwner)
 	PxSceneDesc Desc(Physics->getTolerancesScale());
 	Desc.gravity       = PxVec3(0.0f, 0.0f, -9.81f);   // Z-up, m/s²
 	Desc.cpuDispatcher = Core.GetDispatcher();
-	Desc.filterShader  = PxDefaultSimulationFilterShader;   // 4단계에서 엔진 필터 셰이더로 교체
-	Desc.flags |= PxSceneFlag::eENABLE_ACTIVE_ACTORS;        // 움직인 액터만 동기화 (2단계)
+	Desc.filterShader  = PxDefaultSimulationFilterShader;
+	Desc.flags |= PxSceneFlag::eENABLE_ACTIVE_ACTORS;        // 움직인 액터만 동기화
 	Desc.flags |= PxSceneFlag::eENABLE_CCD;
 	Desc.flags |= PxSceneFlag::eENABLE_PCM;
 

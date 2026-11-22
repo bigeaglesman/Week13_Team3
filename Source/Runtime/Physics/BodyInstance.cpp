@@ -16,6 +16,11 @@ namespace
 	const PxQuat CapsuleXToZ(-PxHalfPi, PxVec3(0.0f, 1.0f, 0.0f));
 }
 
+FTransform MatrixToBodyTransform(const FMatrix& Matrix)
+{
+	return ToFTransform(ToPxNoScale(Matrix));
+}
+
 void FBodyInstance::InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom& Geom, const FTransform& WorldTransform, FPhysicsScene* Scene)
 {
 	if (RigidActor || !InOwner || !Scene || !Scene->IsValid() || Geom.IsEmpty())
@@ -64,7 +69,7 @@ void FBodyInstance::InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom
 		Dynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	}
 
-	// PxActor → FBodyInstance 역참조. 동기화 때 이걸로 컴포넌트를 찾는다. (4단계에서 FPhysicsUserData로 바꾼다)
+	// PxActor → FBodyInstance 역참조. 동기화 때 이걸로 컴포넌트를 찾는다.
 	Dynamic->userData = this;
 	Scene->GetPxScene()->addActor(*Dynamic);
 
@@ -100,7 +105,7 @@ void FBodyInstance::SetBodyTransform(const FTransform& WorldTransform)
 
 void FBodyInstance::SyncComponentToBody()
 {
-	if (!RigidActor || !OwnerComponent || !bSimulatePhysics)
+	if (!RigidActor || !OwnerComponent || !bSimulatePhysics || InstanceBoneIndex >= 0)
 	{
 		return;
 	}

@@ -122,12 +122,13 @@ public:
 	FBodyInstance BodyInstance;
 
 	// 물리 바디의 도형. 도형이 없는 컴포넌트는 false를 돌려 바디를 만들지 않는다.
-	// 2단계: Shape 컴포넌트가 채운다. 3단계: UBodySetup에서 가져온다.
+	// Shape 컴포넌트는 자기 크기로 채운다. 스켈레탈 메시는 이걸 쓰지 않고 UBodySetup의 도형으로 뼈마다 바디를 만든다.
 	virtual bool GetBodyGeometry(FKAggregateGeom& OutGeom) const { return false; }
 
 	// BeginPlay에서 만들고 OnUnregister에서 지운다. 물리 씬은 게임 월드에만 있다. (UE의 OnCreatePhysicsState)
-	void CreatePhysicsState();
-	void DestroyPhysicsState();
+	// 스켈레탈 메시는 바디 하나 대신 뼈마다 바디를 만들도록 덮어쓴다.
+	virtual void CreatePhysicsState();
+	virtual void DestroyPhysicsState();
 
 protected:
 	virtual void OnUnregister() override;

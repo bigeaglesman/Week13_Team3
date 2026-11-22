@@ -49,12 +49,19 @@ struct FBodyInstance
 	void SetBodyTransform(const FTransform& WorldTransform);
 
 	// 바디 → 컴포넌트. FPhysicsScene이 움직인 액터에 대해서만 부른다.
+	// 뼈 바디는 건너뛴다. 뼈 결과는 스켈레탈 메시 컴포넌트가 따로 가져간다 (UE의 BlendPhysicsBones).
 	void SyncComponentToBody();
 
 	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent; }
 	physx::PxRigidActor* GetPxRigidActor() const { return RigidActor; }
 
+	// 스켈레탈 메시의 뼈 바디면 뼈 인덱스, 아니면 -1. UE의 InstanceBoneIndex
+	int32 InstanceBoneIndex = -1;
+
 private:
 	UPrimitiveComponent* OwnerComponent = nullptr;
 	physx::PxRigidActor* RigidActor = nullptr;
 };
+
+// 행렬(뼈 월드 행렬 등)에서 바디 포즈용 위치 + 회전만 뽑는다. 스케일은 버린다.
+FTransform MatrixToBodyTransform(const FMatrix& Matrix);

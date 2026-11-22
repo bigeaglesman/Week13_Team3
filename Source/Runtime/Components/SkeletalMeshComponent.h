@@ -9,6 +9,8 @@ class UAnimSequence;
 class UBlendSpace1D;
 class UWorld;
 class FLineBatcher;
+class FPhysicsScene;
+class UPhysicsAsset;
 
 // World의 SkeletalMeshComponent마다 root 디버그를 그린다 (DrawCollisionShapes와 같은 방식). PIE의 Show Root에서 호출
 void DrawSkeletalRootDebug(UWorld* World, FLineBatcher* LineBatcher);
@@ -75,7 +77,21 @@ public:
 	// 디버그: root 본 구체 + 액터 위치(root 높이)에서 root까지의 선
 	void DrawRootDebug(FLineBatcher* LineBatcher) const;
 
+	// ---- 물리 (래그돌) ----
+	// BodyInstance의 bEnablePhysicsCollision 또는 bSimulatePhysics가 켜져 있으면 바디 하나 대신 Physics Asset대로 뼈마다 바디를 만든다.
+	// 메시에 Physics Asset이 없으면 뼈 모양으로 자동 생성해 붙인다.
+	virtual void CreatePhysicsState() override;
+	virtual void DestroyPhysicsState() override;
+	const TArray<FBodyInstance*>& GetBodies() const { return Bodies; }
+
 protected:
+	// UE의 InitArticulated / TermArticulated
+	void InitArticulated(FPhysicsScene* PhysicsScene, UPhysicsAsset* PhysicsAsset);
+	void TermArticulated();
+
+	// 뼈 바디를 지금 애니메이션 포즈로 옮긴다 (키네마틱). UE의 UpdateKinematicBonesToAnim
+	void UpdateKinematicBonesToAnim();
+
 	// 단일 애니메이션 에셋 경로/루프/재생 속도를 씬에 저장·복원한다 (Serialize에서 부른다)
 	void SerializeSingleAnimation(FStructuredArchive::FRecord& Record);
 
@@ -98,4 +114,7 @@ private:
 
 	FTransform PendingRootMotion;           // 월드 공간 누적값
 	bool bHasPendingRootMotion = false;
+
+	// 뼈마다의 런타임 바디. Physics Asset의 BodySetups 순서와 다를 수 있다 (뼈를 못 찾은 바디는 빠진다). UE의 Bodies
+	TArray<FBodyInstance*> Bodies;
 };

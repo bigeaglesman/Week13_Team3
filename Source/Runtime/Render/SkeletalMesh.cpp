@@ -2,6 +2,23 @@
 #include "SkeletalMesh.h"
 #include "Render/RenderCommand.h"
 #include "Asset/AssetManager.h"
+#include "Physics/PhysicsAsset.h"
+
+USkeletalMesh::~USkeletalMesh()
+{
+	delete PhysicsAsset;
+	PhysicsAsset = nullptr;
+}
+
+void USkeletalMesh::SetPhysicsAsset(UPhysicsAsset* InPhysicsAsset)
+{
+	if (PhysicsAsset == InPhysicsAsset)
+	{
+		return;
+	}
+	delete PhysicsAsset;
+	PhysicsAsset = InPhysicsAsset;
+}
 
 namespace
 {

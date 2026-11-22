@@ -11,6 +11,8 @@
 #include <vector>
 #include "SkeletalMesh.generated.h"
 
+class UPhysicsAsset;
+
 struct FSkeletalMeshLODRenderData
 {
 	TArray<FVertex> BindVertices;
@@ -36,7 +38,15 @@ class USkeletalMesh : public URenderAsset
 {
 	GENERATED_BODY()
 public:
+	USkeletalMesh() = default;
+	virtual ~USkeletalMesh();
+
 	bool Build(FSkeletalMeshData&& ImportData, FString& OutError);
+
+	// 래그돌용 바디·관절 설계도. 메시가 소유한다. 아직 없으면 nullptr (UE의 USkeletalMesh::PhysicsAsset)
+	UPhysicsAsset* GetPhysicsAsset() const { return PhysicsAsset; }
+	// 소유권을 넘겨받는다. 기존 에셋은 지운다.
+	void SetPhysicsAsset(UPhysicsAsset* InPhysicsAsset);
 
 	const TArray<FBoneInfo>& GetRefSkeleton() const { return RefSkeleton; }
 	int32 GetNumBones() const { return RefSkeleton.Num(); }
@@ -57,6 +67,7 @@ private:
 	TArray<FSkeletalMaterialSlot> MaterialSlots;
 	TArray<UMaterial*> Materials;
 	FSkeletalMeshRenderData RenderData;
+	UPhysicsAsset* PhysicsAsset = nullptr;
 	// UStaticMesh와 같은 캐시: 같은 머티리얼 조합의 컴포넌트끼리 섹션 목록 공유
 	TMap<TArray<UMaterial*>, TWeakPtr<const FMeshRenderState>, FMaterialSlotsHash> RenderStates;
 };

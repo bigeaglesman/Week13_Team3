@@ -94,7 +94,7 @@ void UPrimitiveComponent::OnTransformDirty()
 	if (SceneProxy)
 		SceneProxy->GetScene()->MarkDirty(SceneProxy);
 
-	if (IsPhysicsStateCreated())
+	if (!bUpdatingFromPhysics && IsPhysicsStateCreated())
 	{
 		const FVector CurrentScale = GetWorldScale3D().GetAbs();
 		if ((CurrentScale - CachedBodyScale).SizeSquared() > SMALL_NUMBER)
@@ -121,6 +121,14 @@ void UPrimitiveComponent::PostEditChangeProperty(const FProperty& Property)
 		Property.Name == "TranslucencySortPriority")
 	{
 		MarkRenderStateDirty();
+	}
+	else if (Property.Name == "bSimulatePhysics" ||
+		Property.Name == "bEnableGravity" ||
+		Property.Name == "MassInKg" ||
+		Property.Name == "LinearDamping" ||
+		Property.Name == "AngularDamping")
+	{
+		RecreatePhysicsState();
 	}
 }
 
@@ -171,6 +179,12 @@ void UPrimitiveComponent::OnCreatePhysicsState()
 		return;
 	}
 
+	BodyInstance.bSimulatePhysics = bSimulatePhysics;
+	BodyInstance.bEnableGravity = bEnableGravity;
+	BodyInstance.MassInKg = MassInKg;
+	BodyInstance.LinearDamping = LinearDamping;
+	BodyInstance.AngularDamping = AngularDamping;
+
 	BodyInstance.InitBody(ShapeDesc, GetWorldTransform(), this, PhysScene);
 }
 
@@ -178,6 +192,46 @@ void UPrimitiveComponent::OnDestroyPhysicsState()
 {
 	BodyInstance.TermBody();
 	Super::OnDestroyPhysicsState();
+}
+
+void UPrimitiveComponent::SetSimulatePhysics(bool bSimulate)
+{
+	if (bSimulatePhysics == bSimulate)
+	{
+		return;
+	}
+
+	bSimulatePhysics = bSimulate;
+	if (IsPhysicsStateCreated())
+	{
+		RecreatePhysicsState();
+	}
+}
+
+bool UPrimitiveComponent::IsSimulatingPhysics() const
+{
+	return BodyInstance.IsInstanceSimulatingPhysics();
+}
+
+void UPrimitiveComponent::SetEnableGravity(bool bGravityEnabled)
+{
+	bEnableGravity = bGravityEnabled;
+	BodyInstance.SetEnableGravity(bGravityEnabled);
+}
+
+void UPrimitiveComponent::SyncComponentToRBPhysics()
+{
+	if (!BodyInstance.IsInstanceSimulatingPhysics())
+	{
+		return;
+	}
+
+	const FTransform PhysicsTransform = BodyInstance.GetUnrealWorldTransform();
+	ComponentVelocity = BodyInstance.GetUnrealWorldVelocity();
+
+	bUpdatingFromPhysics = true;
+	SetWorldLocationAndRotation(PhysicsTransform.Location, PhysicsTransform.Rotation, false);
+	bUpdatingFromPhysics = false;
 }
 
 bool UPrimitiveComponent::TraceMesh(const FRay& WorldRay, const FStaticMeshData& Mesh, const FMatrix& WorldMatrix, FHitResult& OutResult)

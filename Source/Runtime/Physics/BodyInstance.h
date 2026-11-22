@@ -61,12 +61,27 @@ public:
 	// 컴포넌트의 월드 Transform 변경을 PhysX Actor에 반영한다.
 	void SetBodyTransform(const FTransform& NewTransform);
 
+	// PhysX Actor의 현재 월드 Transform과 선형 속도를 엔진 좌표계로 반환한다.
+	FTransform GetUnrealWorldTransform() const;
+	FVector GetUnrealWorldVelocity() const;
+
 	bool IsValidBodyInstance() const { return RigidActor != nullptr; }
+	bool IsInstanceSimulatingPhysics() const;
+	void SetEnableGravity(bool bGravityEnabled);
+
 	physx::PxRigidActor* GetPxRigidActor() const { return RigidActor; }
 	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent; }
 
+public:
+	// InitBody 호출 전에 소유 컴포넌트가 채워 넣는 시뮬레이션 설정
+	bool bSimulatePhysics = false;
+	bool bEnableGravity = true;
+	float MassInKg = 1.0f;
+	float LinearDamping = 0.01f;
+	float AngularDamping = 0.05f;
+
 private:
-	// 4단계에서는 PxRigidStatic을 담고, 5단계에서 PxRigidDynamic도 같은 공통 부모 포인터로 다룬다.
+	// PxRigidStatic / PxRigidDynamic 공통 부모 포인터
 	physx::PxRigidActor* RigidActor = nullptr;
 	UPrimitiveComponent* OwnerComponent = nullptr;
 };

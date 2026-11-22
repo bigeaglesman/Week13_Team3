@@ -84,12 +84,29 @@ void FBodyInstance::InitBody(
 		return;
 	}
 
-	// 4단계에서는 모든 충돌체를 Static 액터로 생성한다.
-	PxRigidStatic* StaticActor = GPhysXSDK->createRigidStatic(U2PTransform(WorldTransform));
-	if (!StaticActor)
+	const PxTransform InitialPose = U2PTransform(WorldTransform);
+	PxRigidActor* NewActor = nullptr;
+	PxRigidDynamic* DynamicActor = nullptr;
+
+	if (bSimulatePhysics)
 	{
-		HTR_LOG(Error, "[PhysX] createRigidStatic failed");
-		return;
+		DynamicActor = GPhysXSDK->createRigidDynamic(InitialPose);
+		if (!DynamicActor)
+		{
+			HTR_LOG(Error, "[PhysX] createRigidDynamic failed");
+			return;
+		}
+		NewActor = DynamicActor;
+	}
+	else
+	{
+		PxRigidStatic* StaticActor = GPhysXSDK->createRigidStatic(InitialPose);
+		if (!StaticActor)
+		{
+			HTR_LOG(Error, "[PhysX] createRigidStatic failed");
+			return;
+		}
+		NewActor = StaticActor;
 	}
 
 	// Exclusive Shape로 생성(액터 전용)하고, 로컬 포즈와 userData를 설정한다.
@@ -97,7 +114,7 @@ void FBodyInstance::InitBody(
 	if (!Shape)
 	{
 		HTR_LOG(Error, "[PhysX] createShape failed");
-		StaticActor->release();
+		NewActor->release();
 		return;
 	}
 
@@ -105,14 +122,23 @@ void FBodyInstance::InitBody(
 	Shape->userData = InOwnerComp;
 
 	// attachShape가 참조 카운트를 올리므로, 여기서 로컬 참조를 release해야 Actor 해제 시 Shape도 함께 해제된다.
-	StaticActor->attachShape(*Shape);
+	NewActor->attachShape(*Shape);
 	Shape->release();
 
-	StaticActor->userData = InOwnerComp;
+	if (DynamicActor)
+	{
+		// Shape가 붙은 뒤에 호출해야 도형 크기와 LocalPose를 반영해 정확한 관성 텐서와 무게중심이 계산된다.
+		PxRigidBodyExt::setMassAndUpdateInertia(*DynamicActor, std::max(MassInKg, 0.001f));
+		DynamicActor->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, !bEnableGravity);
+		DynamicActor->setLinearDamping(std::max(LinearDamping, 0.0f));
+		DynamicActor->setAngularDamping(std::max(AngularDamping, 0.0f));
+	}
 
-	InPhysScene->GetPxScene()->addActor(*StaticActor);
+	NewActor->userData = InOwnerComp;
 
-	RigidActor = StaticActor;
+	InPhysScene->GetPxScene()->addActor(*NewActor);
+
+	RigidActor = NewActor;
 	OwnerComponent = InOwnerComp;
 }
 
@@ -141,4 +167,59 @@ void FBodyInstance::SetBodyTransform(const FTransform& NewTransform)
 	}
 
 	RigidActor->setGlobalPose(U2PTransform(NewTransform));
+}
+
+FTransform FBodyInstance::GetUnrealWorldTransform() const
+{
+	if (!RigidActor)
+	{
+		return FTransform::Identity;
+	}
+
+	return P2UTransform(RigidActor->getGlobalPose());
+}
+
+FVector FBodyInstance::GetUnrealWorldVelocity() const
+{
+	if (!RigidActor)
+	{
+		return FVector::ZeroVector;
+	}
+
+	if (const PxRigidDynamic* DynamicActor = RigidActor->is<PxRigidDynamic>())
+	{
+		return P2UVector(DynamicActor->getLinearVelocity());
+	}
+
+	return FVector::ZeroVector;
+}
+
+bool FBodyInstance::IsInstanceSimulatingPhysics() const
+{
+	if (!RigidActor)
+	{
+		return false;
+	}
+
+	const PxRigidDynamic* DynamicActor = RigidActor->is<PxRigidDynamic>();
+	if (!DynamicActor)
+	{
+		return false;
+	}
+
+	return !(DynamicActor->getRigidBodyFlags() & PxRigidBodyFlag::eKINEMATIC);
+}
+
+void FBodyInstance::SetEnableGravity(bool bGravityEnabled)
+{
+	bEnableGravity = bGravityEnabled;
+
+	if (PxRigidDynamic* DynamicActor = RigidActor ? RigidActor->is<PxRigidDynamic>() : nullptr)
+	{
+		DynamicActor->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, !bEnableGravity);
+		if (bEnableGravity)
+		{
+			DynamicActor->wakeUp();
+		}
+	}
 }

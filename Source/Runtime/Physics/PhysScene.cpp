@@ -2,9 +2,11 @@
 #include "Physics/PhysScene.h"
 #include "Physics/PhysicsCore.h"
 #include "Physics/PhysXPublic.h"
+#include "Components/PrimitiveComponent.h"
 
 #include <PxPhysicsAPI.h>
 #include <algorithm>
+#include <unordered_set>
 
 using namespace physx;
 
@@ -62,11 +64,35 @@ void FPhysScene::Tick(float DeltaTime)
 	// 브레이크포인트나 프레임 드랍 직후 거대한 DeltaTime이 들어와도 폭주하지 않게 자른다.
 	Accumulator += std::min(DeltaTime, MaxFrameDeltaTime);
 
+	std::unordered_set<UPrimitiveComponent*> ComponentsToSync;
+
 	int32 Steps = 0;
 	while (Accumulator >= FixedDeltaTime && Steps < MaxSubSteps)
 	{
 		PxSceneInstance->simulate(FixedDeltaTime);
 		PxSceneInstance->fetchResults(true);
+
+		// 직전 스텝에서 움직인 Dynamic 액터를 모아 둔다.
+		// (앞 스텝에서 움직였다가 다음 스텝에서 Sleep 상태가 된 액터도 놓치지 않기 위해 매 스텝 수집)
+		PxU32 NumActiveActors = 0;
+		PxActor** ActiveActors = PxSceneInstance->getActiveActors(NumActiveActors);
+		for (PxU32 i = 0; i < NumActiveActors; ++i)
+		{
+			PxRigidDynamic* DynamicActor = ActiveActors[i]->is<PxRigidDynamic>();
+			if (!DynamicActor)
+			{
+				continue;
+			}
+			if (DynamicActor->getRigidBodyFlags() & PxRigidBodyFlag::eKINEMATIC)
+			{
+				continue;
+			}
+
+			if (UPrimitiveComponent* Comp = static_cast<UPrimitiveComponent*>(DynamicActor->userData))
+			{
+				ComponentsToSync.insert(Comp);
+			}
+		}
 
 		Accumulator -= FixedDeltaTime;
 		++Steps;
@@ -76,5 +102,11 @@ void FPhysScene::Tick(float DeltaTime)
 	if (Steps == MaxSubSteps && Accumulator >= FixedDeltaTime)
 	{
 		Accumulator = 0.0f;
+	}
+
+	// 수집한 Dynamic 컴포넌트들의 최종 Transform과 속도를 프레임당 한 번만 엔진에 반영한다.
+	for (UPrimitiveComponent* Comp : ComponentsToSync)
+	{
+		Comp->SyncComponentToRBPhysics();
 	}
 }

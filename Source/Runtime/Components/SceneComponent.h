@@ -43,6 +43,7 @@ public:
 		MarkTransformDirty();
 	}
 	void SetRelativeLocationAndRotation(const FVector& NewLocation, const FRotator& NewRotation);
+	void SetRelativeLocationAndRotation(const FVector& NewLocation, const FQuat& NewRotation);
 	const FVector& GetRelativeScale3D() const { return Transform.Scale; }
 	void SetRelativeScale3D(const FVector& InScale) 
 	{
@@ -79,6 +80,7 @@ public:
 	void SetWorldLocation(FVector NewLocation, bool bSweep);
 	void SetWorldRotation(FRotator NewRotation, bool bSweep);
 	void SetWorldLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep);
+	void SetWorldLocationAndRotation(const FVector& NewLocation, const FQuat& NewRotation, bool bSweep = false);
 	void SetWorldScale3D(FVector NewScale);	
 	void SetWorldTransform(const FMatrix& InWorldMatrix, bool bSweep);
 

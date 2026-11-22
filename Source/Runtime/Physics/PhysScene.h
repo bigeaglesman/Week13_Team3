@@ -3,6 +3,9 @@
 #include "Core/Types.h"
 
 class UWorld;
+class AActor;
+struct FVector;
+struct FHitResult;
 
 namespace physx
 {
@@ -21,6 +24,24 @@ public:
 
 	// 고정 timestep 누적기로 PhysX 시뮬레이션을 진행한다 (Game/PIE 월드에서만 호출).
 	void Tick(float DeltaTime);
+
+	// PhysX Scene Query (단일 레이캐스트 / 단일 구체 스윕). UnitDir는 정규화된 방향 벡터여야 한다.
+	bool RaycastSingle(
+		const FVector& Origin,
+		const FVector& UnitDir,
+		float MaxDistance,
+		FHitResult& OutHit,
+		AActor* IgnoreActor = nullptr,
+		bool bBlockingOnly = false) const;
+
+	bool SweepSphereSingle(
+		const FVector& Origin,
+		const FVector& UnitDir,
+		float MaxDistance,
+		float Radius,
+		FHitResult& OutHit,
+		AActor* IgnoreActor = nullptr,
+		bool bBlockingOnly = false) const;
 
 	physx::PxScene* GetPxScene() const { return PxSceneInstance; }
 	UWorld* GetOwningWorld() const { return OwningWorld; }

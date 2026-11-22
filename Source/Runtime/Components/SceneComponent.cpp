@@ -45,6 +45,13 @@ void USceneComponent::SetRelativeLocationAndRotation(const FVector& NewLocation,
 	MarkTransformDirty();
 }
 
+void USceneComponent::SetRelativeLocationAndRotation(const FVector& NewLocation, const FQuat& NewRotation)
+{
+	Transform.Location = NewLocation;
+	Transform.Rotation = NewRotation;
+	MarkTransformDirty();
+}
+
 void USceneComponent::PostEditChangeProperty(const FProperty& Property)
 {
 	Super::PostEditChangeProperty(Property);
@@ -295,6 +302,20 @@ void USceneComponent::SetWorldLocationAndRotation(FVector NewLocation, FRotator 
 
 		FQuat NewRelQuat = GetAttachParent()->GetWorldRotation().Quaternion().Inverse() * NewRelRotation.Quaternion();
 		NewRelRotation = NewRelQuat.ToFRotator();
+	}
+
+	SetRelativeLocationAndRotation(NewRelLocation, NewRelRotation);
+}
+
+void USceneComponent::SetWorldLocationAndRotation(const FVector& NewLocation, const FQuat& NewRotation, bool bSweep)
+{
+	FVector NewRelLocation = NewLocation;
+	FQuat NewRelRotation = NewRotation;
+
+	if (GetAttachParent() != nullptr)
+	{
+		NewRelLocation = GetAttachParent()->GetWorldMatrix().Inverse().TransformPosition(NewRelLocation);
+		NewRelRotation = GetAttachParent()->GetWorldRotationQuat().Inverse() * NewRelRotation;
 	}
 
 	SetRelativeLocationAndRotation(NewRelLocation, NewRelRotation);

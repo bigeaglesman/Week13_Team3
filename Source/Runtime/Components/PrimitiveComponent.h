@@ -116,6 +116,26 @@ public:
 	void EndComponentOverlap(UPrimitiveComponent* OtherComp);
 	void DispatchHit(UPrimitiveComponent* OtherComp);
 
+	// ---- 물리 시뮬레이션 설정 ----
+	UPROPERTY(EditAnywhere)
+	bool bSimulatePhysics = false;
+	UPROPERTY(EditAnywhere)
+	bool bEnableGravity = true;
+	UPROPERTY(EditAnywhere)
+	float MassInKg = 1.0f;
+	UPROPERTY(EditAnywhere)
+	float LinearDamping = 0.01f;
+	UPROPERTY(EditAnywhere)
+	float AngularDamping = 0.05f;
+
+	void SetSimulatePhysics(bool bSimulate);
+	bool IsSimulatingPhysics() const;
+	void SetEnableGravity(bool bGravityEnabled);
+	bool IsGravityEnabled() const { return bEnableGravity; }
+
+	// PhysX 시뮬레이션 결과(위치·회전·속도)를 이 컴포넌트의 Transform에 반영한다.
+	void SyncComponentToRBPhysics();
+
 	FBodyInstance BodyInstance;
 	FBodyInstance* GetBodyInstance() { return &BodyInstance; }
 	const FBodyInstance* GetBodyInstance() const { return &BodyInstance; }
@@ -144,4 +164,5 @@ private:
 	friend class FScene;
 	FPrimitiveSceneProxy* SceneProxy = nullptr;
 	FVector CachedBodyScale = FVector::OneVector;
+	bool bUpdatingFromPhysics = false;
 };

@@ -70,11 +70,16 @@ void UPrimitiveComponent::CreatePhysicsBody()
 		BodyInstance.InitBody(Setup, GetWorldLocation(), GetWorldRotation().Quaternion(), GetWorldScale3D(), bSimulatePhysics, this, World->GetPhysicsScene());
 }
 
+void UPrimitiveComponent::DestroyPhysicsBody()
+{
+	BodyInstance.TermBody();
+}
+
 void UPrimitiveComponent::OnUnregister()
 {
 	Super::OnUnregister();
 
-	BodyInstance.TermBody();
+	DestroyPhysicsBody();
 
 	// 삭제/등록 해제된 도형을 상대의 OverlapInfos에 남기지 않는다.
 	while (!OverlapInfos.IsEmpty())

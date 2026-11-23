@@ -83,7 +83,14 @@ protected:
 	void RefreshBoneTransforms() override;
 	void OnSkeletalMeshChanged() override;
 
+	// UE InitArticulated / TermArticulated. PhysicsAsset의 본마다 Dynamic 바디를 만든다
+	void CreatePhysicsBody() override;
+	void DestroyPhysicsBody() override;
+
 private:
+	// UE BlendInPhysics. 바디의 월드 Transform을 본 로컬 Transform으로 되돌려 포즈로 쓴다
+	void ApplyPhysicsPose();
+
     UPROPERTY()
     FString AnimBlueprintPath;
 
@@ -96,6 +103,9 @@ private:
 	UAnimInstance* AnimInstance = nullptr;
 
 	TArray<FTransform> BoneSpaceTransforms;
+
+	// userData가 FBodyInstance 주소를 가리키므로 배열이 늘어나도 주소가 바뀌지 않게 따로 할당한다
+	TArray<FBodyInstance*> Bodies;
 
 	FTransform PendingRootMotion;           // 월드 공간 누적값
 	bool bHasPendingRootMotion = false;

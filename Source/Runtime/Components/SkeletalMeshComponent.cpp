@@ -18,6 +18,10 @@
 #include "Animation/BlendSpace1D.h"
 #include "Animation/BlendSpaceFile.h"
 #include "Asset/AssetManager.h"
+#include "Physics/PhysicsAsset.h"
+#include "Physics/BodySetup.h"
+#include "Physics/PhysScene.h"
+#include "Engine/World.h"
 
 void USkeletalMeshComponent::SetAnimInstance(UAnimInstance* InInstance)
 {
@@ -75,6 +79,14 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
         bBlueprintReloadRequested = false;
         ReloadAnimBlueprint();
     }
+
+	// 래그돌 중에는 애니메이션 대신 물리 결과가 포즈를 정한다
+	if (!Bodies.IsEmpty())
+	{
+		ApplyPhysicsPose();
+		Super::TickComponent(DeltaTime);
+		return;
+	}
 
 	if (AnimInstance && GetSkeletalMesh())
 	{
@@ -159,20 +171,111 @@ FMatrix USkeletalMeshComponent::GetBoneWorldMatrix(int32 BoneIndex) const
 	return GetBoneComponentMatrix(BoneIndex) * GetWorldMatrix();
 }
 
-FTransform USkeletalMeshComponent::GetBoneWorldTransform(int32 BoneIndex) const
+namespace
 {
 	// USceneComponent::SetWorldTransform과 같은 방식으로 행렬을 위치, 회전, 스케일로 나눈다
-	const FMatrix M = GetBoneWorldMatrix(BoneIndex);
-	const FVector XAxis(M[0][0], M[0][1], M[0][2]);
-	const FVector YAxis(M[1][0], M[1][1], M[1][2]);
-	const FVector ZAxis(M[2][0], M[2][1], M[2][2]);
+	FTransform MatrixToTransform(const FMatrix& M)
+	{
+		const FVector XAxis(M[0][0], M[0][1], M[0][2]);
+		const FVector YAxis(M[1][0], M[1][1], M[1][2]);
+		const FVector ZAxis(M[2][0], M[2][1], M[2][2]);
 
-	FMatrix RotationMatrix = FMatrix::Identity;
-	RotationMatrix.SetAxis(0, XAxis.Normalized());
-	RotationMatrix.SetAxis(1, YAxis.Normalized());
-	RotationMatrix.SetAxis(2, ZAxis.Normalized());
+		FMatrix RotationMatrix = FMatrix::Identity;
+		RotationMatrix.SetAxis(0, XAxis.Normalized());
+		RotationMatrix.SetAxis(1, YAxis.Normalized());
+		RotationMatrix.SetAxis(2, ZAxis.Normalized());
 
-	return FTransform(FVector(M[3][0], M[3][1], M[3][2]), FVector(XAxis.Size(), YAxis.Size(), ZAxis.Size()), MatrixToRotator(RotationMatrix));
+		return FTransform(FVector(M[3][0], M[3][1], M[3][2]), FVector(XAxis.Size(), YAxis.Size(), ZAxis.Size()), MatrixToRotator(RotationMatrix));
+	}
+}
+
+void USkeletalMeshComponent::CreatePhysicsBody()
+{
+	DestroyPhysicsBody();
+	if (!bSimulatePhysics)
+		return;
+
+	UWorld* World = GetWorld();
+	USkeletalMesh* Mesh = GetSkeletalMesh();
+	UPhysicsAsset* PhysicsAsset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
+	if (!World || !World->HasBegunPlay() || !PhysicsAsset)
+		return;
+
+	// PIE 복제 직후에는 본 행렬이 아직 계산되지 않았을 수 있다
+	RefreshBoneTransformsNow();
+
+	for (UBodySetup* Setup : PhysicsAsset->SkeletalBodySetups)
+	{
+		const int32 BoneIndex = FindBoneIndex(Setup->BoneName.ToString());
+		if (BoneIndex < 0) continue;
+
+		const FTransform Bone = GetBoneWorldTransform(BoneIndex);
+		FBodyInstance* Body = new FBodyInstance();
+		Body->InitBody(Setup, Bone.Location, Bone.Rotation, Bone.Scale, true, this, World->GetPhysicsScene());
+		if (!Body->IsValidBodyInstance())
+		{
+			delete Body;
+			continue;
+		}
+		Body->BoneIndex = BoneIndex;
+		Bodies.Add(Body);
+	}
+	HTR_LOG(Info, "Ragdoll bodies: {} / {}", Bodies.Num(), PhysicsAsset->SkeletalBodySetups.Num());
+}
+
+void USkeletalMeshComponent::DestroyPhysicsBody()
+{
+	Super::DestroyPhysicsBody();
+	for (FBodyInstance* Body : Bodies)
+	{
+		Body->TermBody();
+		delete Body;
+	}
+	Bodies.Empty();
+}
+
+FTransform USkeletalMeshComponent::GetBoneWorldTransform(int32 BoneIndex) const
+{
+	return MatrixToTransform(GetBoneWorldMatrix(BoneIndex));
+}
+
+void USkeletalMeshComponent::ApplyPhysicsPose()
+{
+	const TArray<FBoneInfo>& Bones = GetBones();
+	const int32 NumBones = Bones.Num();
+	if (BoneSpaceTransforms.Num() != NumBones || ComponentSpaceTransforms.Num() != NumBones)
+		return;
+
+	TArray<FBodyInstance*> BoneBodies;
+	BoneBodies.SetNum(NumBones);
+	for (int32 i = 0; i < NumBones; ++i)
+		BoneBodies[i] = nullptr;
+	for (FBodyInstance* Body : Bodies)
+		BoneBodies[Body->BoneIndex] = Body;
+
+	// 부모가 항상 앞 인덱스라 부모의 새 컴포넌트 공간 행렬이 먼저 정해진다
+	const FMatrix WorldToComponent = GetWorldMatrix().Inverse();
+	TArray<FMatrix> NewComponentSpace;
+	NewComponentSpace.SetNum(NumBones);
+	for (int32 i = 0; i < NumBones; ++i)
+	{
+		const int32 Parent = Bones[i].ParentIndex;
+		if (FBodyInstance* Body = BoneBodies[i])
+		{
+			// 바디에는 스케일이 없으므로 본의 월드 스케일을 다시 붙인다
+			const FVector Scale = GetBoneWorldTransform(i).Scale;
+			NewComponentSpace[i] = FTransform(Body->GetWorldRotation(), Body->GetWorldLocation(), Scale).GetLocalMatrix() * WorldToComponent;
+			const FMatrix Local = Parent < 0 ? NewComponentSpace[i] : NewComponentSpace[i] * NewComponentSpace[Parent].Inverse();
+			BoneSpaceTransforms[i] = MatrixToTransform(Local);
+		}
+		else
+		{
+			// 바디가 없는 본(손가락 등)은 로컬 자세를 유지한 채 부모를 따라간다
+			const FMatrix Local = BoneSpaceTransforms[i].GetLocalMatrix();
+			NewComponentSpace[i] = Parent < 0 ? Local : Local * NewComponentSpace[Parent];
+		}
+	}
+	MarkBoneTransformsDirty();
 }
 
 void USkeletalMeshComponent::ResetPose()

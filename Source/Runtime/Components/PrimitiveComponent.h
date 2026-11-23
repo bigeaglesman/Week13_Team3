@@ -143,8 +143,11 @@ protected:
 	bool TraceMesh(const FRay& WorldRay, const FStaticMeshData& Mesh, const FMatrix& WorldMatrix, FHitResult& OutResult);
 	bool TraceMeshLocal(const FRay& LocalRay, const FStaticMeshData& Mesh, float& OutT);
 
+	// 스켈레탈 메시는 본마다 바디를 만든다
+	virtual void CreatePhysicsBody();
+	virtual void DestroyPhysicsBody();
+
 private:
-	void CreatePhysicsBody();
 	friend class FScene;
 	FPrimitiveSceneProxy* SceneProxy = nullptr;
 };

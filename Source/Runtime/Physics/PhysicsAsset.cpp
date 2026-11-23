@@ -310,8 +310,8 @@ void UPhysicsAsset::GenerateFromSkeletalMesh(const USkeletalMesh* Mesh, float Mi
 
 		FSkeletalBodySetup BodySetup;
 		BodySetup.BoneName = Bones[i].Name;
-		BodySetup.LinearDamping = 0.05f;
-		BodySetup.AngularDamping = 0.5f;
+		BodySetup.LinearDamping = 0.2f;
+		BodySetup.AngularDamping = 1.5f;
 
 		if (PrimaryChildIdx >= 0 && BestChildLen >= ClampedMinSize)
 		{

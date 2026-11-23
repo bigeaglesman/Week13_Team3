@@ -303,8 +303,9 @@ FPhysScene::FPhysScene(UWorld* InOwningWorld)
 
 	// 5단계에서 움직인 Dynamic 액터만 골라 동기화할 때 필요하다.
 	SceneDesc.flags |= PxSceneFlag::eENABLE_ACTIVE_ACTORS;
-	// 안정적인 접촉 생성을 위해 PCM(Persistent Contact Manifold)을 켠다.
+	// 안정적인 접촉 생성과 다중 바디(래그돌) 바닥 떨림 방지를 위해 PCM과 Stabilization을 켠다.
 	SceneDesc.flags |= PxSceneFlag::eENABLE_PCM;
+	SceneDesc.flags |= PxSceneFlag::eENABLE_STABILIZATION;
 
 	PxSceneInstance = GPhysXSDK->createScene(SceneDesc);
 	if (!PxSceneInstance)
@@ -388,12 +389,6 @@ void FPhysScene::Tick(float DeltaTime)
 	if (Steps == MaxSubSteps && Accumulator >= FixedDeltaTime)
 	{
 		Accumulator = 0.0f;
-	}
-
-	// 수집한 Dynamic 컴포넌트들의 최종 Transform과 속도를 프레임당 한 번만 엔진에 반영한다.
-	for (UPrimitiveComponent* Comp : ComponentsToSync)
-	{
-		Comp->SyncComponentToRBPhysics();
 	}
 
 	// 수집한 Dynamic 컴포넌트들의 최종 Transform과 속도를 프레임당 한 번만 엔진에 반영한다.

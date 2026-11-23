@@ -189,6 +189,12 @@ void FBodyInstance::InitBody(
 		DynamicActor->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, !bEnableGravity);
 		DynamicActor->setLinearDamping(std::max(LinearDamping, 0.0f));
 		DynamicActor->setAngularDamping(std::max(AngularDamping, 0.0f));
+		DynamicActor->setSolverIterationCounts(
+			std::max(PositionSolverIterationCount, 1u),
+			std::max(VelocitySolverIterationCount, 1u));
+		DynamicActor->setMaxDepenetrationVelocity(2.0f);
+		DynamicActor->setSleepThreshold(0.05f);
+		DynamicActor->setStabilizationThreshold(0.05f);
 	}
 
 	NewActor->userData = InOwnerComp;

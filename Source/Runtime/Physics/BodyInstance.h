@@ -92,6 +92,8 @@ public:
 	float MassInKg = 1.0f;
 	float LinearDamping = 0.01f;
 	float AngularDamping = 0.05f;
+	uint32 PositionSolverIterationCount = 8;
+	uint32 VelocitySolverIterationCount = 2;
 
 	// 충돌 필터 및 트리거 설정 (PxFilterData에 인코딩된다)
 	bool bIsTrigger = false;

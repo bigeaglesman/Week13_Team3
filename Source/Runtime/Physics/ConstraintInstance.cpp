@@ -148,10 +148,14 @@ void FConstraintInstance::UpdateAngularLimit()
 	ConstraintData->setMotion(PxD6Axis::eSWING1, ToPxMotion(Swing1Motion));
 	ConstraintData->setMotion(PxD6Axis::eSWING2, ToPxMotion(Swing2Motion));
 
+	// Soft angular limit: Hard limit은 바닥 접촉과 충돌 시 심한 떨림(jitter)을 유발하므로
+	// 언리얼의 bSoftConstraint처럼 스프링-감쇠(PxSpring)로 부드럽고 단단하게 제한한다.
+	const PxSpring LimitSpring(100.0f, 15.0f);
+
 	if (TwistMotion == EAngularConstraintMotion::ACM_Limited)
 	{
 		const float TwistRad = DegreesToClampedRad(TwistLimitDegrees);
-		ConstraintData->setTwistLimit(PxJointAngularLimitPair(-TwistRad, TwistRad));
+		ConstraintData->setTwistLimit(PxJointAngularLimitPair(-TwistRad, TwistRad, LimitSpring));
 	}
 
 	if (Swing1Motion == EAngularConstraintMotion::ACM_Limited ||
@@ -159,7 +163,7 @@ void FConstraintInstance::UpdateAngularLimit()
 	{
 		const float Swing1Rad = DegreesToClampedRad(Swing1LimitDegrees);
 		const float Swing2Rad = DegreesToClampedRad(Swing2LimitDegrees);
-		ConstraintData->setSwingLimit(PxJointLimitCone(Swing1Rad, Swing2Rad));
+		ConstraintData->setSwingLimit(PxJointLimitCone(Swing1Rad, Swing2Rad, LimitSpring));
 	}
 }
 

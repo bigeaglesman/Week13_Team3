@@ -345,6 +345,17 @@ namespace
 					}
 				}
 			},
+			"SetRagdoll", [](const FLuaActorRef& Ref, bool bEnable)
+			{
+				for (UActorComponent* Comp : Deref(Ref).GetComponents())
+				{
+					if (USkeletalMeshComponent* SkelComp = Cast<USkeletalMeshComponent>(Comp))
+					{
+						SkelComp->SetSimulatePhysics(bEnable);
+						return;
+					}
+				}
+			},
 			"Location", sol::property(
 				// Getter
 				[](const FLuaActorRef& Ref) { return Deref(Ref).GetActorLocation(); },

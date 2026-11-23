@@ -134,8 +134,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	float AngularDamping = 0.05f;
 
-	void SetSimulatePhysics(bool bSimulate);
-	bool IsSimulatingPhysics() const;
+	virtual void SetSimulatePhysics(bool bSimulate);
+	virtual bool IsSimulatingPhysics() const;
 	void SetEnableGravity(bool bGravityEnabled);
 	bool IsGravityEnabled() const { return bEnableGravity; }
 
@@ -144,7 +144,7 @@ public:
 	virtual void AddImpulseAtLocation(const FVector& Impulse, const FVector& Location);
 
 	// PhysX 시뮬레이션 결과(위치·회전·속도)를 이 컴포넌트의 Transform에 반영한다.
-	void SyncComponentToRBPhysics();
+	virtual void SyncComponentToRBPhysics();
 
 	FBodyInstance BodyInstance;
 	FBodyInstance* GetBodyInstance() { return &BodyInstance; }

@@ -16,8 +16,8 @@ struct FSkeletalBodySetup
 	FBodyShapeDesc Shape;
 
 	float MassInKg = 1.0f;
-	float LinearDamping = 0.05f;
-	float AngularDamping = 0.5f;
+	float LinearDamping = 0.2f;
+	float AngularDamping = 1.5f;
 };
 
 // 두 본(자식-부모)을 연결하는 조인트 정의 (언리얼 UPhysicsConstraintTemplate 축소판)
@@ -32,11 +32,11 @@ struct FPhysicsConstraintSetup
 	EAngularConstraintMotion Swing2Motion = EAngularConstraintMotion::ACM_Limited;
 	EAngularConstraintMotion TwistMotion = EAngularConstraintMotion::ACM_Limited;
 
-	float Swing1LimitDegrees = 45.0f;
-	float Swing2LimitDegrees = 45.0f;
-	float TwistLimitDegrees = 30.0f;
+	float Swing1LimitDegrees = 20.0f;
+	float Swing2LimitDegrees = 15.0f;
+	float TwistLimitDegrees = 10.0f;
 
-	float AngularDamping = 0.5f;
+	float AngularDamping = 5.0f;
 	float AngularStiffness = 0.0f;
 	bool bDisableCollision = true;
 };

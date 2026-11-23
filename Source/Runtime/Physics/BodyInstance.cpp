@@ -55,6 +55,23 @@ namespace
 		}
 	}
 
+		// 씬에 등록된 Dynamic(비-Kinematic) 액터만 반환한다.
+		PxRigidDynamic* GetSimulatingDynamicActor(PxRigidActor * RigidActor)
+		{
+			if (!RigidActor || !RigidActor->getScene())
+			{
+				return nullptr;
+			}
+
+			PxRigidDynamic* DynamicActor = RigidActor->is<PxRigidDynamic>();
+			if (!DynamicActor || (DynamicActor->getRigidBodyFlags() & PxRigidBodyFlag::eKINEMATIC))
+			{
+				return nullptr;
+			}
+
+			return DynamicActor;
+		}
+
 	void ApplyShapeFilterAndFlags(PxShape* Shape, const FBodyInstance& Body)
 	{
 		if (!Shape)
@@ -283,4 +300,43 @@ void FBodyInstance::UpdatePhysicsFilterData()
 	{
 		ApplyShapeFilterAndFlags(Shape, *this);
 	}
+}
+void FBodyInstance::AddForce(const FVector& Force, bool bAccelChange)
+{
+	PxRigidDynamic* DynamicActor = GetSimulatingDynamicActor(RigidActor);
+	if (!DynamicActor)
+	{
+		return;
+	}
+
+	const PxForceMode::Enum Mode = bAccelChange ? PxForceMode::eACCELERATION : PxForceMode::eFORCE;
+	DynamicActor->addForce(U2PVector(Force), Mode, true);
+}
+
+void FBodyInstance::AddImpulse(const FVector& Impulse, bool bVelChange)
+{
+	PxRigidDynamic* DynamicActor = GetSimulatingDynamicActor(RigidActor);
+	if (!DynamicActor)
+	{
+		return;
+	}
+
+	const PxForceMode::Enum Mode = bVelChange ? PxForceMode::eVELOCITY_CHANGE : PxForceMode::eIMPULSE;
+	DynamicActor->addForce(U2PVector(Impulse), Mode, true);
+}
+
+void FBodyInstance::AddImpulseAtPosition(const FVector& Impulse, const FVector& Position)
+{
+	PxRigidDynamic* DynamicActor = GetSimulatingDynamicActor(RigidActor);
+	if (!DynamicActor)
+	{
+		return;
+	}
+
+	PxRigidBodyExt::addForceAtPos(
+		*DynamicActor,
+		U2PVector(Impulse),
+		U2PVector(Position),
+		PxForceMode::eIMPULSE,
+		true);
 }

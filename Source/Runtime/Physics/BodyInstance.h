@@ -70,6 +70,11 @@ public:
 	bool IsInstanceSimulatingPhysics() const;
 	void SetEnableGravity(bool bGravityEnabled);
 
+	// Dynamic 바디에 힘/충격을 가한다 (Kinematic/Static 바디에서는 무시).
+	void AddForce(const FVector& Force, bool bAccelChange = false);
+	void AddImpulse(const FVector& Impulse, bool bVelChange = false);
+	void AddImpulseAtPosition(const FVector& Impulse, const FVector& Position);
+
 	// 현재 필터·트리거 설정을 PhysX Shape의 FilterData와 플래그에 반영한다.
 	void UpdatePhysicsFilterData();
 

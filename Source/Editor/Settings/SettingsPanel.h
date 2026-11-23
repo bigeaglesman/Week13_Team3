@@ -24,8 +24,9 @@ struct FEditorSettings
 	bool bDrawBoundingBox = false;
 	bool bShowUUID = false;
 	// Debug Draw (UE show 플래그): PIE에서만 적용된다
-	bool bShowCollision = true;   // show Collision
-	bool bShowRootDebug = false;  // root 본 구체 + 액터→root 선
+	bool bShowCollision = true;     // show Collision
+	bool bShowPhysicsDebug = false; // PhysX 바디·조인트 제한 콘 와이어프레임
+	bool bShowRootDebug = false;    // root 본 구체 + 액터→root 선
 	bool bDrawBatchLine = true;
 	bool bDrawCascadeBounds = false;
 	bool bDrawPSGrid = false;

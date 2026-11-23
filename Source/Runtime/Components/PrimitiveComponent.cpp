@@ -226,6 +226,21 @@ void UPrimitiveComponent::SetEnableGravity(bool bGravityEnabled)
 	BodyInstance.SetEnableGravity(bGravityEnabled);
 }
 
+void UPrimitiveComponent::AddForce(const FVector& Force, bool bAccelChange)
+{
+	BodyInstance.AddForce(Force, bAccelChange);
+}
+
+void UPrimitiveComponent::AddImpulse(const FVector& Impulse, bool bVelChange)
+{
+	BodyInstance.AddImpulse(Impulse, bVelChange);
+}
+
+void UPrimitiveComponent::AddImpulseAtLocation(const FVector& Impulse, const FVector& Location)
+{
+	BodyInstance.AddImpulseAtPosition(Impulse, Location);
+}
+
 void UPrimitiveComponent::SyncComponentToRBPhysics()
 {
 	if (!BodyInstance.IsInstanceSimulatingPhysics())

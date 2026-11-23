@@ -139,6 +139,10 @@ public:
 	void SetEnableGravity(bool bGravityEnabled);
 	bool IsGravityEnabled() const { return bEnableGravity; }
 
+	virtual void AddForce(const FVector& Force, bool bAccelChange = false);
+	virtual void AddImpulse(const FVector& Impulse, bool bVelChange = false);
+	virtual void AddImpulseAtLocation(const FVector& Impulse, const FVector& Location);
+
 	// PhysX 시뮬레이션 결과(위치·회전·속도)를 이 컴포넌트의 Transform에 반영한다.
 	void SyncComponentToRBPhysics();
 

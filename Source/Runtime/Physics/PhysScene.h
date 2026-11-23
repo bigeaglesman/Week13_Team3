@@ -4,6 +4,7 @@
 
 class UWorld;
 class AActor;
+class FLineBatcher;
 class FPhysXSimulationEventCallback;
 struct FVector;
 struct FHitResult;
@@ -44,6 +45,11 @@ public:
 		AActor* IgnoreActor = nullptr,
 		bool bBlockingOnly = false) const;
 
+	// PhysX 디버그 시각화(충돌 도형, 조인트 로컬 축·제한 콘) 켜기/끄기
+	void SetDebugVisualization(bool bEnable);
+	// 직전 simulate()에서 PhysX가 채운 PxRenderBuffer 선분을 LineBatcher에 추가한다.
+	void DrawDebug(FLineBatcher* LineBatcher) const;
+
 	physx::PxScene* GetPxScene() const { return PxSceneInstance; }
 	UWorld* GetOwningWorld() const { return OwningWorld; }
 	bool IsValid() const { return PxSceneInstance != nullptr; }
@@ -55,6 +61,7 @@ private:
 	UWorld* OwningWorld = nullptr;
 	physx::PxScene* PxSceneInstance = nullptr;
 	FPhysXSimulationEventCallback* EventCallback = nullptr;
+	bool bDebugVisualizationEnabled = false;
 
 	// 고정 timestep(60Hz) 누적 시간
 	float Accumulator = 0.0f;

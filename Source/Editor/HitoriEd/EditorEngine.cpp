@@ -12,6 +12,7 @@
 #include "Render/GeometryGenerator.h"
 
 #include "Engine/World.h"
+#include "Physics/PhysScene.h"
 #include "Engine/Level.h"
 #include "Engine/GameInstance.h"
 #include "Engine/GameViewportClient.h"
@@ -1172,6 +1173,12 @@ void UEditorEngine::DrawPIEDebug(UWorld* World, const FMatrix& ViewProjection)
 	LineBatcher->BeginFrame();
 	if (Settings.bShowCollision)
 		DrawCollisionShapes(World, LineBatcher, nullptr);
+	if (FPhysScene* PhysScene = World->GetPhysicsScene())
+	{
+		PhysScene->SetDebugVisualization(Settings.bShowPhysicsDebug);
+		if (Settings.bShowPhysicsDebug)
+			PhysScene->DrawDebug(LineBatcher);
+	}
 	LineBatcher->OnRender(ViewProjection);
 
 	// root는 바닥 높이라 가려지기 쉬우므로 깊이 테스트 없이 따로 그린다 (항상 위에 보임)

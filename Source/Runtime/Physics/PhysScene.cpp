@@ -6,6 +6,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "Components/ShapeComponent.h"
 #include "GameFramework/Actor.h"
+#include "Render/LineBatcher.h"
 
 #include <PxPhysicsAPI.h>
 #include <algorithm>
@@ -604,4 +605,57 @@ bool FPhysScene::SweepSphereSingle(
 		: (Hit.actor ? Hit.actor->userData : nullptr));
 
 	return true;
+}
+
+void FPhysScene::SetDebugVisualization(bool bEnable)
+{
+	if (!PxSceneInstance || bDebugVisualizationEnabled == bEnable)
+	{
+		return;
+	}
+
+	bDebugVisualizationEnabled = bEnable;
+
+	if (bEnable)
+	{
+		// eSCALE은 축·조인트 제한 콘의 길이 스케일(m 단위)이며, > 0이어야 RenderBuffer가 채워진다.
+		// 충돌 도형(eCOLLISION_SHAPES)은 eSCALE 크기와 무관하게 실제 도형 크기로 그려진다.
+		PxSceneInstance->setVisualizationParameter(PxVisualizationParameter::eSCALE, 0.5f);
+		PxSceneInstance->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
+		PxSceneInstance->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, 1.0f);
+		PxSceneInstance->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, 1.0f);
+	}
+	else
+	{
+		// eSCALE을 0으로 끄면 simulate() 중 디버그 선분 생성을 완전히 건너뛰어 오버헤드가 0이 된다.
+		PxSceneInstance->setVisualizationParameter(PxVisualizationParameter::eSCALE, 0.0f);
+		PxSceneInstance->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 0.0f);
+		PxSceneInstance->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, 0.0f);
+		PxSceneInstance->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, 0.0f);
+	}
+}
+
+void FPhysScene::DrawDebug(FLineBatcher* LineBatcher) const
+{
+	if (!PxSceneInstance || !LineBatcher || !bDebugVisualizationEnabled)
+	{
+		return;
+	}
+
+	const PxRenderBuffer& RenderBuffer = PxSceneInstance->getRenderBuffer();
+	const PxU32 NumLines = RenderBuffer.getNbLines();
+	const PxDebugLine* Lines = RenderBuffer.getLines();
+
+	for (PxU32 i = 0; i < NumLines; ++i)
+	{
+		// PhysX PxDebugColor는 0x00RRGGBB 형식
+		const PxU32 RawColor = Lines[i].color0;
+		const FVector4 Color(
+			((RawColor >> 16) & 0xFF) / 255.0f,
+			((RawColor >> 8) & 0xFF) / 255.0f,
+			(RawColor & 0xFF) / 255.0f,
+			1.0f);
+
+		LineBatcher->AddLine(P2UVector(Lines[i].pos0), P2UVector(Lines[i].pos1), Color);
+	}
 }

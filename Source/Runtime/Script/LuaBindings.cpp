@@ -303,7 +303,48 @@ namespace
 			},
 			"SetParticleFrameRate", [](const FLuaActorRef& Ref, float FPS) { ParticleComponent(Ref).SetFrameRate(FPS); },
 			"PlayParticle", [](const FLuaActorRef& Ref, sol::optional<float> Scale) { ParticleComponent(Ref).PlayOnce(Scale.value_or(1.0f)); },
-
+			"AddForce", [](const FLuaActorRef& Ref, const FVector& Force, sol::optional<bool> bAccelChange)
+			{
+				for (UActorComponent* Comp : Deref(Ref).GetComponents())
+				{
+					if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+					{
+						if (Prim->IsSimulatingPhysics())
+						{
+							Prim->AddForce(Force, bAccelChange.value_or(false));
+							return;
+						}
+					}
+				}
+			},
+			"AddImpulse", [](const FLuaActorRef& Ref, const FVector& Impulse, sol::optional<bool> bVelChange)
+			{
+				for (UActorComponent* Comp : Deref(Ref).GetComponents())
+				{
+					if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+					{
+						if (Prim->IsSimulatingPhysics())
+						{
+							Prim->AddImpulse(Impulse, bVelChange.value_or(false));
+							return;
+						}
+					}
+				}
+			},
+			"AddImpulseAtLocation", [](const FLuaActorRef& Ref, const FVector& Impulse, const FVector& Location)
+			{
+				for (UActorComponent* Comp : Deref(Ref).GetComponents())
+				{
+					if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+					{
+						if (Prim->IsSimulatingPhysics())
+						{
+							Prim->AddImpulseAtLocation(Impulse, Location);
+							return;
+						}
+					}
+				}
+			},
 			"Location", sol::property(
 				// Getter
 				[](const FLuaActorRef& Ref) { return Deref(Ref).GetActorLocation(); },

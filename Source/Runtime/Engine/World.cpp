@@ -44,6 +44,7 @@
 
 #include "Script/LuaBindings.h"
 #include "Physics/Collision.h"
+#include "Physics/PhysScene.h"
 #include "Components/ShapeComponent.h"
 #include "Particles/ParticleEventManager.h"
 
@@ -99,6 +100,7 @@ bool UWorld::Init()
 	// 디버그 선 도구를 만든다. FLineBatcher::Init의 렌더러 인자는 쓰이지 않는다.
 	LineBatcher = MakeUnique<FLineBatcher>();
 	LineBatcher->Init(nullptr, this);
+	PhysicsScene = MakeUnique<FPhysScene>(this);
 
 	return true;
 }
@@ -207,7 +209,12 @@ void UWorld::GameWorldTick(float DeltaTime)
 	// 모든 Actor를 도는 대신 등록된 Tick 함수만 실행한다
 	{
 		SCOPE_CYCLE_COUNTER(STAT_ActorTick);
-		TickTaskManager.RunAllTickGroups(DeltaTime);
+		TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, DeltaTime);
+		PhysicsScene->StartFrame(DeltaTime);
+		TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, DeltaTime);
+		PhysicsScene->EndFrame();
+		TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, DeltaTime);
+		TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, DeltaTime);
 	}
 
 	// 코루틴 Tick

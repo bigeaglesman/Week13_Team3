@@ -15,6 +15,7 @@
 #include "Input/InputSystem.h"
 #include "UObject/Casts.h"
 #include "UObject/Class.h"
+#include "Physics/PhysXSDK.h"
 #include "Render/RenderCommand.h"
 #include "Render/RenderDevice.h"
 #include "Render/RenderResourceManager.h"
@@ -301,6 +302,8 @@ void FEngineLoop::Exit()
 	DestroyAllObjectsExceptEngine();
 	delete GEngine;
 	GEngine = nullptr;
+
+	PhysXSDK::Term();
 
 	DepthBuffer.reset();
 	Swapchain.reset();

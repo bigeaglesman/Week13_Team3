@@ -24,6 +24,7 @@ class UBillboardComponent;
 class APawn;
 class APlayerController;
 class AParticleEventManager;
+class FPhysScene;
 
 struct FViewContext;
 
@@ -42,6 +43,8 @@ public:
 	// UE의 UWorld::LineBatcher와 같은 자리이고 UE에서도 public 멤버다.
 	// UE는 선을 쌓아 두면 씬과 함께 그려지지만, 이 엔진은 쓰는 쪽이 BeginFrame, Add..., OnRender 순서로 직접 그린다.
 	TUniquePtr<FLineBatcher> LineBatcher;
+
+	FPhysScene* GetPhysicsScene() const { return PhysicsScene.get(); }
 
 	// 파티클 이벤트를 받아 게임 코드에 전달하는 액터
 	AParticleEventManager* MyParticleEventManager = nullptr;
@@ -132,12 +135,12 @@ public:
 	// Slomo-hitstop
 	float GetEffectiveTimeDilation() const;
 	void StartHitStop(float Duration, float Dilation);
+	
 	// UE AWorldSettings::CinematicTimeDilation. 시퀀스 Play Rate(Slomo) 트랙이 쓴다
 	float GetCinematicTimeDilation() const { return CinematicTimeDilation; }
 	void SetCinematicTimeDilation(float InDilation) { CinematicTimeDilation = InDilation; }
 
 private:
-
 	void GameWorldTick(float DeltaTime);
 	void EditorWorldTick(float DeltaTime);
 	void PreviewWorldTick(float DeltaTime);
@@ -159,6 +162,7 @@ private:
 
 	// 등록된 Tick 함수만 실행한다. Actor보다 먼저 사라져도 남은 함수와의 연결을 스스로 끊는다.
 	FTickTaskManager TickTaskManager;
+	TUniquePtr<FPhysScene> PhysicsScene;   // UE UWorld::PhysicsScene. 월드와 수명이 같다
 	FCoroutineScheduler CoroutineScheduler;
 
 	TQueue<AActor*> BeginPlayList;

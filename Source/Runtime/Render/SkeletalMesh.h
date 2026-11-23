@@ -47,6 +47,8 @@ public:
 	UPhysicsAsset* GetPhysicsAsset() const { return PhysicsAsset; }
 	// 소유권을 넘겨받는다. 기존 에셋은 지운다.
 	void SetPhysicsAsset(UPhysicsAsset* InPhysicsAsset);
+	// UPhysicsAsset 소멸자가 부른다 (엔진 종료 때 일괄 삭제에서 에셋이 메시보다 먼저 지워지는 경우).
+	void OnPhysicsAssetDestroyed(UPhysicsAsset* Asset);
 
 	const TArray<FBoneInfo>& GetRefSkeleton() const { return RefSkeleton; }
 	int32 GetNumBones() const { return RefSkeleton.Num(); }

@@ -9,6 +9,7 @@
 #include "Mesh.generated.h"
 
 class FPrimitiveSceneProxy;
+class UBodySetup;
 
 struct FStaticMeshLODResource
 {
@@ -68,8 +69,16 @@ public:
     void RegisterProxy(FPrimitiveSceneProxy* Proxy);
     void UnregisterProxy(FPrimitiveSceneProxy* Proxy);
 
+    // 이 메시의 단순 충돌(Simple Collision). 처음 부를 때 정점들의 볼록 껍질을 한 번 쿠킹해 만들고, 같은 메시를 쓰는
+    // 컴포넌트가 함께 쓴다. 도형은 메시 원본 단위(스케일 1)다. UE의 UStaticMesh::BodySetup
+    // PhysX가 없거나 쿠킹에 실패하면 메시 AABB 박스 하나로 대신한다.
+    UBodySetup* GetBodySetup();
+    // UBodySetup 소멸자가 부른다 (엔진 종료 때 일괄 삭제에서 BodySetup이 먼저 지워지는 경우).
+    void OnBodySetupDestroyed(UBodySetup* Setup) { if (BodySetup == Setup) BodySetup = nullptr; }
+
     const uint16 SortID;
 private:
+    UBodySetup* BodySetup = nullptr;
     static inline uint16 NextSortID = 0;
     struct FMaterialSlotsHash
     {

@@ -3,6 +3,8 @@
 #include "Renderer.h"
 #include "Asset/AssetManager.h"
 #include "Engine/PrimitiveSceneProxy.h"
+#include "Physics/BodySetup.h"
+#include "Physics/PhysicsCooking.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -11,6 +13,12 @@ UStaticMesh::~UStaticMesh()
 {
     for (FPrimitiveSceneProxy* Proxy : RenderProxies)
         Proxy->OnMeshDestroyed();
+
+    // 소멸자가 OnBodySetupDestroyed로 다시 들어오므로 먼저 비운다.
+    UBodySetup* Setup = BodySetup;
+    BodySetup = nullptr;
+    delete Setup;
+
 	VertexBuffer = nullptr;
 	IndexBuffer = nullptr;
 }
@@ -96,4 +104,37 @@ void UStaticMesh::UnregisterProxy(FPrimitiveSceneProxy* Proxy)
     const auto It = std::find(RenderProxies.begin(), RenderProxies.end(), Proxy);
     if (It != RenderProxies.end())
         RenderProxies.RemoveAtSwap(static_cast<uint32>(It - RenderProxies.begin()));
+}
+
+UBodySetup* UStaticMesh::GetBodySetup()
+{
+    if (BodySetup)
+    {
+        return BodySetup;
+    }
+
+    BodySetup = NewObject<UBodySetup>(this);
+
+    TArray<FVector> Points;
+    Points.Reserve(MeshData.Vertices.Num());
+    for (const FVertex& Vertex : MeshData.Vertices)
+    {
+        Points.Add(Vertex.Position);
+    }
+
+    // 정점 전부 대신 껍질 정점(최대 255개)만 남긴다. 런타임 바디는 이 점들로 다시 쿠킹하므로 빠르다.
+    FKConvexElem Convex;
+    if (FPhysicsCooking::ComputeConvexHull(Points, Convex.VertexData, Convex.DebugEdges))
+    {
+        BodySetup->AggGeom.ConvexElems.Add(std::move(Convex));
+    }
+    else
+    {
+        const FBox& Bounds = MeshData.AABB;
+        FKBoxElem Box;
+        Box.Center = (Bounds.Min + Bounds.Max) * 0.5f;
+        Box.HalfExtent = (Bounds.Max - Bounds.Min) * 0.5f;
+        BodySetup->AggGeom.BoxElems.Add(Box);
+    }
+    return BodySetup;
 }

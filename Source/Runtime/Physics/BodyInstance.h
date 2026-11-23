@@ -4,6 +4,7 @@
 #include "BodyInstance.generated.h"
 
 class UPrimitiveComponent;
+class UPhysicalMaterial;
 class FPhysicsScene;
 struct FKAggregateGeom;
 
@@ -36,6 +37,14 @@ struct FBodyInstance
 	UPROPERTY(EditAnywhere)
 	float MassInKg = 10.0f;
 
+	// 다른 바디와 처음 닿을 때 OnComponentHit을 보낼지. UE의 bNotifyRigidBodyCollision (Simulation Generates Hit Events)
+	UPROPERTY(EditAnywhere)
+	bool bNotifyRigidBodyCollision = false;
+
+	// 이 바디의 모든 도형에 쓸 표면 재질. nullptr이면 엔진 기본 재질. InitBody 전에 정한다.
+	// 에셋(UBodySetup 등)이 소유하고, 바디는 빌려 쓴다. UE의 PhysMaterialOverride
+	UPhysicalMaterial* PhysMaterialOverride = nullptr;
+
 	// WorldTransform의 스케일은 쓰지 않는다. 스케일은 Geom 크기에 이미 들어 있다.
 	void InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom& Geom, const FTransform& WorldTransform, FPhysicsScene* Scene);
 	void TermBody();
@@ -58,6 +67,9 @@ struct FBodyInstance
 	// 0이 아니고 같은 값을 가진 바디끼리는 서로 충돌하지 않는다. InitBody 전에 정한다.
 	// 래그돌 뼈 캡슐들은 서로 겹쳐 있어서, 부딪히게 두면 시작하자마자 튕겨 나간다. 스켈레탈 메시가 자기 UUID를 넣는다.
 	uint32 SelfCollisionGroup = 0;
+
+	// 필터 셰이더가 읽는 PxFilterData.word1 비트
+	static constexpr uint32 FilterFlag_NotifyHit = 1u << 0;
 
 private:
 	UPrimitiveComponent* OwnerComponent = nullptr;

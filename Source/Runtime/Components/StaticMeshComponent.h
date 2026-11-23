@@ -17,6 +17,12 @@ public:
 
 	virtual const FStaticMeshData* GetMeshData() const override { return StaticMesh ? &StaticMesh->GetMeshData() : nullptr; }
 
+	// 메시 모양 그대로의 물리 도형. 시뮬레이션하면 볼록 껍질(Convex), 아니면 삼각형 메시(바닥·벽용 Complex Collision)
+	virtual bool GetBodyGeometry(FKAggregateGeom& OutGeom) const override;
+
+	// 메시 에셋의 단순 충돌(볼록 껍질, UStaticMesh::GetBodySetup)에 컴포넌트 스케일을 곱한 것. Collision 쇼 플래그도 이걸 그린다.
+	bool GetSimpleBodyGeometry(FKAggregateGeom& OutGeom) const;
+
 	// 메시가 바뀌면 슬롯 구성이 달라지므로 덮어쓰기를 비운다
 	void SetStaticMesh(UStaticMesh* InStaticMesh);
 	UStaticMesh* GetStaticMesh() const { return StaticMesh; }

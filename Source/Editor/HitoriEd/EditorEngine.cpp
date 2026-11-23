@@ -1188,9 +1188,10 @@ void UEditorEngine::DrawPIEDebug(UWorld* World, const FMatrix& ViewProjection)
 		DrawCollisionShapes(World, LineBatcher, nullptr);
 
 	// 디버깅용 Physic Body 렌더링 (PhysX 충돌 도형, 조인트 프레임·리밋)
-	if (FPhysicsScene* Physics = World->GetPhysicsScene())
+	FPhysicsScene* Physics = World->GetPhysicsScene();
+	if (Physics && bShowCollision)
 	{
-		Physics->SetDebugVisualization(bShowCollision);
+		Physics->RequestDebugVisualization();
 		Physics->DrawDebug(*LineBatcher);
 	}
 	LineBatcher->OnRender(ViewProjection);

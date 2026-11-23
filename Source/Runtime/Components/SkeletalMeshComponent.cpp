@@ -25,32 +25,30 @@
 #include "Physics/ConstraintSetup.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetUtils.h"
+#include "Physics/PhysicsAssetFile.h"
 
-namespace
+UPhysicsAsset* USkeletalMeshComponent::GetOrCreatePhysicsAsset() const
 {
-	// Physics Asset 도형은 메시 원본 단위다. 컴포넌트 월드 스케일을 곱해 실제 크기로 만든다.
-	// 캡슐·구는 비균일 스케일을 표현할 수 없어 가장 큰 축 하나로 키운다.
-	FKAggregateGeom ScaleAggregateGeom(const FKAggregateGeom& Source, float Scale)
+	USkeletalMesh* Mesh = GetSkeletalMesh();
+	if (!Mesh)
 	{
-		FKAggregateGeom Result = Source;
-		for (FKSphereElem& Elem : Result.SphereElems)
-		{
-			Elem.Center = Elem.Center * Scale;
-			Elem.Radius *= Scale;
-		}
-		for (FKBoxElem& Elem : Result.BoxElems)
-		{
-			Elem.Center = Elem.Center * Scale;
-			Elem.HalfExtent = Elem.HalfExtent * Scale;
-		}
-		for (FKSphylElem& Elem : Result.SphylElems)
-		{
-			Elem.Center = Elem.Center * Scale;
-			Elem.Radius *= Scale;
-			Elem.Length *= Scale;
-		}
-		return Result;
+		return nullptr;
 	}
+
+	// 메시 옆에 저장된 .physicsasset(에디터에서 만든 것)이 있으면 읽고, 없으면 뼈 모양으로 자동 생성한다.
+	// 메시가 소유하므로 다음부터는 재사용된다.
+	if (!Mesh->GetPhysicsAsset())
+	{
+		UPhysicsAsset* Loaded = FPhysicsAssetFile::LoadForMesh(*Mesh);
+		Mesh->SetPhysicsAsset(Loaded ? Loaded : FPhysicsAssetUtils::CreateFromSkeletalMesh(Mesh));
+	}
+	return Mesh->GetPhysicsAsset();
+}
+
+float USkeletalMeshComponent::GetPhysicsAssetScale() const
+{
+	const FVector WorldScale = GetWorldScale3D().GetAbs();
+	return std::max({ WorldScale.X, WorldScale.Y, WorldScale.Z });
 }
 
 bool USkeletalMeshComponent::ShouldCreatePhysicsState() const
@@ -63,15 +61,7 @@ void USkeletalMeshComponent::OnCreatePhysicsState()
 	// UPrimitiveComponent의 바디 하나는 만들지 않는다. 뼈마다 바디를 만든다. (UE도 USceneComponent 쪽으로 건너뛴다)
 	USceneComponent::OnCreatePhysicsState();
 
-	USkeletalMesh* Mesh = GetSkeletalMesh();
-
-	// 에디터에서 만든 Physics Asset이 없으면 뼈 모양으로 자동 생성한다. 메시가 소유하므로 다음부터는 재사용된다.
-	if (!Mesh->GetPhysicsAsset())
-	{
-		Mesh->SetPhysicsAsset(FPhysicsAssetUtils::CreateFromSkeletalMesh(Mesh));
-	}
-
-	if (UPhysicsAsset* PhysicsAsset = Mesh->GetPhysicsAsset())
+	if (UPhysicsAsset* PhysicsAsset = GetOrCreatePhysicsAsset())
 	{
 		InitArticulated(GetWorld()->GetPhysicsScene(), PhysicsAsset);
 	}
@@ -108,8 +98,7 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 	// 바디를 지금 포즈 자리에 만든다. BeginPlay 시점엔 뼈 행렬이 아직 안 만들어졌을 수 있다.
 	RefreshBoneTransformsNow();
 
-	const FVector WorldScale = GetWorldScale3D().GetAbs();
-	const float Scale = std::max({ WorldScale.X, WorldScale.Y, WorldScale.Z });
+	const float Scale = GetPhysicsAssetScale();
 
 	// 컴포넌트의 BodyInstance 설정이 뼈 바디 전체에 적용된다. 켜져 있으면 래그돌, 꺼져 있으면 애니메이션을 따라가는 키네마틱
 	const bool bSimulate = BodyInstance.bSimulatePhysics;
@@ -134,8 +123,10 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 		Body->bSimulatePhysics = bSimulate;
 		Body->bEnablePhysicsCollision = true;
 		Body->SelfCollisionGroup = GetUUID();   // 겹쳐 있는 뼈 캡슐끼리는 부딪히지 않게 한다
+		Body->bNotifyRigidBodyCollision |= BodyInstance.bNotifyRigidBodyCollision;   // 컴포넌트에서 켜면 뼈 바디 전체에 적용
+		Body->PhysMaterialOverride = Setup->PhysMaterial;   // DefaultInstance에도 이어져 있지만, 코드로 만든 에셋도 확실히 쓰도록
 
-		Body->InitBody(this, ScaleAggregateGeom(Setup->AggGeom, Scale), MatrixToBodyTransform(GetBoneWorldMatrix(BoneIndex)), PhysicsScene);
+		Body->InitBody(this, Setup->AggGeom.GetScaled(FVector(Scale, Scale, Scale)), MatrixToBodyTransform(GetBoneWorldMatrix(BoneIndex)), PhysicsScene);
 		if (Body->IsValidBodyInstance())
 		{
 			Bodies.Add(Body);

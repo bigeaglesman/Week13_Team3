@@ -90,6 +90,13 @@ public:
 	// ---- 물리 (래그돌) ----
 	const TArray<FBodyInstance*>& GetBodies() const { return Bodies; }
 
+	// 메시의 Physics Asset. 아직 없으면 메시 옆의 .physicsasset을 읽거나, 없으면 뼈 모양으로 자동 생성해 메시에 붙인다.
+	// 메시가 없거나 뼈가 없으면 nullptr
+	UPhysicsAsset* GetOrCreatePhysicsAsset() const;
+
+	// Physics Asset 도형(메시 원본 단위)에 곱할 배율. 캡슐·구는 비균일 스케일을 못 하므로 가장 큰 축
+	float GetPhysicsAssetScale() const;
+
 	// BodyInstance.bSimulatePhysics가 켜진 채로 바디가 만들어졌으면 true. 이때는 애니메이션 대신 물리가 뼈를 움직인다.
 	bool IsRagdollSimulating() const { return bRagdollSimulating; }
 

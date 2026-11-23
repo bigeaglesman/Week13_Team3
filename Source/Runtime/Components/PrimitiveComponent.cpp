@@ -45,16 +45,12 @@ UPrimitiveComponent::~UPrimitiveComponent()
 
 }
 
-namespace
+FTransform UPrimitiveComponent::GetBodyWorldTransform() const
 {
-	// PhysX 바디 포즈용 월드 트랜스폼. 스케일은 도형 크기에 들어가므로 뺀다.
-	FTransform GetBodyWorldTransform(const UPrimitiveComponent* Component)
-	{
-		const FQuat Rotation = Component->GetAttachParent()
-			? Component->GetWorldRotation().Quaternion()
-			: Component->GetRelativeRotationQuat();   // 부모가 없으면 쿼터니언을 그대로 쓴다
-		return FTransform(Rotation, Component->GetWorldLocation());
-	}
+	const FQuat Rotation = GetAttachParent()
+		? GetWorldRotation().Quaternion()
+		: GetRelativeRotationQuat();   // 부모가 없으면 쿼터니언을 그대로 쓴다
+	return FTransform(Rotation, GetWorldLocation());
 }
 
 void UPrimitiveComponent::BeginPlay()
@@ -75,7 +71,7 @@ void UPrimitiveComponent::OnCreatePhysicsState()
 	FKAggregateGeom Geom;
 	if (GetBodyGeometry(Geom))
 	{
-		BodyInstance.InitBody(this, Geom, GetBodyWorldTransform(this), GetWorld()->GetPhysicsScene());
+		BodyInstance.InitBody(this, Geom, GetBodyWorldTransform(), GetWorld()->GetPhysicsScene());
 	}
 }
 
@@ -155,7 +151,7 @@ void UPrimitiveComponent::OnTransformDirty()
 
 	// 키네마틱 바디는 컴포넌트를 따라간다. 시뮬레이션 중인 바디는 SetBodyTransform이 무시한다.
 	if (BodyInstance.IsValidBodyInstance())
-		BodyInstance.SetBodyTransform(GetBodyWorldTransform(this));
+		BodyInstance.SetBodyTransform(GetBodyWorldTransform());
 }
 
 bool UPrimitiveComponent::MoveComponent(const FVector& Delta, const FRotator& NewRotation, bool bSweep, FHitResult* Hit)

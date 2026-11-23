@@ -18,6 +18,8 @@
 #include "Engine/Level.h"
 #include "GameFramework/Actor.h"
 #include "Asset/AssetManager.h"
+#include "Physics/PhysicsDebugDraw.h"
+#include "Physics/PhysicsScene.h"
 
 FLevelEditorViewportClient* GCurrentLevelEditingViewportClient = nullptr;
 
@@ -186,6 +188,21 @@ void FLevelEditorViewportClient::Draw(const FSceneView* View, FScenePassCallback
 				// 이 뷰포트가 보고 있는 월드의 것을 그린다. PIE와 SIE 중에는 PIE 월드다.
 				DrawCollisionShapes(GetWorld(), LineBatcher, SelectedActor);
 				DrawSpringArms(GetWorld(), LineBatcher, SelectedActor);
+
+				// Collision 쇼 플래그: 물리 바디 충돌 도형.
+				// 시뮬레이션 중인 월드(PIE/SIE)는 PhysX가 그린 실제 바디 위치를, 에디터 월드는 설계도의 도형을 그린다.
+				if (EngineShowFlags.Collision)
+				{
+					if (FPhysicsScene* Physics = GetWorld() ? GetWorld()->GetPhysicsScene() : nullptr)
+					{
+						Physics->RequestDebugVisualization();
+						Physics->DrawDebug(*LineBatcher);
+					}
+					else
+					{
+						DrawPhysicsCollision(GetWorld(), *LineBatcher);
+					}
+				}
 
 				LineBatcher->OnRender(SceneView.ViewProjectionMatrix);
 			};

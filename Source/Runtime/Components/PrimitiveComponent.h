@@ -128,6 +128,9 @@ public:
 	// 바디 → 컴포넌트. 물리 씬이 시뮬레이션으로 움직인 바디에 대해 부른다.
 	void SyncComponentToRBPhysics();
 
+	// PhysX 바디 포즈용 월드 트랜스폼 (위치 + 회전). 스케일은 도형 크기에 들어가므로 뺀다.
+	FTransform GetBodyWorldTransform() const;
+
 protected:
 	// 물리 씬은 게임 월드에만 있다. BeginPlay에서 CreatePhysicsState를 부르고, 등록 해제 때 지운다.
 	// 스켈레탈 메시는 바디 하나 대신 뼈마다 바디를 만들도록 덮어쓴다.

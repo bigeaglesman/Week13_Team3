@@ -6,8 +6,7 @@
 
 USkeletalMesh::~USkeletalMesh()
 {
-	delete PhysicsAsset;
-	PhysicsAsset = nullptr;
+	SetPhysicsAsset(nullptr);
 }
 
 void USkeletalMesh::SetPhysicsAsset(UPhysicsAsset* InPhysicsAsset)
@@ -16,8 +15,27 @@ void USkeletalMesh::SetPhysicsAsset(UPhysicsAsset* InPhysicsAsset)
 	{
 		return;
 	}
-	delete PhysicsAsset;
+
+	// 기존 에셋의 소멸자가 OnPhysicsAssetDestroyed로 다시 들어오지 않도록 연결부터 끊는다.
+	UPhysicsAsset* Old = PhysicsAsset;
 	PhysicsAsset = InPhysicsAsset;
+	if (Old)
+	{
+		Old->OwningMesh = nullptr;
+		delete Old;
+	}
+	if (PhysicsAsset)
+	{
+		PhysicsAsset->OwningMesh = this;
+	}
+}
+
+void USkeletalMesh::OnPhysicsAssetDestroyed(UPhysicsAsset* Asset)
+{
+	if (PhysicsAsset == Asset)
+	{
+		PhysicsAsset = nullptr;
+	}
 }
 
 namespace

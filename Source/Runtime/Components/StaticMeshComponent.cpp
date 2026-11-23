@@ -5,6 +5,8 @@
 
 #include "Engine/PrimitiveSceneProxy.h"
 #include "Asset/LOD/StaticMeshLODSelector.h"
+#include "Physics/AggregateGeom.h"
+#include "Physics/BodySetup.h"
 
 
 // StaticMesh 컴포넌트를 초기화한다.
@@ -22,6 +24,49 @@ UStaticMeshComponent::~UStaticMeshComponent()
 void UStaticMeshComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+bool UStaticMeshComponent::GetSimpleBodyGeometry(FKAggregateGeom& OutGeom) const
+{
+	// 에디터 아이콘(조명 화살표 등)은 바디가 없다.
+	UBodySetup* Setup = (StaticMesh && !bEditorIcon) ? StaticMesh->GetBodySetup() : nullptr;
+	if (!Setup || Setup->AggGeom.IsEmpty())
+	{
+		return false;
+	}
+
+	// 메시 에셋의 도형은 스케일 1이다. 바디 포즈에는 스케일이 없으므로 도형에 곱한다.
+	OutGeom = Setup->AggGeom.GetScaled(GetWorldScale3D());
+	return true;
+}
+
+bool UStaticMeshComponent::GetBodyGeometry(FKAggregateGeom& OutGeom) const
+{
+	// 움직이는 바디: PhysX가 삼각형 메시 시뮬레이션을 지원하지 않아 메시 에셋의 볼록 껍질을 쓴다. (오목한 부분은 메워진다)
+	if (BodyInstance.bSimulatePhysics)
+	{
+		return GetSimpleBodyGeometry(OutGeom);
+	}
+
+	const FStaticMeshData* MeshData = (StaticMesh && !bEditorIcon) ? GetMeshData() : nullptr;
+	if (!MeshData || MeshData->Vertices.Num() < 3)
+	{
+		return false;
+	}
+
+	// 움직이지 않는 바디: 메시 모양 그대로 (Complex Collision).
+	// 바디 포즈에는 스케일이 없으므로 정점에 곱한다. 음수 스케일이면 GetScaled가 감기 방향도 뒤집는다.
+	FKAggregateGeom Unscaled;
+	FKTriMeshElem& Elem = Unscaled.TriMeshElems[Unscaled.TriMeshElems.Add(FKTriMeshElem())];
+	Elem.Vertices.Reserve(MeshData->Vertices.Num());
+	for (const FVertex& V : MeshData->Vertices)
+	{
+		Elem.Vertices.Add(V.Position);
+	}
+	Elem.Indices = MeshData->Indices;
+
+	OutGeom = Unscaled.GetScaled(GetWorldScale3D());
+	return true;
 }
 
 // 부모 컴포넌트의 프레임 갱신을 호출한다.

@@ -9,6 +9,7 @@
 #include "Engine/Scene.h"
 #include "Engine/World.h"
 #include "Components/ShapeComponent.h"
+#include "Physics/PhysicalMaterial.h"
 
 namespace
 {
@@ -134,6 +135,13 @@ void UPrimitiveComponent::PostEditChangeProperty(const FProperty& Property)
 			ClearOverlaps();
 		}
 	}
+	else if (Property.Name == "PhysMaterialPath")
+	{
+		UPhysicalMaterial* Loaded = PhysMaterialPath.empty()
+			? nullptr
+			: UPhysicalMaterial::LoadOrGet(PhysMaterialPath);
+		SetPhysMaterialOverride(Loaded);
+	}
 }
 
 void UPrimitiveComponent::SetCastShadow(bool NewValue)
@@ -183,11 +191,17 @@ void UPrimitiveComponent::OnCreatePhysicsState()
 		return;
 	}
 
+	if (!PhysMaterialOverride && !PhysMaterialPath.empty())
+	{
+		PhysMaterialOverride = UPhysicalMaterial::LoadOrGet(PhysMaterialPath);
+	}
+
 	BodyInstance.bSimulatePhysics = bSimulatePhysics;
 	BodyInstance.bEnableGravity = bEnableGravity;
 	BodyInstance.MassInKg = MassInKg;
 	BodyInstance.LinearDamping = LinearDamping;
 	BodyInstance.AngularDamping = AngularDamping;
+	BodyInstance.PhysMaterialOverride = PhysMaterialOverride;
 
 	// bKinematic, bIsTrigger, 채널/마스크, ActorUniqueID를 InitBody 전에 채운다.
 	UpdateCollisionFilter();
@@ -224,6 +238,12 @@ void UPrimitiveComponent::SetEnableGravity(bool bGravityEnabled)
 {
 	bEnableGravity = bGravityEnabled;
 	BodyInstance.SetEnableGravity(bGravityEnabled);
+}
+
+void UPrimitiveComponent::SetPhysMaterialOverride(UPhysicalMaterial* NewPhysMaterial)
+{
+	PhysMaterialOverride = NewPhysMaterial;
+	BodyInstance.SetPhysMaterialOverride(NewPhysMaterial);
 }
 
 void UPrimitiveComponent::AddForce(const FVector& Force, bool bAccelChange)

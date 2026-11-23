@@ -308,12 +308,76 @@ void UCharacterMovementComponent::SafeMoveWithSlide(const FVector& Delta, const 
 
 	HandleImpact(Hit, 0.0f, Delta);
 
-	// 벽으로 들어가는 속도 성분을 없애고 남은 이동을 표면을 따라 한 번 더 시도한다
+	// 벽으로 들어가는 속도 성분을 없애고 남은 이동을 표면을 따라 한 번 더 시도한다.
+	// Dynamic 강체와 부딪힌 경우에는 벽처럼 속도를 0으로 깎지 않고, 질량비만큼만 감속해
+	// 이동·애니메이션이 멈칫거리지 않게 한다.
 	const FVector Normal = Hit.ImpactNormal;
 	const float VDotN = Velocity.Dot(Normal);
-	if (VDotN < 0.0f) Velocity = Velocity - Normal * VDotN;
+	if (VDotN < 0.0f)
+	{
+		float CancelRatio = 1.0f;
+		if (bEnablePhysicsInteraction && Hit.HitComponent && Hit.HitComponent->IsSimulatingPhysics())
+		{
+			constexpr float CharacterMassKg = 70.0f;
+			const float OtherMassKg = std::max(Hit.HitComponent->MassInKg, 0.01f);
+			CancelRatio = std::clamp(OtherMassKg / (CharacterMassKg + OtherMassKg), 0.0f, 0.85f);
+		}
+		Velocity = Velocity - Normal * (VDotN * CancelRatio);
+	}
 
 	const FVector Slide = ComputeSlideVector(Delta, 1.0f - Hit.Time, Normal, Hit);
 	if (Slide.SizeSquared() > SMALL_NUMBER)
 		MoveUpdatedComponent(Slide, NewRotation, true, &Hit);
+}
+
+void UCharacterMovementComponent::HandleImpact(const FHitResult& Hit, float TimeSlice, const FVector& MoveDelta)
+{
+	Super::HandleImpact(Hit, TimeSlice, MoveDelta);
+
+	if (bEnablePhysicsInteraction && Hit.bBlockingHit)
+	{
+		ApplyImpactPhysicsForces(Hit, Velocity);
+	}
+}
+
+void UCharacterMovementComponent::ApplyImpactPhysicsForces(const FHitResult& Impact, const FVector& ImpactVelocity)
+{
+	UPrimitiveComponent* HitComp = Impact.HitComponent;
+	if (!HitComp || !HitComp->IsSimulatingPhysics())
+	{
+		return;
+	}
+
+	// 수평 이동 속도 방향으로 Dynamic 강체를 밀어낸다 (바닥 누름/위로 튕김 방지).
+	FVector PushDir(ImpactVelocity.X, ImpactVelocity.Y, 0.0f);
+	const float Speed = PushDir.Size();
+	if (Speed <= KINDA_SMALL_NUMBER)
+	{
+		return;
+	}
+	PushDir = PushDir / Speed;
+
+	// 표면 안쪽으로 향할 때만 힘을 가한다.
+	if (PushDir.Dot(Impact.ImpactNormal) >= 0.0f)
+	{
+		return;
+	}
+
+	// 캐릭터 질량 대비 물체 질량비로 목표 밀림 속도를 계산하고,
+	// 이미 충분히 빠르게 밀려나고 있는 물체에는 중복 충격을 주지 않는다.
+	constexpr float CharacterMassKg = 70.0f;
+	const float OtherMassKg = std::max(HitComp->MassInKg, 0.1f);
+	const float MassRatio = CharacterMassKg / (CharacterMassKg + OtherMassKg);
+	const float DesiredSpeed = std::clamp(Speed, 0.5f, 10.0f) * (1.0f + PushForceFactor) * MassRatio;
+
+	const FBodyInstance* Body = HitComp->GetBodyInstance();
+	const float CurrentAlongPush = Body ? Body->GetUnrealWorldVelocity().Dot(PushDir) : 0.0f;
+	const float DeltaSpeed = std::max(DesiredSpeed - CurrentAlongPush, 0.0f);
+	if (DeltaSpeed <= SMALL_NUMBER)
+	{
+		return;
+	}
+
+	const FVector Impulse = PushDir * (DeltaSpeed * OtherMassKg);
+	HitComp->AddImpulseAtLocation(Impulse, Impact.ImpactPoint);
 }

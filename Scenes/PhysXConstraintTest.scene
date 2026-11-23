@@ -1555,7 +1555,7 @@
                     ],
                     "Name": "AMyCharacter_0",
                     "Properties": {
-                        "ScriptPath": "",
+                        "ScriptPath": "Scripts/PhysXConstraintTest_AMyCharacter_0.lua",
                         "bActorEnableCollision": true
                     }
                 },
@@ -1662,7 +1662,7 @@
                     ],
                     "Name": "AStaticMeshActor_0",
                     "Properties": {
-                        "ScriptPath": "",
+                        "ScriptPath": "Scripts/PhysXConstraintTest_AStaticMeshActor_0.lua",
                         "bActorEnableCollision": true
                     }
                 },

@@ -78,15 +78,26 @@ bool UStaticMeshComponent::BuildBodyShapeDesc(FBodyShapeDesc& OutDesc) const
 	const FVector WorldScale = GetWorldScale3D();
 	const FVector AbsScale = WorldScale.GetAbs();
 
+	OutDesc.LocalOffset = FVector(
+		LocalCenter.X * WorldScale.X,
+		LocalCenter.Y * WorldScale.Y,
+		LocalCenter.Z * WorldScale.Z);
+
+	if (StaticMesh->GetPath() == "Sphere")
+	{
+		OutDesc.Type = EBodyShapeType::Sphere;
+		OutDesc.Radius = (std::max)({
+			LocalExtent.X * AbsScale.X,
+			LocalExtent.Y * AbsScale.Y,
+			LocalExtent.Z * AbsScale.Z });
+		return true;
+	}
+
 	OutDesc.Type = EBodyShapeType::Box;
 	OutDesc.HalfExtent = FVector(
 		LocalExtent.X * AbsScale.X,
 		LocalExtent.Y * AbsScale.Y,
 		LocalExtent.Z * AbsScale.Z);
-	OutDesc.LocalOffset = FVector(
-		LocalCenter.X * WorldScale.X,
-		LocalCenter.Y * WorldScale.Y,
-		LocalCenter.Z * WorldScale.Z);
 	return true;
 }
 

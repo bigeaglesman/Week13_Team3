@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "Physics/BodyInstance.h"
+#include "Physics/PhysicalMaterial.h"
 #include "Physics/PhysicsCore.h"
 #include "Physics/PhysScene.h"
 #include "Physics/PhysXPublic.h"
@@ -165,8 +166,15 @@ void FBodyInstance::InitBody(
 		NewActor = StaticActor;
 	}
 
+	// 물리 재질 결정: 오버라이드가 있으면 우선 사용, 없으면 전역 기본 재질
+	PxMaterial* MaterialToUse = PhysMaterialOverride ? PhysMaterialOverride->GetPxMaterial() : nullptr;
+	if (!MaterialToUse)
+	{
+		MaterialToUse = GPhysXDefaultMaterial;
+	}
+
 	// Exclusive Shape로 생성(액터 전용)하고, 로컬 포즈·필터·userData를 설정한다.
-	PxShape* Shape = GPhysXSDK->createShape(Geometry.any(), *GPhysXDefaultMaterial, true);
+	PxShape* Shape = GPhysXSDK->createShape(Geometry.any(), *MaterialToUse, true);
 	if (!Shape)
 	{
 		HTR_LOG(Error, "[PhysX] createShape failed");
@@ -308,6 +316,44 @@ void FBodyInstance::UpdatePhysicsFilterData()
 		ApplyShapeFilterAndFlags(Shape, *this);
 	}
 }
+
+void FBodyInstance::SetPhysMaterialOverride(UPhysicalMaterial* NewPhysMaterial)
+{
+	PhysMaterialOverride = NewPhysMaterial;
+
+	if (!RigidActor)
+	{
+		return;
+	}
+
+	PxMaterial* MaterialToUse = PhysMaterialOverride ? PhysMaterialOverride->GetPxMaterial() : nullptr;
+	if (!MaterialToUse)
+	{
+		MaterialToUse = GPhysXDefaultMaterial;
+	}
+	if (!MaterialToUse)
+	{
+		return;
+	}
+
+	const PxU32 NumShapes = RigidActor->getNbShapes();
+	if (NumShapes == 0)
+	{
+		return;
+	}
+
+	std::vector<PxShape*> Shapes(NumShapes);
+	RigidActor->getShapes(Shapes.data(), NumShapes);
+
+	for (PxShape* Shape : Shapes)
+	{
+		if (Shape)
+		{
+			Shape->setMaterials(&MaterialToUse, 1);
+		}
+	}
+}
+
 void FBodyInstance::AddForce(const FVector& Force, bool bAccelChange)
 {
 	PxRigidDynamic* DynamicActor = GetSimulatingDynamicActor(RigidActor);

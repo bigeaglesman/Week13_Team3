@@ -133,11 +133,16 @@ public:
 	float LinearDamping = 0.01f;
 	UPROPERTY(EditAnywhere)
 	float AngularDamping = 0.05f;
+	UPROPERTY(EditAnywhere)
+	FString PhysMaterialPath;
 
 	virtual void SetSimulatePhysics(bool bSimulate);
 	virtual bool IsSimulatingPhysics() const;
 	void SetEnableGravity(bool bGravityEnabled);
 	bool IsGravityEnabled() const { return bEnableGravity; }
+
+	void SetPhysMaterialOverride(class UPhysicalMaterial* NewPhysMaterial);
+	class UPhysicalMaterial* GetPhysMaterialOverride() const { return PhysMaterialOverride; }
 
 	virtual void AddForce(const FVector& Force, bool bAccelChange = false);
 	virtual void AddImpulse(const FVector& Impulse, bool bVelChange = false);
@@ -149,6 +154,8 @@ public:
 	FBodyInstance BodyInstance;
 	FBodyInstance* GetBodyInstance() { return &BodyInstance; }
 	const FBodyInstance* GetBodyInstance() const { return &BodyInstance; }
+
+	class UPhysicalMaterial* PhysMaterialOverride = nullptr;
 
 protected:
 	virtual void OnUnregister() override;

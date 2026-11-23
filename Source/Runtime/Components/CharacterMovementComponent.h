@@ -59,6 +59,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	float TerminalVelocity = 4000.0f;
 
+	// UE UCharacterMovementComponent 물리 상호작용 설정: 이동 중 Dynamic 강체를 밀어낸다.
+	UPROPERTY(EditAnywhere)
+	bool bEnablePhysicsInteraction = true;
+	UPROPERTY(EditAnywhere)
+	float PushForceFactor = 0.35f;
+
 	FVector GetCurrentAcceleration() const { return Acceleration; }
 
 	ECharacterMovementMode GetMovementMode() const { return MovementMode; }
@@ -69,7 +75,10 @@ public:
 	// 바닥에 있을 때만 JumpZVelocity로 위로 띄우고 Falling으로 바꾼다. 뛰었으면 true
 	bool DoJump();
 
+	virtual void HandleImpact(const FHitResult& Hit, float TimeSlice = 0.0f, const FVector& MoveDelta = FVector::ZeroVector) override;
+
 protected:
+	void ApplyImpactPhysicsForces(const FHitResult& Impact, const FVector& ImpactVelocity);
 	// UE: 입력 벡터를 가속도로 바꾼 뒤 PerformMovement
 	void ControlledCharacterMove(const FVector& InputVector, float DeltaTime);
 	// 걷기 중에는 Z 입력을 버린다

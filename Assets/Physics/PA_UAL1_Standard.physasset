@@ -1,0 +1,675 @@
+{
+    "Version":  1,
+    "Bodies":  [
+                   null,
+                   null,
+                   null,
+                   null,
+                   null,
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "Head",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.14,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  11.49404,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "ball_l",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.06333,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  1.064,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "ball_l",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.06333,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  1.064,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "ball_l",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.06333,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  1.064,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "ball_l",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.06333,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  1.064,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   },
+                   {
+                       "BoneName":  "ball_r",
+                       "ShapeType":  2,
+                       "HalfExtent":  {
+                                          "X":  0,
+                                          "Y":  0,
+                                          "Z":  0
+                                      },
+                       "Radius":  0.06333,
+                       "HalfHeight":  0,
+                       "LocalOffset":  {
+                                           "X":  0,
+                                           "Y":  0,
+                                           "Z":  0
+                                       },
+                       "LocalRotation":  {
+                                             "X":  0,
+                                             "Y":  0,
+                                             "Z":  0,
+                                             "W":  1
+                                         },
+                       "MassInKg":  1.064,
+                       "LinearDamping":  0.2,
+                       "AngularDamping":  1.5
+                   }
+               ],
+    "Constraints":  [
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "Head",
+                            "ConstraintBone1":  "Head",
+                            "ConstraintBone2":  "neck_01",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  25,
+                            "Swing2LimitDegrees":  20,
+                            "TwistLimitDegrees":  30,
+                            "AngularDamping":  5,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "ball_l",
+                            "ConstraintBone1":  "ball_l",
+                            "ConstraintBone2":  "foot_l",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  15,
+                            "Swing2LimitDegrees":  5,
+                            "TwistLimitDegrees":  5,
+                            "AngularDamping":  4,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "ball_l",
+                            "ConstraintBone1":  "ball_l",
+                            "ConstraintBone2":  "foot_l",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  15,
+                            "Swing2LimitDegrees":  5,
+                            "TwistLimitDegrees":  5,
+                            "AngularDamping":  4,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "ball_l",
+                            "ConstraintBone1":  "ball_l",
+                            "ConstraintBone2":  "foot_l",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  15,
+                            "Swing2LimitDegrees":  5,
+                            "TwistLimitDegrees":  5,
+                            "AngularDamping":  4,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "ball_l",
+                            "ConstraintBone1":  "ball_l",
+                            "ConstraintBone2":  "foot_l",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  15,
+                            "Swing2LimitDegrees":  5,
+                            "TwistLimitDegrees":  5,
+                            "AngularDamping":  4,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        },
+                        {
+                            "JointName":  "ball_r",
+                            "ConstraintBone1":  "ball_r",
+                            "ConstraintBone2":  "foot_r",
+                            "Swing1Motion":  1,
+                            "Swing2Motion":  1,
+                            "TwistMotion":  1,
+                            "Swing1LimitDegrees":  15,
+                            "Swing2LimitDegrees":  5,
+                            "TwistLimitDegrees":  5,
+                            "AngularDamping":  4,
+                            "AngularStiffness":  0,
+                            "bDisableCollision":  true
+                        }
+                    ]
+}

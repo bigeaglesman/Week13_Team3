@@ -6,6 +6,7 @@
 
 class FPhysScene;
 class UPrimitiveComponent;
+class UPhysicalMaterial;
 
 namespace physx
 {
@@ -81,6 +82,9 @@ public:
 	// 현재 필터·트리거 설정을 PhysX Shape의 FilterData와 플래그에 반영한다.
 	void UpdatePhysicsFilterData();
 
+	// 물리 재질 오버라이드를 변경하고, 이미 생성된 Shape에도 즉시 반영한다.
+	void SetPhysMaterialOverride(UPhysicalMaterial* NewPhysMaterial);
+
 	physx::PxRigidActor* GetPxRigidActor() const { return RigidActor; }
 	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent; }
 
@@ -94,6 +98,9 @@ public:
 	float AngularDamping = 0.05f;
 	uint32 PositionSolverIterationCount = 8;
 	uint32 VelocitySolverIterationCount = 2;
+
+	// 물리 재질 오버라이드 (nullptr이면 GPhysXDefaultMaterial 사용)
+	UPhysicalMaterial* PhysMaterialOverride = nullptr;
 
 	// 충돌 필터 및 트리거 설정 (PxFilterData에 인코딩된다)
 	bool bIsTrigger = false;

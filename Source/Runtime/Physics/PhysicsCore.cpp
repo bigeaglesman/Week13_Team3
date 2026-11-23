@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "PhysicsCore.h"
+#include "Physics/PhysicalMaterial.h"
 
 #include <PxPhysicsAPI.h>
 
@@ -130,6 +131,8 @@ void TermGamePhys()
 {
 	// InitGamePhys에서 만든 정확히 역순으로 해제한다.
 	// 중간 실패 시에도 불리므로 모든 포인터/플래그를 검사하고 초기화한다.
+
+	UPhysicalMaterial::ReleaseAllPhysXMaterials();
 
 	if (GPhysXDefaultMaterial)
 	{

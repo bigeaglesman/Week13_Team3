@@ -3,6 +3,8 @@
 #include "BodySetup.generated.h"
 
 class UStaticMesh;
+class UWorld;
+class FLineBatcher;
 
 // UE FKShapeElem 계열. 모든 값은 바디 원점 기준 로컬 공간, 미터 단위다.
 struct FKSphereElem
@@ -37,7 +39,13 @@ struct FKAggregateGeom
 	TArray<FKSphylElem> SphylElems;
 
 	int32 GetElementCount() const { return SphereElems.Num() + BoxElems.Num() + SphylElems.Num(); }
+
+	// 월드 공간 와이어프레임. 스케일은 PhysX 도형과 같은 규칙으로 곱한다
+	void DrawDebug(FLineBatcher& LineBatcher, const FVector& Location, const FQuat& Rotation, const FVector& Scale, const FVector4& Color) const;
 };
+
+// Collision 쇼 플래그. 바디를 만드는 컴포넌트의 BodySetup을 그린다
+void DrawPhysicsCollision(UWorld* World, FLineBatcher* LineBatcher);
 
 // UE UBodySetup. 바디 하나의 충돌 모양 에셋 데이터. 런타임 바디(FBodyInstance)는 이걸 읽어서 만든다.
 UCLASS()

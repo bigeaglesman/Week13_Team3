@@ -215,6 +215,7 @@ namespace EditorViewportUI
 				{ "Rendering", EEditorIcon::ShowPrimitives, &Flags.Rendering },
 				{ "Skeletal Meshes", EEditorIcon::SkeletalMesh, &Flags.SkeletalMeshes },
 				{ "Particles", EEditorIcon::Particle, &Flags.Particles },
+				{ "Collision", EEditorIcon::ViewWireframe, &Flags.Collision },
 				{ "Decals", EEditorIcon::ShowDecal, &Flags.Decals },
 				{ "Fog", EEditorIcon::ShowFog, &Flags.Fog },
 				{ "Anti-aliasing", EEditorIcon::ShowAntiAliasing, &Flags.AntiAliasing },

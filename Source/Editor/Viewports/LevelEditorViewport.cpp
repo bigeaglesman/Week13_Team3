@@ -5,6 +5,7 @@
 #include "Render/Renderer.h"
 #include "Render/SceneRenderer.h"
 #include "Components/ShapeComponent.h"
+#include "Physics/BodySetup.h"
 #include "Components/DecalComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/SpotLightComponent.h"
@@ -185,6 +186,8 @@ void FLevelEditorViewportClient::Draw(const FSceneView* View, FScenePassCallback
 
 				// 이 뷰포트가 보고 있는 월드의 것을 그린다. PIE와 SIE 중에는 PIE 월드다.
 				DrawCollisionShapes(GetWorld(), LineBatcher, SelectedActor);
+				if (EngineShowFlags.Collision)
+					DrawPhysicsCollision(GetWorld(), LineBatcher);
 				DrawSpringArms(GetWorld(), LineBatcher, SelectedActor);
 
 				LineBatcher->OnRender(SceneView.ViewProjectionMatrix);

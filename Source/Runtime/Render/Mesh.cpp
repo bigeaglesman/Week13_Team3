@@ -4,6 +4,7 @@
 #include "Asset/AssetManager.h"
 #include "Engine/PrimitiveSceneProxy.h"
 #include "Physics/BodySetup.h"
+#include "Physics/PhysicsAsset.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -123,4 +124,6 @@ UBodySetup::~UBodySetup()
     // UObject 일괄 정리에서 BodySetup이 메시보다 먼저 해제되는 경우.
     if (OwningStaticMesh && OwningStaticMesh->BodySetup == this)
         OwningStaticMesh->BodySetup = nullptr;
+    if (UPhysicsAsset* PhysicsAsset = Cast<UPhysicsAsset>(GetOuter()))
+        PhysicsAsset->OnBodySetupDestroyed(this);
 }

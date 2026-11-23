@@ -159,6 +159,22 @@ FMatrix USkeletalMeshComponent::GetBoneWorldMatrix(int32 BoneIndex) const
 	return GetBoneComponentMatrix(BoneIndex) * GetWorldMatrix();
 }
 
+FTransform USkeletalMeshComponent::GetBoneWorldTransform(int32 BoneIndex) const
+{
+	// USceneComponent::SetWorldTransform과 같은 방식으로 행렬을 위치, 회전, 스케일로 나눈다
+	const FMatrix M = GetBoneWorldMatrix(BoneIndex);
+	const FVector XAxis(M[0][0], M[0][1], M[0][2]);
+	const FVector YAxis(M[1][0], M[1][1], M[1][2]);
+	const FVector ZAxis(M[2][0], M[2][1], M[2][2]);
+
+	FMatrix RotationMatrix = FMatrix::Identity;
+	RotationMatrix.SetAxis(0, XAxis.Normalized());
+	RotationMatrix.SetAxis(1, YAxis.Normalized());
+	RotationMatrix.SetAxis(2, ZAxis.Normalized());
+
+	return FTransform(FVector(M[3][0], M[3][1], M[3][2]), FVector(XAxis.Size(), YAxis.Size(), ZAxis.Size()), MatrixToRotator(RotationMatrix));
+}
+
 void USkeletalMeshComponent::ResetPose()
 {
 	OnSkeletalMeshChanged();

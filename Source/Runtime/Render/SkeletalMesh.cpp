@@ -2,6 +2,7 @@
 #include "SkeletalMesh.h"
 #include "Render/RenderCommand.h"
 #include "Asset/AssetManager.h"
+#include "Physics/PhysicsAsset.h"
 
 namespace
 {
@@ -29,6 +30,21 @@ namespace
 		}
 		return Bounds;
 	}
+}
+
+USkeletalMesh::~USkeletalMesh()
+{
+	delete PhysicsAsset;
+}
+
+UPhysicsAsset* USkeletalMesh::GetPhysicsAsset()
+{
+	if (!PhysicsAsset && !RefSkeleton.IsEmpty())
+	{
+		PhysicsAsset = NewObject<UPhysicsAsset>(this);
+		PhysicsAsset->CreateFromSkeletalMesh(*this);
+	}
+	return PhysicsAsset;
 }
 
 bool USkeletalMesh::Build(FSkeletalMeshData&& ImportData, FString& OutError)

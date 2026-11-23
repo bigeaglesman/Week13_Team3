@@ -11,6 +11,8 @@
 #include <vector>
 #include "SkeletalMesh.generated.h"
 
+class UPhysicsAsset;
+
 struct FSkeletalMeshLODRenderData
 {
 	TArray<FVertex> BindVertices;
@@ -36,6 +38,7 @@ class USkeletalMesh : public URenderAsset
 {
 	GENERATED_BODY()
 public:
+	~USkeletalMesh() override;
 	bool Build(FSkeletalMeshData&& ImportData, FString& OutError);
 
 	const TArray<FBoneInfo>& GetRefSkeleton() const { return RefSkeleton; }
@@ -43,6 +46,8 @@ public:
 	int32 FindBoneIndex(const FString& Name) const;
 	const FSkeletalMeshRenderData& GetRenderData() const { return RenderData; }
 	const TArray<FSkeletalMaterialSlot>& GetMaterialSlots() const { return MaterialSlots; }
+	// 첫 호출 때 본마다 캡슐을 만든다. 같은 메시를 쓰는 컴포넌트가 공유한다.
+	UPhysicsAsset* GetPhysicsAsset();
 	UMaterial* GetMaterial(uint32 SlotIndex) const;
 
 	TSharedPtr<const FMeshRenderState> GetRenderState(const TArray<UMaterial*>& Materials);
@@ -59,4 +64,7 @@ private:
 	FSkeletalMeshRenderData RenderData;
 	// UStaticMesh와 같은 캐시: 같은 머티리얼 조합의 컴포넌트끼리 섹션 목록 공유
 	TMap<TArray<UMaterial*>, TWeakPtr<const FMeshRenderState>, FMaterialSlotsHash> RenderStates;
+
+	friend class UPhysicsAsset;
+	UPhysicsAsset* PhysicsAsset = nullptr;
 };

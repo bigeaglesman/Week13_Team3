@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "Physics/BodySetup.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Physics/PhysicsAsset.h"
 #include "Render/LineBatcher.h"
 #include "UObject/UObjectIterator.h"
 #include "Math/Transform.h"
@@ -61,6 +63,23 @@ void DrawPhysicsCollision(UWorld* World, FLineBatcher* LineBatcher)
 		if (!Component || Component->GetWorld() != World || !Component->IsRegistered()) continue;
 		// CreatePhysicsBody와 같은 조건
 		if (!Component->bSimulatePhysics && !Component->bEnableStaticPhysicsCollision) continue;
+
+		// 스켈레탈 메시는 본마다 바디가 있다
+		if (USkeletalMeshComponent* SkeletalComponent = Cast<USkeletalMeshComponent>(Component))
+		{
+			USkeletalMesh* Mesh = SkeletalComponent->GetSkeletalMesh();
+			UPhysicsAsset* PhysicsAsset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
+			if (!PhysicsAsset) continue;
+
+			for (const UBodySetup* BoneSetup : PhysicsAsset->SkeletalBodySetups)
+			{
+				const int32 BoneIndex = SkeletalComponent->FindBoneIndex(BoneSetup->BoneName.ToString());
+				if (BoneIndex < 0) continue;
+				const FTransform Bone = SkeletalComponent->GetBoneWorldTransform(BoneIndex);
+				BoneSetup->AggGeom.DrawDebug(*LineBatcher, Bone.Location, Bone.Rotation, Bone.Scale, SimulateColor);
+			}
+			continue;
+		}
 
 		const UBodySetup* Setup = Component->GetBodySetup();
 		if (!Setup) continue;

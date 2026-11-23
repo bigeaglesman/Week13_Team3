@@ -4,7 +4,6 @@
 #include "Physics/PhysicsCore.h"
 #include "Physics/PhysicsScene.h"
 #include "Physics/PhysXConversion.h"
-#include "Components/PrimitiveComponent.h"
 
 #include <PxPhysicsAPI.h>
 
@@ -103,27 +102,7 @@ void FBodyInstance::SetBodyTransform(const FTransform& WorldTransform)
 	}
 }
 
-void FBodyInstance::SyncComponentToBody()
+FTransform FBodyInstance::GetUnrealWorldTransform() const
 {
-	if (!RigidActor || !OwnerComponent || !bSimulatePhysics || InstanceBoneIndex >= 0)
-	{
-		return;
-	}
-
-	const PxTransform Pose = RigidActor->getGlobalPose();
-	const FVector Location = ToFVector(Pose.p);
-	const FQuat   Rotation = ToFQuat(Pose.q);
-
-	// 부모가 없으면 쿼터니언 그대로 넣는다. FRotator를 거치면 Pitch ±90도 근처에서 값이 튄다.
-	if (!OwnerComponent->GetAttachParent())
-	{
-		FTransform Transform = OwnerComponent->GetTransform();
-		Transform.Location = Location;
-		Transform.Rotation = Rotation;
-		OwnerComponent->SetTransform(Transform);
-	}
-	else
-	{
-		OwnerComponent->SetWorldLocationAndRotation(Location, Rotation.ToFRotator(), false);
-	}
+	return RigidActor ? ToFTransform(RigidActor->getGlobalPose()) : FTransform();
 }

@@ -3,6 +3,7 @@
 #include "Physics/PhysicsCore.h"
 #include "Physics/PhysXConversion.h"
 #include "Physics/BodyInstance.h"
+#include "Components/PrimitiveComponent.h"
 #include "Render/LineBatcher.h"
 #include "Core/Stats/LightweightStats.h"
 
@@ -93,9 +94,11 @@ void FPhysicsScene::SyncActiveBodiesToComponents()
 	PxActor** ActiveActors = Scene->getActiveActors(NumActive);
 	for (PxU32 i = 0; i < NumActive; ++i)
 	{
-		if (FBodyInstance* Body = static_cast<FBodyInstance*>(ActiveActors[i]->userData))
+		// 뼈 바디는 건너뛴다. 뼈 결과는 스켈레탈 메시 컴포넌트가 물리 이후에 한꺼번에 가져간다 (UE의 BlendPhysicsBones).
+		FBodyInstance* Body = static_cast<FBodyInstance*>(ActiveActors[i]->userData);
+		if (Body && Body->InstanceBoneIndex < 0 && Body->GetOwnerComponent())
 		{
-			Body->SyncComponentToBody();
+			Body->GetOwnerComponent()->SyncComponentToRBPhysics();
 		}
 	}
 }

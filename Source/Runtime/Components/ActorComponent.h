@@ -64,6 +64,13 @@ public:
 	bool IsRegistered() const { return bRegistered; }
 	bool IsRenderStateCreated() const { return bRenderStateCreated; }
 
+	// 물리 상태(PhysX 바디). 월드에 물리 씬이 있고 ShouldCreatePhysicsState가 true일 때만 OnCreatePhysicsState를 부른다.
+	// 물리 씬은 게임 월드의 BeginPlay에서 생기므로, 만드는 쪽(UPrimitiveComponent::BeginPlay)이 직접 부른다.
+	// 지우는 건 등록 해제 때 자동으로 한다.
+	void CreatePhysicsState();
+	void DestroyPhysicsState();
+	bool IsPhysicsStateCreated() const { return bPhysicsStateCreated; }
+
 	UWorld* GetWorld() const { return WorldPrivate; }
 protected:
 
@@ -77,6 +84,12 @@ protected:
 	//원래는 _Concurrent 병렬처리 -> 현재 엔진에서는 멀티 스레드 사용 X 
 	virtual void CreateRenderState();
 	virtual void DestroyRenderState();
+
+	// 덮어쓸 때는 Super를 불러야 bPhysicsStateCreated가 바뀐다.
+	virtual bool ShouldCreatePhysicsState() const { return false; }
+	virtual void OnCreatePhysicsState();
+	virtual void OnDestroyPhysicsState();
+
 	UPROPERTY(EditAnywhere)
 	bool bAutoActivate = true;
 	UPROPERTY(EditAnywhere)
@@ -97,4 +110,5 @@ private:
 
 	UWorld* WorldPrivate = nullptr;
 	bool bRenderStateCreated = false;
+	bool bPhysicsStateCreated = false;
 };

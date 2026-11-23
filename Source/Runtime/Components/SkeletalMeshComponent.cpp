@@ -51,20 +51,17 @@ namespace
 	}
 }
 
-void USkeletalMeshComponent::CreatePhysicsState()
+bool USkeletalMeshComponent::ShouldCreatePhysicsState() const
 {
-	if (!Bodies.IsEmpty() || !BodyInstance.ShouldCreateBody())
-	{
-		return;
-	}
+	return Super::ShouldCreatePhysicsState() && GetSkeletalMesh();
+}
 
-	UWorld* World = GetWorld();
-	FPhysicsScene* PhysicsScene = World ? World->GetPhysicsScene() : nullptr;
+void USkeletalMeshComponent::OnCreatePhysicsState()
+{
+	// UPrimitiveComponent의 바디 하나는 만들지 않는다. 뼈마다 바디를 만든다. (UE도 USceneComponent 쪽으로 건너뛴다)
+	USceneComponent::OnCreatePhysicsState();
+
 	USkeletalMesh* Mesh = GetSkeletalMesh();
-	if (!PhysicsScene || !Mesh)
-	{
-		return;
-	}
 
 	// 에디터에서 만든 Physics Asset이 없으면 뼈 모양으로 자동 생성한다. 메시가 소유하므로 다음부터는 재사용된다.
 	if (!Mesh->GetPhysicsAsset())
@@ -74,14 +71,14 @@ void USkeletalMeshComponent::CreatePhysicsState()
 
 	if (UPhysicsAsset* PhysicsAsset = Mesh->GetPhysicsAsset())
 	{
-		InitArticulated(PhysicsScene, PhysicsAsset);
+		InitArticulated(GetWorld()->GetPhysicsScene(), PhysicsAsset);
 	}
 }
 
-void USkeletalMeshComponent::DestroyPhysicsState()
+void USkeletalMeshComponent::OnDestroyPhysicsState()
 {
 	TermArticulated();
-	Super::DestroyPhysicsState();
+	Super::OnDestroyPhysicsState();
 }
 
 void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysicsAsset* PhysicsAsset)

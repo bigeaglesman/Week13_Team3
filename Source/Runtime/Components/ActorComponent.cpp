@@ -170,8 +170,37 @@ void UActorComponent::ExecuteRegisterEvents()
 	}
 }
 
+void UActorComponent::CreatePhysicsState()
+{
+	if (!bPhysicsStateCreated && WorldPrivate && WorldPrivate->GetPhysicsScene() && ShouldCreatePhysicsState())
+	{
+		OnCreatePhysicsState();
+		assert(bPhysicsStateCreated && "Forgot to Call OnCreatePhysicsState: Super ");
+	}
+}
+
+void UActorComponent::DestroyPhysicsState()
+{
+	if (bPhysicsStateCreated)
+	{
+		OnDestroyPhysicsState();
+		assert(!bPhysicsStateCreated && "Forgot to Call OnDestroyPhysicsState: Super ");
+	}
+}
+
+void UActorComponent::OnCreatePhysicsState()
+{
+	bPhysicsStateCreated = true;
+}
+
+void UActorComponent::OnDestroyPhysicsState()
+{
+	bPhysicsStateCreated = false;
+}
+
 void UActorComponent::ExecuteUnregisterEvents()
 {
+	DestroyPhysicsState();
 	if (bRenderStateCreated)
 	{
 		DestroyRenderState();

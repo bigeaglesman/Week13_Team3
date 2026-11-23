@@ -78,13 +78,15 @@ public:
 	void DrawRootDebug(FLineBatcher* LineBatcher) const;
 
 	// ---- 물리 (래그돌) ----
-	// BodyInstance의 bEnablePhysicsCollision 또는 bSimulatePhysics가 켜져 있으면 바디 하나 대신 Physics Asset대로 뼈마다 바디를 만든다.
-	// 메시에 Physics Asset이 없으면 뼈 모양으로 자동 생성해 붙인다.
-	virtual void CreatePhysicsState() override;
-	virtual void DestroyPhysicsState() override;
 	const TArray<FBodyInstance*>& GetBodies() const { return Bodies; }
 
 protected:
+	// BodyInstance의 bEnablePhysicsCollision 또는 bSimulatePhysics가 켜져 있으면 바디 하나 대신 Physics Asset대로 뼈마다 바디를 만든다.
+	// 메시에 Physics Asset이 없으면 뼈 모양으로 자동 생성해 붙인다.
+	virtual bool ShouldCreatePhysicsState() const override;
+	virtual void OnCreatePhysicsState() override;
+	virtual void OnDestroyPhysicsState() override;
+
 	// UE의 InitArticulated / TermArticulated
 	void InitArticulated(FPhysicsScene* PhysicsScene, UPhysicsAsset* PhysicsAsset);
 	void TermArticulated();

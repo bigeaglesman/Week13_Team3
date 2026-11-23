@@ -63,37 +63,53 @@ void UPrimitiveComponent::BeginPlay()
 	CreatePhysicsState();
 }
 
-void UPrimitiveComponent::CreatePhysicsState()
+bool UPrimitiveComponent::ShouldCreatePhysicsState() const
 {
-	if (BodyInstance.IsValidBodyInstance() || !BodyInstance.ShouldCreateBody())
-	{
-		return;
-	}
-
-	UWorld* World = GetWorld();
-	FPhysicsScene* PhysicsScene = World ? World->GetPhysicsScene() : nullptr;
-	if (!PhysicsScene)
-	{
-		return;
-	}
-
-	FKAggregateGeom Geom;
-	if (!GetBodyGeometry(Geom))
-	{
-		return;
-	}
-
-	BodyInstance.InitBody(this, Geom, GetBodyWorldTransform(this), PhysicsScene);
+	return BodyInstance.bSimulatePhysics || BodyInstance.bEnablePhysicsCollision;
 }
 
-void UPrimitiveComponent::DestroyPhysicsState()
+void UPrimitiveComponent::OnCreatePhysicsState()
+{
+	Super::OnCreatePhysicsState();
+
+	FKAggregateGeom Geom;
+	if (GetBodyGeometry(Geom))
+	{
+		BodyInstance.InitBody(this, Geom, GetBodyWorldTransform(this), GetWorld()->GetPhysicsScene());
+	}
+}
+
+void UPrimitiveComponent::OnDestroyPhysicsState()
 {
 	BodyInstance.TermBody();
+	Super::OnDestroyPhysicsState();
+}
+
+void UPrimitiveComponent::SyncComponentToRBPhysics()
+{
+	if (!BodyInstance.IsSimulating())
+	{
+		return;
+	}
+
+	const FTransform Pose = BodyInstance.GetUnrealWorldTransform();
+
+	// 부모가 없으면 쿼터니언 그대로 넣는다. FRotator를 거치면 Pitch ±90도 근처에서 값이 튄다.
+	if (!GetAttachParent())
+	{
+		FTransform Transform = GetTransform();
+		Transform.Location = Pose.Location;
+		Transform.Rotation = Pose.Rotation;
+		SetTransform(Transform);
+	}
+	else
+	{
+		SetWorldLocationAndRotation(Pose.Location, Pose.Rotation.ToFRotator(), false);
+	}
 }
 
 void UPrimitiveComponent::OnUnregister()
 {
-	DestroyPhysicsState();
 	Super::OnUnregister();
 	// 삭제/등록 해제된 도형을 상대의 OverlapInfos에 남기지 않는다.
 	while (!OverlapInfos.IsEmpty())

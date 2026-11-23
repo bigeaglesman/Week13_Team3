@@ -36,8 +36,6 @@ struct FBodyInstance
 	UPROPERTY(EditAnywhere)
 	float MassInKg = 10.0f;
 
-	bool ShouldCreateBody() const { return bSimulatePhysics || bEnablePhysicsCollision; }
-
 	// WorldTransform의 스케일은 쓰지 않는다. 스케일은 Geom 크기에 이미 들어 있다.
 	void InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom& Geom, const FTransform& WorldTransform, FPhysicsScene* Scene);
 	void TermBody();
@@ -48,9 +46,8 @@ struct FBodyInstance
 	// 컴포넌트 → 바디. 키네마틱 바디만 따라간다. 시뮬레이션 중인 바디는 PhysX가 주인이다.
 	void SetBodyTransform(const FTransform& WorldTransform);
 
-	// 바디 → 컴포넌트. FPhysicsScene이 움직인 액터에 대해서만 부른다.
-	// 뼈 바디는 건너뛴다. 뼈 결과는 스켈레탈 메시 컴포넌트가 따로 가져간다 (UE의 BlendPhysicsBones).
-	void SyncComponentToBody();
+	// 지금 바디의 월드 위치·회전 (스케일 없음)
+	FTransform GetUnrealWorldTransform() const;
 
 	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent; }
 	physx::PxRigidActor* GetPxRigidActor() const { return RigidActor; }

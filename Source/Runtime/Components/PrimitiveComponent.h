@@ -125,12 +125,16 @@ public:
 	// Shape 컴포넌트는 자기 크기로 채운다. 스켈레탈 메시는 이걸 쓰지 않고 UBodySetup의 도형으로 뼈마다 바디를 만든다.
 	virtual bool GetBodyGeometry(FKAggregateGeom& OutGeom) const { return false; }
 
-	// BeginPlay에서 만들고 OnUnregister에서 지운다. 물리 씬은 게임 월드에만 있다. (UE의 OnCreatePhysicsState)
-	// 스켈레탈 메시는 바디 하나 대신 뼈마다 바디를 만들도록 덮어쓴다.
-	virtual void CreatePhysicsState();
-	virtual void DestroyPhysicsState();
+	// 바디 → 컴포넌트. 물리 씬이 시뮬레이션으로 움직인 바디에 대해 부른다.
+	void SyncComponentToRBPhysics();
 
 protected:
+	// 물리 씬은 게임 월드에만 있다. BeginPlay에서 CreatePhysicsState를 부르고, 등록 해제 때 지운다.
+	// 스켈레탈 메시는 바디 하나 대신 뼈마다 바디를 만들도록 덮어쓴다.
+	virtual bool ShouldCreatePhysicsState() const override;
+	virtual void OnCreatePhysicsState() override;
+	virtual void OnDestroyPhysicsState() override;
+
 	virtual void OnUnregister() override;
 	TArray<FOverlapInfo> OverlapInfos;
 

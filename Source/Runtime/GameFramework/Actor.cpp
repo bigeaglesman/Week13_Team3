@@ -3,6 +3,7 @@
 #include "Engine/World.h"
 #include "Engine/Level.h"
 #include "Components/SceneComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Components/ParticleSubUVComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Core/EngineLog.h"
@@ -413,6 +414,28 @@ bool AActor::TryGetActorBounds(FBox& OutBounds) const
 	}
 
 	return bHasBounds;
+}
+
+void AActor::SetActorEnableCollision(bool bEnabled)
+{
+	if (bActorEnableCollision == bEnabled)
+	{
+		return;
+	}
+
+	bActorEnableCollision = bEnabled;
+
+	for (UActorComponent* Comp : Components)
+	{
+		if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Comp))
+		{
+			PrimComp->UpdateCollisionFilter();
+			if (!bActorEnableCollision)
+			{
+				PrimComp->ClearOverlaps();
+			}
+		}
+	}
 }
 
 void AActor::NotifyActorBeginOverlap(AActor* OtherActor)

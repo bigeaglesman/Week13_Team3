@@ -7,6 +7,8 @@
 ACharacter::ACharacter()
 {
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>("CapsuleComponent");
+	CapsuleComponent->bBlockComponent = true;
+	CapsuleComponent->CollisionObjectType = ECollisionChannel::ECC_Pawn;
 	SetRootComponent(CapsuleComponent);
 
 	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("SkeletalMeshComponent");

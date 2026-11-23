@@ -8,6 +8,7 @@
 #include "Engine/PrimitiveSceneProxy.h"
 #include "Engine/Scene.h"
 #include "Engine/World.h"
+#include "Components/ShapeComponent.h"
 
 namespace
 {
@@ -52,13 +53,7 @@ void UPrimitiveComponent::BeginPlay()
 void UPrimitiveComponent::OnUnregister()
 {
 	Super::OnUnregister();
-	// 삭제/등록 해제된 도형을 상대의 OverlapInfos에 남기지 않는다.
-	while (!OverlapInfos.IsEmpty())
-	{
-		UPrimitiveComponent* Other = OverlapInfos[OverlapInfos.Num() - 1].OtherComp;
-		EndComponentOverlap(Other);
-		if (Other) Other->EndComponentOverlap(this);
-	}
+	ClearOverlaps();
 }
 
 
@@ -130,6 +125,15 @@ void UPrimitiveComponent::PostEditChangeProperty(const FProperty& Property)
 	{
 		RecreatePhysicsState();
 	}
+	else if (Property.Name == "bGenerateOverlapEvents" ||
+		Property.Name == "bBlockComponent")
+	{
+		UpdateCollisionFilter();
+		if (!bGenerateOverlapEvents)
+		{
+			ClearOverlaps();
+		}
+	}
 }
 
 void UPrimitiveComponent::SetCastShadow(bool NewValue)
@@ -184,6 +188,9 @@ void UPrimitiveComponent::OnCreatePhysicsState()
 	BodyInstance.MassInKg = MassInKg;
 	BodyInstance.LinearDamping = LinearDamping;
 	BodyInstance.AngularDamping = AngularDamping;
+
+	// bKinematic, bIsTrigger, 채널/마스크, ActorUniqueID를 InitBody 전에 채운다.
+	UpdateCollisionFilter();
 
 	BodyInstance.InitBody(ShapeDesc, GetWorldTransform(), this, PhysScene);
 }
@@ -338,5 +345,47 @@ void UPrimitiveComponent::DispatchHit(UPrimitiveComponent* OtherComp)
 	if (Owner && OtherActor)
 	{
 		Owner->NotifyHit(OtherActor);
+	}
+}
+
+void UPrimitiveComponent::UpdateCollisionFilter()
+{
+	const bool bIsShape = (Cast<UShapeComponent>(this) != nullptr);
+	AActor* Owner = GetOwner();
+	const bool bCollisionEnabled = Owner && Owner->GetActorEnableCollision();
+
+	BodyInstance.bKinematic = bIsShape && !bSimulatePhysics;
+	BodyInstance.bIsTrigger = bIsShape && !bSimulatePhysics && !bBlockComponent;
+	BodyInstance.ObjectType = bSimulatePhysics ? ECollisionChannel::ECC_PhysicsBody : CollisionObjectType;
+	BodyInstance.ActorUniqueID = Owner ? Owner->GetUUID() : 0;
+
+	if (!bCollisionEnabled)
+	{
+		BodyInstance.BlockMask = 0;
+		BodyInstance.OverlapMask = 0;
+	}
+	else
+	{
+		// StaticMesh는 기본 Block, Shape는 bBlockComponent 또는 bSimulatePhysics일 때 Block
+		const bool bBlocks = !bIsShape || bBlockComponent || bSimulatePhysics;
+		BodyInstance.BlockMask = bBlocks ? ECC_AllChannelsMask : 0u;
+		BodyInstance.OverlapMask = bGenerateOverlapEvents ? ECC_AllChannelsMask : 0u;
+	}
+
+	// 이미 PxRigidActor가 생성되어 있다면 Shape의 FilterData와 Trigger 플래그를 즉시 갱신한다.
+	BodyInstance.UpdatePhysicsFilterData();
+}
+
+void UPrimitiveComponent::ClearOverlaps()
+{
+	// 삭제/등록 해제/충돌 비활성화된 도형을 상대의 OverlapInfos에 남기지 않는다.
+	while (!OverlapInfos.IsEmpty())
+	{
+		UPrimitiveComponent* Other = OverlapInfos[OverlapInfos.Num() - 1].OtherComp;
+		EndComponentOverlap(Other);
+		if (Other)
+		{
+			Other->EndComponentOverlap(this);
+		}
 	}
 }

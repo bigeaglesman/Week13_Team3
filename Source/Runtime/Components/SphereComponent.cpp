@@ -1,6 +1,5 @@
 #include "EnginePCH.h"
 #include "SphereComponent.h"
-#include "Physics/Collision.h"
 #include "Render/LineBatcher.h"
 
 float USphereComponent::GetScaledSphereRadius() const

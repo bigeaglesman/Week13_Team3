@@ -6,6 +6,7 @@
 
 #include <PxPhysicsAPI.h>
 #include <algorithm>
+#include <vector>
 
 using namespace physx;
 
@@ -53,6 +54,39 @@ namespace
 			return false;
 		}
 	}
+
+	void ApplyShapeFilterAndFlags(PxShape* Shape, const FBodyInstance& Body)
+	{
+		if (!Shape)
+		{
+			return;
+		}
+
+		// Dynamic 강체는 시뮬레이션 도형이 필요하므로 Trigger 플래그를 허용하지 않는다.
+		const bool bUseTrigger = Body.bIsTrigger && !Body.bSimulatePhysics;
+
+		// PhysX 규칙: eSIMULATION_SHAPE과 eTRIGGER_SHAPE은 상호 배타적이다.
+		// 반드시 기존 플래그를 먼저 끈 뒤 새 플래그를 켜야 에러가 나지 않는다.
+		if (bUseTrigger)
+		{
+			Shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+			Shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+		}
+		else
+		{
+			Shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+			Shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+		}
+
+		PxFilterData FilterData;
+		FilterData.word0 = CollisionChannelToBit(Body.ObjectType);
+		FilterData.word1 = Body.BlockMask;
+		FilterData.word2 = Body.OverlapMask;
+		FilterData.word3 = Body.ActorUniqueID;
+
+		Shape->setSimulationFilterData(FilterData);
+		Shape->setQueryFilterData(FilterData);
+	}
 }
 
 FBodyInstance::~FBodyInstance()
@@ -88,13 +122,17 @@ void FBodyInstance::InitBody(
 	PxRigidActor* NewActor = nullptr;
 	PxRigidDynamic* DynamicActor = nullptr;
 
-	if (bSimulatePhysics)
+	if (bSimulatePhysics || bKinematic)
 	{
 		DynamicActor = GPhysXSDK->createRigidDynamic(InitialPose);
 		if (!DynamicActor)
 		{
 			HTR_LOG(Error, "[PhysX] createRigidDynamic failed");
 			return;
+		}
+		if (!bSimulatePhysics && bKinematic)
+		{
+			DynamicActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 		}
 		NewActor = DynamicActor;
 	}
@@ -109,7 +147,7 @@ void FBodyInstance::InitBody(
 		NewActor = StaticActor;
 	}
 
-	// Exclusive Shape로 생성(액터 전용)하고, 로컬 포즈와 userData를 설정한다.
+	// Exclusive Shape로 생성(액터 전용)하고, 로컬 포즈·필터·userData를 설정한다.
 	PxShape* Shape = GPhysXSDK->createShape(Geometry.any(), *GPhysXDefaultMaterial, true);
 	if (!Shape)
 	{
@@ -120,12 +158,13 @@ void FBodyInstance::InitBody(
 
 	Shape->setLocalPose(LocalPose);
 	Shape->userData = InOwnerComp;
+	ApplyShapeFilterAndFlags(Shape, *this);
 
 	// attachShape가 참조 카운트를 올리므로, 여기서 로컬 참조를 release해야 Actor 해제 시 Shape도 함께 해제된다.
 	NewActor->attachShape(*Shape);
 	Shape->release();
 
-	if (DynamicActor)
+	if (DynamicActor && bSimulatePhysics)
 	{
 		// Shape가 붙은 뒤에 호출해야 도형 크기와 LocalPose를 반영해 정확한 관성 텐서와 무게중심이 계산된다.
 		PxRigidBodyExt::setMassAndUpdateInertia(*DynamicActor, std::max(MassInKg, 0.001f));
@@ -221,5 +260,27 @@ void FBodyInstance::SetEnableGravity(bool bGravityEnabled)
 		{
 			DynamicActor->wakeUp();
 		}
+	}
+}
+
+void FBodyInstance::UpdatePhysicsFilterData()
+{
+	if (!RigidActor)
+	{
+		return;
+	}
+
+	const PxU32 NumShapes = RigidActor->getNbShapes();
+	if (NumShapes == 0)
+	{
+		return;
+	}
+
+	std::vector<PxShape*> Shapes(NumShapes);
+	RigidActor->getShapes(Shapes.data(), NumShapes);
+
+	for (PxShape* Shape : Shapes)
+	{
+		ApplyShapeFilterAndFlags(Shape, *this);
 	}
 }

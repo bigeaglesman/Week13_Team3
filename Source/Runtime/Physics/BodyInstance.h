@@ -2,6 +2,7 @@
 
 #include "Core/Types.h"
 #include "Math/Transform.h"
+#include "Physics/CollisionTypes.h"
 
 class FPhysScene;
 class UPrimitiveComponent;
@@ -69,16 +70,27 @@ public:
 	bool IsInstanceSimulatingPhysics() const;
 	void SetEnableGravity(bool bGravityEnabled);
 
+	// 현재 필터·트리거 설정을 PhysX Shape의 FilterData와 플래그에 반영한다.
+	void UpdatePhysicsFilterData();
+
 	physx::PxRigidActor* GetPxRigidActor() const { return RigidActor; }
 	UPrimitiveComponent* GetOwnerComponent() const { return OwnerComponent; }
 
 public:
 	// InitBody 호출 전에 소유 컴포넌트가 채워 넣는 시뮬레이션 설정
 	bool bSimulatePhysics = false;
+	bool bKinematic = false;
 	bool bEnableGravity = true;
 	float MassInKg = 1.0f;
 	float LinearDamping = 0.01f;
 	float AngularDamping = 0.05f;
+
+	// 충돌 필터 및 트리거 설정 (PxFilterData에 인코딩된다)
+	bool bIsTrigger = false;
+	ECollisionChannel ObjectType = ECollisionChannel::ECC_WorldStatic;
+	uint32 BlockMask = ECC_AllChannelsMask;
+	uint32 OverlapMask = ECC_AllChannelsMask;
+	uint32 ActorUniqueID = 0;
 
 private:
 	// PxRigidStatic / PxRigidDynamic 공통 부모 포인터

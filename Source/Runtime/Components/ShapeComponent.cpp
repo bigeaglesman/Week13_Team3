@@ -7,6 +7,7 @@ UShapeComponent::UShapeComponent()
 {
 	bCastShadow = false;
 	bReceiveShadow = false;
+	CollisionObjectType = ECollisionChannel::ECC_WorldDynamic;
 }
 
 FBox UShapeComponent::GetWorldAABB() const

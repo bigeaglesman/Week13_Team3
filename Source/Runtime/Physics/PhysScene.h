@@ -4,6 +4,7 @@
 
 class UWorld;
 class AActor;
+class FPhysXSimulationEventCallback;
 struct FVector;
 struct FHitResult;
 
@@ -48,8 +49,12 @@ public:
 	bool IsValid() const { return PxSceneInstance != nullptr; }
 
 private:
+	// fetchResults() 이후 콜백 큐에 쌓인 Overlap/Hit 이벤트를 엔진에 Broadcast한다.
+	void FlushSimulationEvents();
+
 	UWorld* OwningWorld = nullptr;
 	physx::PxScene* PxSceneInstance = nullptr;
+	FPhysXSimulationEventCallback* EventCallback = nullptr;
 
 	// 고정 timestep(60Hz) 누적 시간
 	float Accumulator = 0.0f;

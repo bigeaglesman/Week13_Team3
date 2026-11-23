@@ -1,6 +1,5 @@
 #include "EnginePCH.h"
 #include "BoxComponent.h"
-#include "Physics/Collision.h"
 #include "Render/LineBatcher.h"
 
 FVector UBoxComponent::GetScaledBoxExtent() const

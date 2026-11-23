@@ -105,17 +105,23 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool bBlockComponent = false;
 
+	// 이 컴포넌트의 충돌 오브젝트 채널 (기본값: WorldStatic)
+	ECollisionChannel CollisionObjectType = ECollisionChannel::ECC_WorldStatic;
+
 	UPROPERTY(EditAnywhere)
 	int32 TranslucencySortPriority = 0;
 
 	bool IsOverlappingComponent(const UPrimitiveComponent* Other) const;
 	const TArray<FOverlapInfo>& GetOverlapInfos() const { return OverlapInfos; }
 
-	// UWorld::UpdateOverlaps가 겹침 상태가 바뀐 프레임에 호출한다
+	// FPhysScene 이벤트 콜백(FlushSimulationEvents)에서 호출한다.
 	void BeginComponentOverlap(UPrimitiveComponent* OtherComp);
 	void EndComponentOverlap(UPrimitiveComponent* OtherComp);
 	void DispatchHit(UPrimitiveComponent* OtherComp);
 
+	// 현재 충돌 설정(채널, Block/Overlap, ActorEnableCollision)을 PhysX Shape에 반영한다.
+	void UpdateCollisionFilter();
+	void ClearOverlaps();
 	// ---- 물리 시뮬레이션 설정 ----
 	UPROPERTY(EditAnywhere)
 	bool bSimulatePhysics = false;

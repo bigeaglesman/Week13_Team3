@@ -2,6 +2,8 @@
 #include "Physics/PhysScene.h"
 #include "Physics/PhysXSDK.h"
 #include "Physics/PhysicsFilter.h"
+#include "Physics/BodyInstance.h"
+#include "Components/PrimitiveComponent.h"
 
 using namespace physx;
 
@@ -71,9 +73,20 @@ void FPhysScene::AddPendingCollision(const FCollisionNotifyInfo& Info)
 	PendingCollisions.Add(Info);
 }
 
+// UE FPhysScene_PhysX::SyncComponentsToBodies. 이번 simulate에서 움직인 Dynamic 바디만 컴포넌트에 반영한다.
 void FPhysScene::SyncComponentsToBodies()
 {
-	// 8단계(FBodyInstance)에서 채운다
+	PxU32 NumActiveActors = 0;
+	PxActor** ActiveActors = Scene->getActiveActors(NumActiveActors);   // eENABLE_ACTIVE_ACTORS가 켜져 있어야 채워진다
+
+	for (PxU32 Index = 0; Index < NumActiveActors; ++Index)
+	{
+		FBodyInstance* Body = static_cast<FBodyInstance*>(ActiveActors[Index]->userData);
+		if (!Body || !Body->OwnerComponent || Body->BoneIndex != -1) continue;   // 본 바디는 래그돌 쪽에서 본 Transform으로 반영한다
+
+		// 물리가 정한 위치이므로 스윕하지 않는다. 스윕하면 기존 충돌 처리가 물리 결과를 다시 막는다
+		Body->OwnerComponent->SetWorldLocationAndRotation(Body->GetWorldLocation(), Body->GetWorldRotation().ToFRotator(), false);
+	}
 }
 
 void FPhysScene::DispatchPhysNotifications()

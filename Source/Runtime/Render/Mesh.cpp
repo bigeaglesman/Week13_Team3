@@ -3,6 +3,7 @@
 #include "Renderer.h"
 #include "Asset/AssetManager.h"
 #include "Engine/PrimitiveSceneProxy.h"
+#include "Physics/BodySetup.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -11,6 +12,7 @@ UStaticMesh::~UStaticMesh()
 {
     for (FPrimitiveSceneProxy* Proxy : RenderProxies)
         Proxy->OnMeshDestroyed();
+    delete BodySetup;
 	VertexBuffer = nullptr;
 	IndexBuffer = nullptr;
 }
@@ -96,4 +98,29 @@ void UStaticMesh::UnregisterProxy(FPrimitiveSceneProxy* Proxy)
     const auto It = std::find(RenderProxies.begin(), RenderProxies.end(), Proxy);
     if (It != RenderProxies.end())
         RenderProxies.RemoveAtSwap(static_cast<uint32>(It - RenderProxies.begin()));
+}
+
+UBodySetup* UStaticMesh::GetBodySetup()
+{
+    if (!BodySetup)
+    {
+        const FBox& Bounds = MeshData.AABB;
+        FKBoxElem Box;
+        Box.Center = FVector((Bounds.Min.X + Bounds.Max.X) * 0.5f, (Bounds.Min.Y + Bounds.Max.Y) * 0.5f, (Bounds.Min.Z + Bounds.Max.Z) * 0.5f);
+        Box.X = Bounds.Max.X - Bounds.Min.X;
+        Box.Y = Bounds.Max.Y - Bounds.Min.Y;
+        Box.Z = Bounds.Max.Z - Bounds.Min.Z;
+
+        BodySetup = NewObject<UBodySetup>(this);
+        BodySetup->OwningStaticMesh = this;
+        BodySetup->AggGeom.BoxElems.Add(Box);
+    }
+    return BodySetup;
+}
+
+UBodySetup::~UBodySetup()
+{
+    // UObject 일괄 정리에서 BodySetup이 메시보다 먼저 해제되는 경우.
+    if (OwningStaticMesh && OwningStaticMesh->BodySetup == this)
+        OwningStaticMesh->BodySetup = nullptr;
 }

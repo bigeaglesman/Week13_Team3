@@ -9,4 +9,5 @@ namespace PhysXSDK
 	physx::PxPhysics* Get();
 	physx::PxCooking* Cooking();
 	physx::PxDefaultCpuDispatcher* Dispatcher();
+	physx::PxMaterial* DefaultMaterial();
 }

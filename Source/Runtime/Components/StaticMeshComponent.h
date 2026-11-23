@@ -22,6 +22,9 @@ public:
 	UStaticMesh* GetStaticMesh() const { return StaticMesh; }
 	virtual UStaticMesh* GetRenderMesh() const override { return StaticMesh; }
 
+	// 충돌 모양은 메시 에셋이 소유하고 같은 메시를 쓰는 컴포넌트가 공유한다. 에디터 아이콘 메시는 바디가 없다.
+	virtual UBodySetup* GetBodySetup() override { return (bEditorIcon || !StaticMesh) ? nullptr : StaticMesh->GetBodySetup(); }
+
 	virtual int32 GetNumMaterials() const override;
 	virtual FString GetMaterialSlotName(int32 SlotIndex) const override;
 	virtual UMaterial* GetDefaultMaterial(int32 SlotIndex) const override;

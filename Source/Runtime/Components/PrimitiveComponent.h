@@ -7,11 +7,13 @@
 #include "Render/GeometryGenerator.h"
 #include "Collision/HitResult.h"
 #include "Core/Delegate/Delegate.h"
+#include "Physics/BodyInstance.h"
 #include "PrimitiveComponent.generated.h"
 
 class FPrimitiveSceneProxy;
 class AActor;
 class UPrimitiveComponent;
+class UBodySetup;
 
 // (Self, Other, OtherComp). 담당: C
 DECLARE_DELEGATE(FComponentOverlapSignature, UPrimitiveComponent*, AActor*, UPrimitiveComponent*);
@@ -103,6 +105,15 @@ public:
 	bool bGenerateOverlapEvents = true;
 	UPROPERTY(EditAnywhere)
 	bool bBlockComponent = false;
+	UPROPERTY(EditAnywhere)
+	bool bEnableStaticPhysicsCollision = false;   // 정적 PhysX 바디 생성
+	UPROPERTY(EditAnywhere)
+	bool bSimulatePhysics = false;   // 동적 PhysX 바디 시뮬레이션
+
+	// 이 컴포넌트의 충돌 모양. 없으면 바디를 만들지 않는다.
+	virtual UBodySetup* GetBodySetup() { return nullptr; }
+
+	FBodyInstance BodyInstance;
 
 	UPROPERTY(EditAnywhere)
 	int32 TranslucencySortPriority = 0;
@@ -116,6 +127,7 @@ public:
 	void DispatchHit(UPrimitiveComponent* OtherComp);
 
 protected:
+	virtual void OnRegister() override;
 	virtual void OnUnregister() override;
 	TArray<FOverlapInfo> OverlapInfos;
 
@@ -132,6 +144,7 @@ protected:
 	bool TraceMeshLocal(const FRay& LocalRay, const FStaticMeshData& Mesh, float& OutT);
 
 private:
+	void CreatePhysicsBody();
 	friend class FScene;
 	FPrimitiveSceneProxy* SceneProxy = nullptr;
 };

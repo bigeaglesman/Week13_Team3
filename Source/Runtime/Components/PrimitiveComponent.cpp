@@ -4,10 +4,10 @@
 #include "Asset/AssetManager.h"
 #include "Render/RenderCommand.h"
 
-
 #include "Engine/PrimitiveSceneProxy.h"
 #include "Engine/Scene.h"
 #include "Engine/World.h"
+#include "Physics/PhysScene.h"
 
 namespace
 {
@@ -47,11 +47,35 @@ UPrimitiveComponent::~UPrimitiveComponent()
 void UPrimitiveComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	CreatePhysicsBody();
+}
+
+void UPrimitiveComponent::OnRegister()
+{
+	Super::OnRegister();
+	if (HasBegunPlay())
+		CreatePhysicsBody();
+}
+
+void UPrimitiveComponent::CreatePhysicsBody()
+{
+	if (!bSimulatePhysics && !bEnableStaticPhysicsCollision)
+		return;
+
+	UWorld* World = GetWorld();
+	if (!World || !World->HasBegunPlay())
+		return;
+
+	if (UBodySetup* Setup = GetBodySetup())
+		BodyInstance.InitBody(Setup, GetWorldLocation(), GetWorldRotation().Quaternion(), GetWorldScale3D(), bSimulatePhysics, this, World->GetPhysicsScene());
 }
 
 void UPrimitiveComponent::OnUnregister()
 {
 	Super::OnUnregister();
+
+	BodyInstance.TermBody();
+
 	// 삭제/등록 해제된 도형을 상대의 OverlapInfos에 남기지 않는다.
 	while (!OverlapInfos.IsEmpty())
 	{

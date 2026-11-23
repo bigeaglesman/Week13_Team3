@@ -9,6 +9,7 @@
 #include "Mesh.generated.h"
 
 class FPrimitiveSceneProxy;
+class UBodySetup;
 
 struct FStaticMeshLODResource
 {
@@ -68,8 +69,13 @@ public:
     void RegisterProxy(FPrimitiveSceneProxy* Proxy);
     void UnregisterProxy(FPrimitiveSceneProxy* Proxy);
 
+    // 메시 AABB를 감싸는 박스 하나로 충돌 모양을 만든다. 같은 메시를 쓰는 컴포넌트가 공유한다.
+    UBodySetup* GetBodySetup();
+
     const uint16 SortID;
 private:
+    friend class UBodySetup;
+    UBodySetup* BodySetup = nullptr;
     static inline uint16 NextSortID = 0;
     struct FMaterialSlotsHash
     {

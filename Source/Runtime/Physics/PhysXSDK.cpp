@@ -12,6 +12,7 @@ namespace
 	PxPhysics* Physics = nullptr;
 	PxCooking* CookingInstance = nullptr;
 	PxDefaultCpuDispatcher* CpuDispatcher = nullptr;
+	PxMaterial* Material = nullptr;
 }
 
 void PhysXSDK::Init()
@@ -28,6 +29,7 @@ void PhysXSDK::Init()
 	PxInitExtensions(*Physics, nullptr);   // D6 조인트 등 Extensions 기능에 필요
 	CookingInstance = PxCreateCooking(PX_PHYSICS_VERSION, *Foundation, PxCookingParams(Scale));
 	CpuDispatcher = PxDefaultCpuDispatcherCreate(2);
+	Material = Physics->createMaterial(0.5f, 0.5f, 0.3f);   // 정지 마찰, 운동 마찰, 반발 계수
 
 	HTR_LOG(Info, "[Physics] PhysX {}.{} initialized", PX_PHYSICS_VERSION_MAJOR, PX_PHYSICS_VERSION_MINOR);
 }
@@ -39,6 +41,8 @@ void PhysXSDK::Term()
 	if (CookingInstance) { CookingInstance->release(); CookingInstance = nullptr; }
 	if (Physics)
 	{
+		if (Material) { Material->release(); Material = nullptr; }
+
 		PxCloseExtensions();
 		Physics->release();
 		Physics = nullptr;
@@ -49,3 +53,4 @@ void PhysXSDK::Term()
 PxPhysics* PhysXSDK::Get() { return Physics; }
 PxCooking* PhysXSDK::Cooking() { return CookingInstance; }
 PxDefaultCpuDispatcher* PhysXSDK::Dispatcher() { return CpuDispatcher; }
+PxMaterial* PhysXSDK::DefaultMaterial() { return Material; }

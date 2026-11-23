@@ -17,6 +17,22 @@ DECLARE_CYCLE_STAT("Physics: Sync Bodies", STAT_PhysicsSyncBodies);
 
 namespace
 {
+	// 같은 SelfCollisionGroup(word0, 0 제외)끼리는 충돌하지 않는다. 나머지는 PhysX 기본 접촉 처리.
+	// UE의 PhysXSimFilterShader 자리다. 트리거와 충돌 이벤트는 아직 다루지 않는다.
+	PxFilterFlags EngineFilterShader(
+		PxFilterObjectAttributes, PxFilterData Data0,
+		PxFilterObjectAttributes, PxFilterData Data1,
+		PxPairFlags& PairFlags, const void*, PxU32)
+	{
+		if (Data0.word0 != 0 && Data0.word0 == Data1.word0)
+		{
+			return PxFilterFlag::eSUPPRESS;
+		}
+
+		PairFlags = PxPairFlag::eCONTACT_DEFAULT;
+		return PxFilterFlag::eDEFAULT;
+	}
+
 	// PhysX 디버그 색(0xAARRGGBB) → 선 색
 	FVector4 ToLineColor(PxU32 Color)
 	{
@@ -38,7 +54,7 @@ FPhysicsScene::FPhysicsScene(UWorld* InOwner)
 	PxSceneDesc Desc(Physics->getTolerancesScale());
 	Desc.gravity       = PxVec3(0.0f, 0.0f, -9.81f);   // Z-up, m/s²
 	Desc.cpuDispatcher = Core.GetDispatcher();
-	Desc.filterShader  = PxDefaultSimulationFilterShader;
+	Desc.filterShader  = EngineFilterShader;
 	Desc.flags |= PxSceneFlag::eENABLE_ACTIVE_ACTORS;        // 움직인 액터만 동기화
 	Desc.flags |= PxSceneFlag::eENABLE_CCD;
 	Desc.flags |= PxSceneFlag::eENABLE_PCM;

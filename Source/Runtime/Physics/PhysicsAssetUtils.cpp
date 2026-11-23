@@ -62,9 +62,20 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 	const FSkeletalMeshLODRenderData& LOD = RenderData.LODRenderData[0];
 	const int32 NumBones = Bones.Num();
 
+	// 바인드 포즈의 뼈 프레임에서 스케일을 뺀다. 런타임 바디 포즈도 뼈 월드 행렬에서 스케일을 뺀 값이라 기준이 같아진다.
+	// 뼈에 스케일이 들어 있는 메시(FBX 단위 변환 등)에서 InverseBindPose를 그대로 쓰면 크기가 그 배율만큼 줄어든다.
+	TArray<FMatrix> BindNoScale;      // 뼈 로컬(스케일 없음) → 컴포넌트
+	TArray<FMatrix> InvBindNoScale;   // 컴포넌트 → 뼈 로컬(스케일 없음)
+	BindNoScale.SetNum(NumBones);
+	InvBindNoScale.SetNum(NumBones);
+	for (int32 i = 0; i < NumBones; ++i)
+	{
+		BindNoScale[i] = ToFTransform(ToPxNoScale(Bones[i].InverseBindPose.Inverse())).GetLocalMatrix();
+		InvBindNoScale[i] = BindNoScale[i].Inverse();
+	}
+
 	// ---- 1. 뼈마다 담당 정점의 로컬 AABB ----
-	// 정점은 가중치가 가장 큰 뼈 하나에만 넣는다 (UE의 EVW_DominantWeight).
-	// InverseBindPose는 컴포넌트 공간 → 뼈 로컬 공간 변환이다.
+	// 정점은 가중치가 가장 큰 뼈 하나에만 넣는다 (UE의 EVW_DominantWeight). 크기는 메시 단위다.
 	TArray<FBoneVertexBounds> Bounds;
 	Bounds.SetNum(NumBones);
 
@@ -87,7 +98,7 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 			continue;
 		}
 
-		const FVector P = Bones[Dominant].InverseBindPose.TransformPosition(LOD.BindVertices[v].Position);
+		const FVector P = InvBindNoScale[Dominant].TransformPosition(LOD.BindVertices[v].Position);
 		FBoneVertexBounds& B = Bounds[Dominant];
 		B.Min = FVector(std::min(B.Min.X, P.X), std::min(B.Min.Y, P.Y), std::min(B.Min.Z, P.Z));
 		B.Max = FVector(std::max(B.Max.X, P.X), std::max(B.Max.Y, P.Y), std::max(B.Max.Z, P.Z));
@@ -187,8 +198,7 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 		Constraint.ChildFrame = FTransform(RotateXToAxis(BodyLongAxis[ChildBody]), FVector(0, 0, 0));
 
 		// 같은 프레임을 부모 뼈 로컬로 옮긴다: 자식 로컬 → 컴포넌트(바인드) → 부모 로컬
-		const FMatrix ChildBindComponent = Bones[i].InverseBindPose.Inverse();
-		const FMatrix FrameInParent = Constraint.ChildFrame.GetLocalMatrix() * ChildBindComponent * Bones[Parent].InverseBindPose;
+		const FMatrix FrameInParent = Constraint.ChildFrame.GetLocalMatrix() * BindNoScale[i] * InvBindNoScale[Parent];
 		Constraint.ParentFrame = ToFTransform(ToPxNoScale(FrameInParent));
 
 		Constraint.TwistLimitDeg = Params.TwistLimitDeg;

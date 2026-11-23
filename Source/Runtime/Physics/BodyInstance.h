@@ -55,6 +55,10 @@ struct FBodyInstance
 	// 스켈레탈 메시의 뼈 바디면 뼈 인덱스, 아니면 -1. UE의 InstanceBoneIndex
 	int32 InstanceBoneIndex = -1;
 
+	// 0이 아니고 같은 값을 가진 바디끼리는 서로 충돌하지 않는다. InitBody 전에 정한다.
+	// 래그돌 뼈 캡슐들은 서로 겹쳐 있어서, 부딪히게 두면 시작하자마자 튕겨 나간다. 스켈레탈 메시가 자기 UUID를 넣는다.
+	uint32 SelfCollisionGroup = 0;
+
 private:
 	UPrimitiveComponent* OwnerComponent = nullptr;
 	physx::PxRigidActor* RigidActor = nullptr;

@@ -39,22 +39,28 @@ void FBodyInstance::InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom
 		return;
 	}
 
+	// 필터 셰이더가 읽는 값. word0 = SelfCollisionGroup
+	const PxFilterData FilterData(SelfCollisionGroup, 0, 0, 0);
+
 	// 도형마다 PxShape 하나. Exclusive = 이 액터 전용 (다른 액터와 공유하지 않음)
 	for (const FKSphereElem& Elem : Geom.SphereElems)
 	{
 		PxShape* Shape = PxRigidActorExt::createExclusiveShape(*Dynamic, PxSphereGeometry(Elem.Radius), *Material);
 		Shape->setLocalPose(PxTransform(ToPx(Elem.Center)));
+		Shape->setSimulationFilterData(FilterData);
 	}
 	for (const FKBoxElem& Elem : Geom.BoxElems)
 	{
 		PxShape* Shape = PxRigidActorExt::createExclusiveShape(*Dynamic, PxBoxGeometry(ToPx(Elem.HalfExtent)), *Material);
 		Shape->setLocalPose(PxTransform(ToPx(Elem.Center), ToPx(Elem.Rotation).getNormalized()));
+		Shape->setSimulationFilterData(FilterData);
 	}
 	for (const FKSphylElem& Elem : Geom.SphylElems)
 	{
 		// PhysX halfHeight는 원기둥 부분의 절반
 		PxShape* Shape = PxRigidActorExt::createExclusiveShape(*Dynamic, PxCapsuleGeometry(Elem.Radius, Elem.Length * 0.5f), *Material);
 		Shape->setLocalPose(PxTransform(ToPx(Elem.Center), ToPx(Elem.Rotation).getNormalized() * CapsuleXToZ));
+		Shape->setSimulationFilterData(FilterData);
 	}
 
 	if (bSimulatePhysics)

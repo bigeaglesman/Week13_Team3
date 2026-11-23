@@ -21,6 +21,8 @@
 #include "Engine/World.h"
 #include "Physics/AggregateGeom.h"
 #include "Physics/BodySetup.h"
+#include "Physics/ConstraintInstance.h"
+#include "Physics/ConstraintSetup.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetUtils.h"
 
@@ -73,12 +75,32 @@ void USkeletalMeshComponent::OnCreatePhysicsState()
 	{
 		InitArticulated(GetWorld()->GetPhysicsScene(), PhysicsAsset);
 	}
+
+	// 시뮬레이션 중이면 물리 결과를 뼈로 가져오는 틱을 붙인다. 물리 틱보다 뒤인 PostPhysics 그룹에서 돈다.
+	if (bRagdollSimulating)
+	{
+		EndPhysicsTickFunction.Target = this;
+		EndPhysicsTickFunction.bCanEverTick = true;
+		EndPhysicsTickFunction.TickGroup = ETickingGroup::PostPhysics;
+		EndPhysicsTickFunction.RegisterTickFunction(GetWorld()->GetTickTaskManager());
+	}
 }
 
 void USkeletalMeshComponent::OnDestroyPhysicsState()
 {
+	EndPhysicsTickFunction.UnRegisterTickFunction();
 	TermArticulated();
 	Super::OnDestroyPhysicsState();
+}
+
+void FSkeletalMeshComponentEndPhysicsTickFunction::ExecuteTick(float DeltaTime)
+{
+	// RefreshBoneTransforms 안에서 BlendPhysicsBones가 돌고, 그 결과로 스키닝까지 갱신한다.
+	if (Target)
+	{
+		Target->MarkBoneTransformsDirty();
+		Target->UpdateBoneTransformsNow();
+	}
 }
 
 void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysicsAsset* PhysicsAsset)
@@ -88,6 +110,9 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 
 	const FVector WorldScale = GetWorldScale3D().GetAbs();
 	const float Scale = std::max({ WorldScale.X, WorldScale.Y, WorldScale.Z });
+
+	// 컴포넌트의 BodyInstance 설정이 뼈 바디 전체에 적용된다. 켜져 있으면 래그돌, 꺼져 있으면 애니메이션을 따라가는 키네마틱
+	const bool bSimulate = BodyInstance.bSimulatePhysics;
 
 	for (UBodySetup* Setup : PhysicsAsset->BodySetups)
 	{
@@ -106,9 +131,9 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 		FBodyInstance* Body = new FBodyInstance(Setup->DefaultInstance);
 		Body->InstanceBoneIndex = BoneIndex;
 
-		// 시뮬레이션 없이 애니메이션 뼈를 따라가기만 한다 (키네마틱).
-		Body->bSimulatePhysics = false;
+		Body->bSimulatePhysics = bSimulate;
 		Body->bEnablePhysicsCollision = true;
+		Body->SelfCollisionGroup = GetUUID();   // 겹쳐 있는 뼈 캡슐끼리는 부딪히지 않게 한다
 
 		Body->InitBody(this, ScaleAggregateGeom(Setup->AggGeom, Scale), MatrixToBodyTransform(GetBoneWorldMatrix(BoneIndex)), PhysicsScene);
 		if (Body->IsValidBodyInstance())
@@ -120,16 +145,62 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 			delete Body;
 		}
 	}
+
+	// 관절. 양쪽 뼈에 바디가 있어야 만든다.
+	auto FindBody = [this](const FString& BoneName) -> FBodyInstance*
+	{
+		const int32 BoneIndex = FindBoneIndex(BoneName);
+		for (FBodyInstance* Body : Bodies)
+		{
+			if (Body->InstanceBoneIndex == BoneIndex)
+			{
+				return Body;
+			}
+		}
+		return nullptr;
+	};
+
+	for (const FConstraintSetup& Setup : PhysicsAsset->ConstraintSetups)
+	{
+		FBodyInstance* ChildBody  = FindBody(Setup.ChildBoneName);
+		FBodyInstance* ParentBody = FindBody(Setup.ParentBoneName);
+		if (!ChildBody || !ParentBody)
+		{
+			continue;
+		}
+
+		FConstraintInstance* Constraint = new FConstraintInstance();
+		Constraint->InitConstraint(Setup, ChildBody, ParentBody, Scale);
+		if (Constraint->IsValidConstraintInstance())
+		{
+			Constraints.Add(Constraint);
+		}
+		else
+		{
+			delete Constraint;
+		}
+	}
+
+	bRagdollSimulating = bSimulate && !Bodies.IsEmpty();
 }
 
 void USkeletalMeshComponent::TermArticulated()
 {
+	// 관절이 바디를 참조하므로 먼저 지운다.
+	for (FConstraintInstance* Constraint : Constraints)
+	{
+		delete Constraint;
+	}
+	Constraints.Empty();
+
 	for (FBodyInstance* Body : Bodies)
 	{
 		Body->TermBody();
 		delete Body;
 	}
 	Bodies.Empty();
+
+	bRagdollSimulating = false;
 }
 
 void USkeletalMeshComponent::UpdateKinematicBonesToAnim()
@@ -137,6 +208,50 @@ void USkeletalMeshComponent::UpdateKinematicBonesToAnim()
 	for (FBodyInstance* Body : Bodies)
 	{
 		Body->SetBodyTransform(MatrixToBodyTransform(GetBoneWorldMatrix(Body->InstanceBoneIndex)));
+	}
+}
+
+void USkeletalMeshComponent::BlendPhysicsBones()
+{
+	const TArray<FBoneInfo>& Bones = GetBones();
+	if (ComponentSpaceTransforms.Num() != Bones.Num())
+	{
+		return;
+	}
+
+	TArray<FBodyInstance*> BoneBodies;
+	BoneBodies.Init(nullptr, Bones.Num());
+	for (FBodyInstance* Body : Bodies)
+	{
+		if (Body->IsSimulating() && Body->InstanceBoneIndex < Bones.Num())
+		{
+			BoneBodies[Body->InstanceBoneIndex] = Body;
+		}
+	}
+
+	const FMatrix ComponentToWorld = GetWorldMatrix();
+	const FMatrix WorldToComponent = ComponentToWorld.Inverse();
+
+	// 부모가 항상 자식보다 앞에 있으므로 한 번 훑으면 부모 결과가 자식에 이어진다.
+	for (int32 i = 0; i < Bones.Num(); ++i)
+	{
+		if (FBodyInstance* Body = BoneBodies[i])
+		{
+			// 바디 포즈에는 스케일이 없다. 애니메이션 포즈의 뼈 스케일(행 길이)을 다시 붙인다.
+			const FMatrix AnimWorld = ComponentSpaceTransforms[i] * ComponentToWorld;
+			const FVector BoneScale(
+				FVector(AnimWorld.M[0][0], AnimWorld.M[0][1], AnimWorld.M[0][2]).Length(),
+				FVector(AnimWorld.M[1][0], AnimWorld.M[1][1], AnimWorld.M[1][2]).Length(),
+				FVector(AnimWorld.M[2][0], AnimWorld.M[2][1], AnimWorld.M[2][2]).Length());
+
+			FTransform BodyWorld = Body->GetUnrealWorldTransform();
+			BodyWorld.Scale = BoneScale;
+			ComponentSpaceTransforms[i] = BodyWorld.GetLocalMatrix() * WorldToComponent;
+		}
+		else if (Bones[i].ParentIndex >= 0)
+		{
+			ComponentSpaceTransforms[i] = BoneSpaceTransforms[i].GetLocalMatrix() * ComponentSpaceTransforms[Bones[i].ParentIndex];
+		}
 	}
 }
 
@@ -197,7 +312,8 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
         ReloadAnimBlueprint();
     }
 
-	if (AnimInstance && GetSkeletalMesh())
+	// 래그돌 중에는 물리가 뼈를 움직이므로 애니메이션을 평가하지 않는다. 바디 없는 뼈는 마지막 로컬 포즈를 유지한다.
+	if (AnimInstance && GetSkeletalMesh() && !bRagdollSimulating)
 	{
         bUpdatingAnimation = true;
 		if (auto* Instance = Cast<UAnimSingleNodeInstance>(AnimInstance))
@@ -225,7 +341,10 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
 	Super::TickComponent(DeltaTime);
 
 	// 뼈 행렬이 갱신된 뒤에 바디를 옮긴다. PrePhysics 틱이라 이번 프레임 simulate에 반영된다.
-	UpdateKinematicBonesToAnim();
+	if (!bRagdollSimulating)
+	{
+		UpdateKinematicBonesToAnim();
+	}
 }
 
 const TArray<FBoneInfo>& USkeletalMeshComponent::GetBones() const
@@ -306,6 +425,11 @@ void USkeletalMeshComponent::RefreshBoneTransforms()
 		const FMatrix Local = BoneSpaceTransforms[i].GetLocalMatrix();
 		const int32 Parent = Bones[i].ParentIndex;
 		ComponentSpaceTransforms[i] = Parent < 0 ? Local : Local * ComponentSpaceTransforms[Parent];
+	}
+
+	if (bRagdollSimulating)
+	{
+		BlendPhysicsBones();
 	}
 }
 

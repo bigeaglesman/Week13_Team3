@@ -17,6 +17,7 @@ namespace
 		// PhysX는 0 이하의 반크기·반지름·높이를 가진 Geometry로 Shape를 만들면 실패한다.
 		constexpr float MinExtent = 1e-4f;
 		const PxVec3 LocalOffset = U2PVector(ShapeDesc.LocalOffset);
+		const PxQuat LocalRot = U2PQuat(ShapeDesc.LocalRotation);
 
 		switch (ShapeDesc.Type)
 		{
@@ -27,14 +28,14 @@ namespace
 				std::max(ShapeDesc.HalfExtent.Y, MinExtent),
 				std::max(ShapeDesc.HalfExtent.Z, MinExtent));
 			OutGeometry.storeAny(PxBoxGeometry(HalfExtents));
-			OutLocalPose = PxTransform(LocalOffset);
+			OutLocalPose = PxTransform(LocalOffset, LocalRot);
 			return true;
 		}
 		case EBodyShapeType::Sphere:
 		{
 			const float Radius = std::max(ShapeDesc.Radius, MinExtent);
 			OutGeometry.storeAny(PxSphereGeometry(Radius));
-			OutLocalPose = PxTransform(LocalOffset);
+			OutLocalPose = PxTransform(LocalOffset, LocalRot);
 			return true;
 		}
 		case EBodyShapeType::Capsule:
@@ -45,9 +46,9 @@ namespace
 			const float CylinderHalfHeight = std::max(ShapeDesc.HalfHeight - Radius, MinExtent);
 			OutGeometry.storeAny(PxCapsuleGeometry(Radius, CylinderHalfHeight));
 
-			// PhysX 캡슐은 로컬 X축이 캡슐 축이고, 엔진(UE) 캡슐은 로컬 Z축이 캡슐 축이다.
-			// Y축 기준 90도 회전해 X축을 Z축 방향으로 정렬한다.
-			OutLocalPose = PxTransform(LocalOffset, PxQuat(PxHalfPi, PxVec3(0.0f, 1.0f, 0.0f)));
+			// PhysX 캡슐은 로컬 X축이 축이므로 먼저 Y축 90도 회전해 UE Z축으로 맞춘 뒤,
+			// 그 위에 ShapeDesc.LocalRotation을 곱해 원하는 본 축 방향으로 정렬한다.
+			OutLocalPose = PxTransform(LocalOffset, LocalRot * PxQuat(PxHalfPi, PxVec3(0.0f, 1.0f, 0.0f)));
 			return true;
 		}
 		default:

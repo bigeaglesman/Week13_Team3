@@ -37,6 +37,9 @@ struct FBodyShapeDesc
 
 	// 컴포넌트 원점 기준 로컬 오프셋 (스케일 반영됨, StaticMesh AABB 중심 보정용)
 	FVector LocalOffset = FVector::ZeroVector;
+
+	// 컴포넌트/본 원점 기준 로컬 회전 (래그돌 캡슐을 본 축 방향에 정렬할 때 사용)
+	FQuat LocalRotation = FQuat::Identity();
 };
 
 // UPrimitiveComponent가 소유하는 물리 바디 인스턴스 (언리얼의 FBodyInstance 대응)

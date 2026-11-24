@@ -668,6 +668,89 @@ bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehi
 	return true;
 }
 
+
+bool FPhysicsScene::GetVehicleDriveState(PxVehicleWheels* Vehicle, FVehicleDriveState& OutState) const
+{
+	if (!Scene || !Vehicle || !VehicleSceneQueryData)
+	{
+		return false;
+	}
+
+	SCOPED_SCENE_READ_LOCK(Scene);
+
+	const auto& Vehicles = VehicleSceneQueryData->Vehicles;
+
+	if (std::find(Vehicles.begin(), Vehicles.end(), Vehicle) == Vehicles.end())
+	{
+		return false;
+	}
+
+	const PxVehicleDrive4W* DriveVehicle = static_cast<const PxVehicleDrive4W*>(Vehicle);
+
+	OutState.ForwardSpeed = Vehicle->computeForwardSpeed();
+	OutState.EngineRPM = DriveVehicle->mDriveDynData.getEngineRotationSpeed() * 60.0f / (2.0f * 3.1415926535f);
+	OutState.CurrentGear = static_cast<int32>(DriveVehicle->mDriveDynData.getCurrentGear());
+	OutState.TargetGear = static_cast<int32>(DriveVehicle->mDriveDynData.getTargetGear());
+	OutState.bUseAutoGears = DriveVehicle->mDriveDynData.getUseAutoGears();
+
+	return true;
+}
+
+bool FPhysicsScene::SetVehicleGear(PxVehicleWheels* Vehicle, int32 Gear, bool bUseAutoGears, bool bForce)
+{
+	if (!Scene || !Vehicle || !VehicleSceneQueryData || Gear < PxVehicleGearsData::eREVERSE || Gear > PxVehicleGearsData::eFIFTH)
+	{
+		return false;
+	}
+
+	SCOPED_SCENE_WRITE_LOCK(Scene);
+
+	const auto& Vehicles = VehicleSceneQueryData->Vehicles;
+
+	if (std::find(Vehicles.begin(), Vehicles.end(), Vehicle) == Vehicles.end())
+	{
+		return false;
+	}
+
+	PxVehicleDrive4W* DriveVehicle = static_cast<PxVehicleDrive4W*>(Vehicle);
+
+	DriveVehicle->mDriveDynData.setUseAutoGears(bUseAutoGears);
+
+	if (bForce)
+	{
+		DriveVehicle->mDriveDynData.forceGearChange(static_cast<PxU32>(Gear));
+	}
+	else
+	{
+		DriveVehicle->mDriveDynData.startGearChange(static_cast<PxU32>(Gear));
+	}
+
+	return true;
+}
+
+bool FPhysicsScene::SetVehicleAutomaticGears(PxVehicleWheels* Vehicle, bool bUseAutoGears)
+{
+	if (!Scene || !Vehicle || !VehicleSceneQueryData)
+	{
+		return false;
+	}
+
+	SCOPED_SCENE_WRITE_LOCK(Scene);
+
+	const auto& Vehicles = VehicleSceneQueryData->Vehicles;
+
+	if (std::find(Vehicles.begin(), Vehicles.end(), Vehicle) == Vehicles.end())
+	{
+		return false;
+	}
+
+	PxVehicleDrive4W* DriveVehicle = static_cast<PxVehicleDrive4W*>(Vehicle);
+	DriveVehicle->mDriveDynData.setUseAutoGears(bUseAutoGears);
+
+	return true;
+}
+
+
 void FPhysicsScene::SetDebugVisualization(bool bEnable)
 {
 	if (!Scene || bDebugVisualization == bEnable)

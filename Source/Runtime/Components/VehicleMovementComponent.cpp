@@ -4,10 +4,14 @@
 
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 #include "Physics/PhysicsScene.h"
-#include "Input/InputSystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Math/Quat.h"
+
+#include <cmath>
+#include <vehicle/PxVehicleComponents.h>
 
 void UVehicleMovementComponent::BeginPlay()
 {
@@ -75,6 +79,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     const float RightInput = InputVector.Dot(VehicleRotation.GetRightVector());
 
 
+
     FPhysicsScene* PhysicsScene = GetWorld()->GetPhysicsScene();
 
     if (!PhysicsScene)
@@ -84,7 +89,124 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
     physx::PxVehicleWheels* Vehicle = VehicleInstance.GetVehicle();
 
-    PhysicsScene->SetVehicleInput(Vehicle, ForwardInput > KINDA_SMALL_NUMBER, ForwardInput < -KINDA_SMALL_NUMBER, FInputSystem::IsKeyDown(EKeyCode::Space), RightInput < -KINDA_SMALL_NUMBER, RightInput > KINDA_SMALL_NUMBER);
+    APlayerController* Controller = GetPawnOwner() ? GetPawnOwner()->GetController() : nullptr;
+
+    const auto IsKeyDown = [Controller](EKeyCode Key)
+        {
+            return Controller && Controller->IsKeyDown(static_cast<int32>(Key));
+        };
+
+    const bool bNeutralKeyDown = IsKeyDown(EKeyCode::N);
+    const bool bAutomaticToggleKeyDown = IsKeyDown(EKeyCode::M);
+    const bool bGearUpKeyDown = IsKeyDown(EKeyCode::E);
+    const bool bGearDownKeyDown = IsKeyDown(EKeyCode::Q);
+
+    const bool bNeutralPressed = bNeutralKeyDown && !bPreviousNeutralKeyDown;
+    const bool bAutomaticTogglePressed = bAutomaticToggleKeyDown && !bPreviousAutomaticToggleKeyDown;
+    const bool bGearUpPressed = bGearUpKeyDown && !bPreviousGearUpKeyDown;
+    const bool bGearDownPressed = bGearDownKeyDown && !bPreviousGearDownKeyDown;
+
+    bPreviousNeutralKeyDown = bNeutralKeyDown;
+    bPreviousAutomaticToggleKeyDown = bAutomaticToggleKeyDown;
+    bPreviousGearUpKeyDown = bGearUpKeyDown;
+    bPreviousGearDownKeyDown = bGearDownKeyDown;
+
+    FVehicleDriveState DriveState;
+
+    if (!PhysicsScene->GetVehicleDriveState(Vehicle, DriveState))
+    {
+        return;
+    }
+
+    VehicleSpeed = DriveState.ForwardSpeed;
+    EngineRPM = DriveState.EngineRPM;
+    CurrentGear = DriveState.CurrentGear;
+
+    if (bAutomaticTogglePressed)
+    {
+        bAutomaticTransmission = !bAutomaticTransmission;
+
+        if (DriveState.CurrentGear >= physx::PxVehicleGearsData::eFIRST && DriveState.CurrentGear <= physx::PxVehicleGearsData::eFIFTH)
+        {
+            PhysicsScene->SetVehicleAutomaticGears(Vehicle, bAutomaticTransmission);
+        }
+
+        HTR_LOG(Info, "[Vehicle] Transmission Mode | Automatic={}", bAutomaticTransmission);
+    }
+
+    bool bAccelerate = false;
+    bool bBrake = false;
+
+    const bool bForwardCommand = ForwardInput > KINDA_SMALL_NUMBER;
+    const bool bReverseCommand = ForwardInput < -KINDA_SMALL_NUMBER;
+
+    const bool bVehicleInReverse =
+        DriveState.CurrentGear == physx::PxVehicleGearsData::eREVERSE ||
+        DriveState.TargetGear == physx::PxVehicleGearsData::eREVERSE;
+
+    if (bNeutralPressed)
+    {
+        PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eNEUTRAL, false, true);
+        bAccelerate = false;
+        bBrake = false;
+    }
+    else if (bForwardCommand)
+    {
+        const bool bMustStop = bVehicleInReverse || DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL;
+
+        if (bMustStop && std::abs(DriveState.ForwardSpeed) > 0.5f)
+        {
+            bBrake = true;
+        }
+        else
+        {
+            if (bVehicleInReverse || DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL)
+            {
+                PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eFIRST, bAutomaticTransmission, true);
+            }
+
+            bAccelerate = true;
+        }
+    }
+    else if (bReverseCommand)
+    {
+        const bool bMustStop = !bVehicleInReverse;
+
+        if (bMustStop && std::abs(DriveState.ForwardSpeed) > 0.5f)
+        {
+            bBrake = true;
+        }
+        else
+        {
+            if (!bVehicleInReverse)
+            {
+                PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eREVERSE, false, true);
+            }
+
+            bAccelerate = true;
+        }
+    }
+
+    if (!bAutomaticTransmission && !bNeutralPressed && !bReverseCommand)
+    {
+        int32 GearToShift = DriveState.TargetGear;
+
+        if (GearToShift < physx::PxVehicleGearsData::eFIRST || GearToShift > physx::PxVehicleGearsData::eFIFTH)
+        {
+            GearToShift = DriveState.CurrentGear;
+        }
+
+        if (bGearUpPressed && GearToShift < physx::PxVehicleGearsData::eFIFTH)
+        {
+            PhysicsScene->SetVehicleGear(Vehicle, GearToShift + 1, false, false);
+        }
+        else if (bGearDownPressed && GearToShift > physx::PxVehicleGearsData::eFIRST)
+        {
+            PhysicsScene->SetVehicleGear(Vehicle, GearToShift - 1, false, false);
+        }
+    }
+
+    PhysicsScene->SetVehicleInput(Vehicle, bAccelerate, bBrake, IsKeyDown(EKeyCode::Space), RightInput < -KINDA_SMALL_NUMBER, RightInput > KINDA_SMALL_NUMBER);
 
     FVehicleWheelState WheelStates[4];
 

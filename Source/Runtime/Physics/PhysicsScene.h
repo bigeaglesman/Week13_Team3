@@ -62,6 +62,17 @@ struct FVehicleWheelState
 	int32 TireSurfaceType = -1;
 };
 
+struct FVehicleDriveState
+{
+	float ForwardSpeed = 0.0f;
+	float EngineRPM = 0.0f;
+
+	int32 CurrentGear = 0;
+	int32 TargetGear = 0;
+
+	bool bUseAutoGears = false;
+};
+
 // 월드 하나당 PxScene 하나. 고정 스텝으로 시뮬레이션한다.
 // UE 4.27의 FPhysScene_PhysX 자리다.
 //
@@ -101,6 +112,9 @@ public:
 
 	void SetVehicleInput(physx::PxVehicleWheels* Vehicle, bool bAccelerate, bool bBrake, bool bHandbrake, bool bSteerLeft, bool bSteerRight);
 	bool GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehicleWheelState* OutWheelStates, int32 MaxWheelCount, bool& OutIsInAir) const;
+	bool GetVehicleDriveState(physx::PxVehicleWheels* Vehicle, FVehicleDriveState& OutState) const;
+	bool SetVehicleGear(physx::PxVehicleWheels* Vehicle, int32 Gear, bool bUseAutoGears, bool bForce);
+	bool SetVehicleAutomaticGears(physx::PxVehicleWheels* Vehicle, bool bUseAutoGears);
 
 	static constexpr float FixedStep = 1.0f / 60.0f;
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다

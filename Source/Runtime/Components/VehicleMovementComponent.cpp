@@ -25,7 +25,7 @@ void UVehicleMovementComponent::BeginPlay()
         return;
     }
 
-    if (!PhysicsScene->AddVehicle(VehicleInstance.GetVehicle()))
+    if (!PhysicsScene->AddVehicle(VehicleInstance.GetVehicle(), UpdatedComponent))
     {
         HTR_LOG(Error, "[Vehicle] Failed to register vehicle in PhysicsScene.");
         VehicleInstance.TermVehicle();

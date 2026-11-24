@@ -4,6 +4,7 @@
 #include "Physics/PhysXConversion.h"
 #include "Physics/BodyInstance.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SceneComponent.h"
 #include "Render/LineBatcher.h"
 #include "Core/Stats/LightweightStats.h"
 
@@ -25,6 +26,7 @@ struct FVehicleSceneQueryData
 	PxVehicleDrivableSurfaceToTireFrictionPairs* FrictionPairs = nullptr;
 
 	std::vector<PxVehicleWheels*> Vehicles;
+	std::vector<USceneComponent*> SyncComponents;
 	std::vector<PxRaycastQueryResult> RaycastResults;
 	std::vector<PxVehicleDrive4WRawInputData> RawInputs;
 
@@ -289,6 +291,7 @@ void FPhysicsScene::Tick(float DeltaTime)
 	if (Steps > 0)
 	{
 		SyncActiveBodiesToComponents();
+		SyncVehiclesToComponents();
 		DispatchPhysNotifications();
 	}
 }
@@ -319,6 +322,54 @@ void FPhysicsScene::SyncActiveBodiesToComponents()
 	for (FBodyInstance* Body : MovedBodies)
 	{
 		Body->GetOwnerComponent()->SyncComponentToRBPhysics();
+	}
+}
+
+void FPhysicsScene::SyncVehiclesToComponents()
+{
+	if (!Scene || !VehicleSceneQueryData)
+	{
+		return;
+	}
+
+	struct FVehiclePoseSync
+	{
+		USceneComponent* Component = nullptr;
+		PxTransform Pose;
+	};
+
+	const FVehicleSceneQueryData& QueryData = *VehicleSceneQueryData;
+	std::vector<FVehiclePoseSync> SyncData;
+
+	{
+		SCOPED_SCENE_READ_LOCK(Scene);
+
+		const size_t Count = std::min(QueryData.Vehicles.size(), QueryData.SyncComponents.size());
+
+		for (size_t i = 0; i < Count; ++i)
+		{
+			PxVehicleWheels* Vehicle = QueryData.Vehicles[i];
+			USceneComponent* Component = QueryData.SyncComponents[i];
+
+			if (!Vehicle || !Component)
+			{
+				continue;
+			}
+
+			PxRigidDynamic* ChassisActor = Vehicle->getRigidDynamicActor();
+
+			if (!ChassisActor)
+			{
+				continue;
+			}
+
+			SyncData.push_back({ Component, ChassisActor->getGlobalPose() });
+		}
+	}
+
+	for (const FVehiclePoseSync& Data : SyncData)
+	{
+		Data.Component->SetWorldLocationAndRotation(ToFVector(Data.Pose.p), ToFQuat(Data.Pose.q).ToFRotator(), false);
 	}
 }
 
@@ -419,9 +470,9 @@ void FPhysicsScene::DispatchPhysNotifications()
 	PendingCollisionNotifies.Empty();
 }
 
-bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle)
+bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle, USceneComponent* SyncComponent)
 {
-	if (!Scene || !Vehicle)
+	if (!Scene || !Vehicle || !SyncComponent)
 	{
 		return false;
 	}
@@ -442,8 +493,12 @@ bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle)
 
 	auto& QueryData = *VehicleSceneQueryData;
 
-	if (std::find(QueryData.Vehicles.begin(), QueryData.Vehicles.end(), Vehicle) != QueryData.Vehicles.end())
+	auto ExistingIt = std::find(QueryData.Vehicles.begin(), QueryData.Vehicles.end(), Vehicle);
+
+	if (ExistingIt != QueryData.Vehicles.end())
 	{
+		const size_t ExistingIndex = static_cast<size_t>(ExistingIt - QueryData.Vehicles.begin());
+		QueryData.SyncComponents[ExistingIndex] = SyncComponent;
 		return true;
 	}
 
@@ -454,6 +509,7 @@ bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle)
 	}
 
 	QueryData.Vehicles.push_back(Vehicle);
+	QueryData.SyncComponents.push_back(SyncComponent);
 	QueryData.RawInputs.emplace_back();
 	QueryData.TotalWheelCount += WheelCount;
 
@@ -480,6 +536,7 @@ void FPhysicsScene::RemoveVehicle(PxVehicleWheels* Vehicle)
 	const size_t VehicleIndex = static_cast<size_t>(It - QueryData.Vehicles.begin());
 
 	QueryData.RawInputs.erase(QueryData.RawInputs.begin() + VehicleIndex);
+	QueryData.SyncComponents.erase(QueryData.SyncComponents.begin() + VehicleIndex);
 	QueryData.TotalWheelCount -= Vehicle->mWheelsSimData.getNbWheels();
 	QueryData.Vehicles.erase(It);
 }

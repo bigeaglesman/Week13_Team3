@@ -52,6 +52,8 @@ void UVehicleMovementComponent::BeginPlay()
     {
         BaseSpringArmLength = VehicleSpringArm->TargetArmLength;
         CurrentSpringArmLength = BaseSpringArmLength;
+        BaseCameraLagSpeed = VehicleSpringArm->CameraLagSpeed;
+        CurrentCameraLagSpeed = BaseCameraLagSpeed;
     }
     else
     {
@@ -158,7 +160,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         return;
     }
 
-    VehicleSpeed = DriveState.ForwardSpeed;
+    VehicleSpeed = DriveState.LinearSpeed;
 
     if (VehicleCamera)
     {
@@ -178,6 +180,12 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
         CurrentSpringArmLength += (TargetArmLength - CurrentSpringArmLength) * ArmAlpha;
         VehicleSpringArm->TargetArmLength = CurrentSpringArmLength;
+
+        const float TargetCameraLagSpeed = BaseCameraLagSpeed * (1.0f - 0.2f * SpeedAlpha);
+        const float LagAlpha = FMath::Clamp(DeltaTime * 3.0f, 0.0f, 1.0f);
+
+        CurrentCameraLagSpeed += (TargetCameraLagSpeed - CurrentCameraLagSpeed) * LagAlpha;
+        VehicleSpringArm->CameraLagSpeed = CurrentCameraLagSpeed;
     }
 
     EngineRPM = DriveState.EngineRPM;

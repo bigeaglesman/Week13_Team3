@@ -42,6 +42,8 @@ private:
     float CurrentCameraFOV = 60.0f;
     float BaseSpringArmLength = 13.5f;
     float CurrentSpringArmLength = 13.5f;
+    float BaseCameraLagSpeed = 14.0f;
+    float CurrentCameraLagSpeed = 14.0f;
     FVehicleInstance VehicleInstance;
 
     bool bIsVehicleInAir = true;

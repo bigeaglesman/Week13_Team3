@@ -45,6 +45,21 @@ bool FPhysicsCore::Init()
 	}
 
 	PxInitExtensions(*Physics, Pvd);   // 조인트, PxRigidBodyExt 등 확장 기능
+
+	if (!PxInitVehicleSDK(*Physics))
+	{
+		HTR_LOG(Warning, "[PhysX] Vehicle SDK initialization failed.");
+		Shutdown();
+		return false;
+	}
+
+	bVehicleSDKInitialized = true;
+
+	PxVehicleSetBasisVectors(PxVec3(0.0f, 0.0f, 1.0f), PxVec3(1.0f, 0.0f, 0.0f));
+
+	PxVehicleSetUpdateMode(PxVehicleUpdateMode::eVELOCITY_CHANGE);
+	HTR_LOG(Info, "[PhysX] Vehicle SDK initialized. Up=(0,0,1), Forward=(1,0,0).");
+
 	Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *Foundation, PxCookingParams(Scale));
 	Dispatcher = PxDefaultCpuDispatcherCreate(2);
 	DefaultMaterial = Physics->createMaterial(0.5f, 0.5f, 0.1f);   // 정마찰, 동마찰, 반발
@@ -54,11 +69,12 @@ bool FPhysicsCore::Init()
 void FPhysicsCore::Shutdown()
 {
 	// 만든 것의 역순. PxScene은 이미 모두 release된 상태여야 한다.
-	if (DefaultMaterial) { DefaultMaterial->release(); DefaultMaterial = nullptr; }
-	if (Dispatcher)      { Dispatcher->release();      Dispatcher = nullptr; }
-	if (Cooking)         { Cooking->release();         Cooking = nullptr; }
-	if (Physics)         { PxCloseExtensions(); Physics->release(); Physics = nullptr; }
-	if (Pvd)             { Pvd->release();             Pvd = nullptr; }
-	if (PvdTransport)    { PvdTransport->release();    PvdTransport = nullptr; }
-	if (Foundation)     { Foundation->release();      Foundation = nullptr; }
+	if (DefaultMaterial)		{ DefaultMaterial->release(); DefaultMaterial = nullptr; }
+	if (Dispatcher)				{ Dispatcher->release();      Dispatcher = nullptr; }
+	if (Cooking)				{ Cooking->release();         Cooking = nullptr; }
+	if (bVehicleSDKInitialized)	{ PxCloseVehicleSDK(); bVehicleSDKInitialized = false; }
+	if (Physics)				{ PxCloseExtensions(); Physics->release(); Physics = nullptr; }
+	if (Pvd)					{ Pvd->release();             Pvd = nullptr; }
+	if (PvdTransport)			{ PvdTransport->release();    PvdTransport = nullptr; }
+	if (Foundation)				{ Foundation->release();      Foundation = nullptr; }
 }

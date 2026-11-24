@@ -23,6 +23,7 @@ public:
 	void Shutdown();    // FEngineLoop::Exit (모든 월드가 사라진 뒤)
 
 	bool IsInitialized() const { return Physics != nullptr; }
+	bool IsVehicleSDKInitialized() const { return bVehicleSDKInitialized; }
 
 	physx::PxPhysics*              GetPhysics() const         { return Physics; }
 	physx::PxCooking*              GetCooking() const         { return Cooking; }
@@ -38,6 +39,7 @@ private:
 	physx::PxPvd*                  Pvd = nullptr;            // PhysX Visual Debugger 연결 (127.0.0.1:5425)
 	physx::PxPvdTransport*         PvdTransport = nullptr;
 	physx::PxPhysics*              Physics = nullptr;
+	bool                           bVehicleSDKInitialized = false;
 	physx::PxCooking*              Cooking = nullptr;
 	physx::PxDefaultCpuDispatcher* Dispatcher = nullptr;
 	physx::PxMaterial*             DefaultMaterial = nullptr;

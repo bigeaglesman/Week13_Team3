@@ -55,7 +55,7 @@
 #include "Physics/Collision.h"
 
 #include "Audio/AudioDevice.h"
-
+#include "Physics/PhysicsCore.h"
 namespace
 {
 	DECLARE_CYCLE_STAT("Viewport Update", STAT_ViewportUpdate);
@@ -157,6 +157,10 @@ void UEditorEngine::InitLevelEditorTab()
 
 	OutputLogPanel = LevelEditorTab->AddPanel<FOutputLogPanel>();
 	FLog::AddSink(OutputLogPanel);
+
+	FPhysicsCore& PhysicsCore = FPhysicsCore::Get();
+	HTR_LOG(Info, "[PhysX] CoreInitialized={} | VehicleSDKInitialized={}", PhysicsCore.IsInitialized(), PhysicsCore.IsVehicleSDKInitialized());
+
 	HTR_LOG(Info, "Editor Initialize...");
 
 	// 테스트 코드 

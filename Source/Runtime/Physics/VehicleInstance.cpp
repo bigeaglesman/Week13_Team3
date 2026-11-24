@@ -57,13 +57,14 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
 
     // 현재 단계의 차체 충돌 형상: 길이 3.6m, 너비 1.6m, 높이 0.7m
     PxShape* ChassisShape = PxRigidActorExt::createExclusiveShape(*NewChassis, PxBoxGeometry(1.8f, 0.8f, 0.35f), *Material);
-    ChassisShape->setSimulationFilterData(PxFilterData(0u, bNotifyRigidBodyCollision ? FBodyInstance::FilterFlag_NotifyHit : 0u, 0u, 0u));
 
     if (!ChassisShape)
     {
         NewChassis->release();
         return false;
     }
+
+    ChassisShape->setSimulationFilterData(PxFilterData(0u, bNotifyRigidBodyCollision ? FBodyInstance::FilterFlag_NotifyHit : 0u, 0u, 0u));
 
     // 차체 질량과 관성 텐서
     PxVehicleChassisData ChassisData;

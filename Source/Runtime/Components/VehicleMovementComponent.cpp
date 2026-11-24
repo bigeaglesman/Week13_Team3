@@ -147,10 +147,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     {
         bAutomaticTransmission = !bAutomaticTransmission;
 
-        if (DriveState.CurrentGear >= physx::PxVehicleGearsData::eFIRST && DriveState.CurrentGear <= physx::PxVehicleGearsData::eFIFTH)
-        {
-            PhysicsScene->SetVehicleAutomaticGears(Vehicle, bAutomaticTransmission);
-        }
+        PhysicsScene->SetVehicleAutomaticGears(Vehicle, bAutomaticTransmission);
 
         HTR_LOG(Info, "[Vehicle] Transmission Mode | Automatic={}", bAutomaticTransmission);
     }

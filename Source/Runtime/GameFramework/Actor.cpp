@@ -491,16 +491,31 @@ void AActor::GetOverlappingActors(TArray<AActor*>& OutActors) const
 
 void AActor::CalcCamera(float DeltaTime, FMinimalViewInfo& OutPOV)
 {
-
-	// 카메라있음 -> 정보 전달
+	// 활성화된 카메라를 우선 선택한다. BeginPlay 전(에디터 화면 등)에는 모두 비활성 상태이므로
+	// 첫 번째 카메라로 fallback한다.
+	UCameraComponent* FallbackCamera = nullptr;
 	for (UActorComponent* Component : GetComponents())
 	{
 		if (UCameraComponent* Camera = Cast<UCameraComponent>(Component))
 		{
-			Camera->GetCameraView(DeltaTime, OutPOV);
-			return;
+			if (Camera->IsActive())
+			{
+				Camera->GetCameraView(DeltaTime, OutPOV);
+				return;
+			}
+			if (!FallbackCamera)
+			{
+				FallbackCamera = Camera;
+			}
 		}
 	}
+
+	if (FallbackCamera)
+	{
+		FallbackCamera->GetCameraView(DeltaTime, OutPOV);
+		return;
+	}
+
 	// 카메라없음 -> 액터자신
 	OutPOV.Location = GetActorLocation();
 	OutPOV.Rotation = GetActorRotation();

@@ -128,6 +128,8 @@ void APlayerCameraManager::SetViewTarget(AActor* NewTarget, const FViewTargetTra
 
 void APlayerCameraManager::UpdateCamera(float DeltaTime) 
 {
+	ClearCachedPPBlends();
+
 	//현재 대상 시점
 	const bool bOutgoingLocked = bFreezeOutgoing || (PendingViewTarget.Target && BlendParams.bLockOutgoing);
 	if (!bOutgoingLocked)
@@ -146,7 +148,19 @@ void APlayerCameraManager::UpdateCamera(float DeltaTime)
 		if (BlendTimeToGo > 0.0f)
 		{
 			const float TimePct = 1.0f - BlendTimeToGo / BlendParams.BlendTime;
-			NewPOV.BlendViewInfo(PendingViewTarget.POV, BlendParams.GetBlendAlpha(TimePct));
+			const float BlendPct = BlendParams.GetBlendAlpha(TimePct);
+			NewPOV.BlendViewInfo(PendingViewTarget.POV, BlendPct);
+
+			// 언리얼 방식: 나가는 카메라(1 - BlendPct) → 들어오는 카메라(BlendPct) 순으로 캐시에 쌓는다.
+			// 한쪽 카메라만 bOverride가 켜져 있어도 전환 끝에서 끊기지 않고 부드럽게 이어진다.
+			if (ViewTarget.POV.PostProcessBlendWeight > 0.0f)
+			{
+				AddCachedPPBlend(ViewTarget.POV.PostProcessSettings, ViewTarget.POV.PostProcessBlendWeight * (1.0f - BlendPct));
+			}
+			if (PendingViewTarget.POV.PostProcessBlendWeight > 0.0f)
+			{
+				AddCachedPPBlend(PendingViewTarget.POV.PostProcessSettings, PendingViewTarget.POV.PostProcessBlendWeight * BlendPct);
+			}
 		}
 		else
 		{
@@ -156,6 +170,18 @@ void APlayerCameraManager::UpdateCamera(float DeltaTime)
 			bFreezeOutgoing = false;
 			BlendTimeToGo = 0.0f;
 			NewPOV = ViewTarget.POV;
+
+			if (ViewTarget.POV.PostProcessBlendWeight > 0.0f)
+			{
+				AddCachedPPBlend(ViewTarget.POV.PostProcessSettings, ViewTarget.POV.PostProcessBlendWeight);
+			}
+		}
+	}
+	else
+	{
+		if (ViewTarget.POV.PostProcessBlendWeight > 0.0f)
+		{
+			AddCachedPPBlend(ViewTarget.POV.PostProcessSettings, ViewTarget.POV.PostProcessBlendWeight);
 		}
 	}
 	//효과
@@ -168,6 +194,31 @@ void APlayerCameraManager::UpdateCamera(float DeltaTime)
 	//결과저장
 	CameraCachePOV = NewPOV;
 	bCameraCacheValid = true;
+}
+
+void APlayerCameraManager::ClearCachedPPBlends()
+{
+	PostProcessBlendCache.Empty();
+	PostProcessBlendCacheWeights.Empty();
+}
+
+void APlayerCameraManager::AddCachedPPBlend(const FPostProcessSettings& PPSettings, float InWeight)
+{
+	const float ClampedWeight = FMath::Clamp(InWeight, 0.0f, 1.0f);
+	if (ClampedWeight <= 0.0f)
+	{
+		return;
+	}
+	PostProcessBlendCache.Add(PPSettings);
+	PostProcessBlendCacheWeights.Add(ClampedWeight);
+}
+
+void APlayerCameraManager::GetCachedPostProcessBlends(
+	const TArray<FPostProcessSettings>*& OutPPSettings,
+	const TArray<float>*& OutPPBlendWeights) const
+{
+	OutPPSettings = &PostProcessBlendCache;
+	OutPPBlendWeights = &PostProcessBlendCacheWeights;
 }
 
 void APlayerCameraManager::AddCameraModifier(UCameraModifier* Modifier)
@@ -244,6 +295,7 @@ void APlayerCameraManager::CheckViewTarget(FViewTarget& VT)
 
 void APlayerCameraManager::UpdateViewTarget(FViewTarget& OutVT, float DeltaTime)
 {
+	OutVT.POV.PostProcessBlendWeight = 0.0f;
 	if (OutVT.Target) OutVT.Target->CalcCamera(DeltaTime, OutVT.POV);
 }
 

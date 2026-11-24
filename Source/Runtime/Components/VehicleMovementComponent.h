@@ -5,6 +5,8 @@
 #include "Physics/VehicleInstance.h"
 #include "VehicleMovementComponent.generated.h"
 
+class UStaticMeshComponent;
+
 UCLASS()
 class UVehicleMovementComponent : public UPawnMovementComponent
 {
@@ -18,5 +20,6 @@ protected:
     virtual void OnUnregister() override;
 
 private:
+    UStaticMeshComponent* WheelVisuals[4] = {};
     FVehicleInstance VehicleInstance;
 };

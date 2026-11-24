@@ -16,10 +16,13 @@ public:
     virtual void BeginPlay() override;
     virtual void TickComponent(float DeltaTime) override;
 
+    bool IsVehicleInAir() const { return bIsVehicleInAir; }
+
 protected:
     virtual void OnUnregister() override;
 
 private:
     UStaticMeshComponent* WheelVisuals[4] = {};
     FVehicleInstance VehicleInstance;
+    bool bIsVehicleInAir = true;
 };

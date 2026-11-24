@@ -29,6 +29,39 @@ struct FCollisionNotifyInfo
 	FVector ImpactNormal = FVector(0, 0, 0);   // B에서 A 쪽을 향한다
 };
 
+struct FVehicleWheelState
+{
+	bool bIsInAir = true;
+	bool bHasContact = false;
+
+	FVector SuspensionLineStart = FVector(0.0f, 0.0f, 0.0f);
+	FVector SuspensionLineDirection = FVector(0.0f, 0.0f, 0.0f);
+	float SuspensionLineLength = 0.0f;
+
+	FVector WheelCenterOffset = FVector(0.0f, 0.0f, 0.0f);
+	FVector SuspensionTravelDirection = FVector(0.0f, 0.0f, 0.0f);
+
+	FVector TireContactPoint = FVector(0.0f, 0.0f, 0.0f);
+	FVector TireContactNormal = FVector(0.0f, 0.0f, 0.0f);
+	FVector TireLongitudinalDirection = FVector(0.0f, 0.0f, 0.0f);
+	FVector TireLateralDirection = FVector(0.0f, 0.0f, 0.0f);
+
+	float WheelRadius = 0.0f;
+	float WheelWidth = 0.0f;
+
+	float SuspensionJounce = 0.0f;
+	float SuspensionSpringForce = 0.0f;
+
+	float TireFriction = 0.0f;
+	float LongitudinalSlip = 0.0f;
+	float LateralSlip = 0.0f;
+
+	float SteerAngle = 0.0f;
+	float WheelRotationAngle = 0.0f;
+
+	int32 TireSurfaceType = -1;
+};
+
 // 월드 하나당 PxScene 하나. 고정 스텝으로 시뮬레이션한다.
 // UE 4.27의 FPhysScene_PhysX 자리다.
 //
@@ -67,6 +100,7 @@ public:
 	void RemoveVehicle(physx::PxVehicleWheels* Vehicle);
 
 	void SetVehicleInput(physx::PxVehicleWheels* Vehicle, bool bAccelerate, bool bBrake, bool bHandbrake, bool bSteerLeft, bool bSteerRight);
+	bool GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehicleWheelState* OutWheelStates, int32 MaxWheelCount, bool& OutIsInAir) const;
 
 	static constexpr float FixedStep = 1.0f / 60.0f;
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다

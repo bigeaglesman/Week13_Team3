@@ -9,9 +9,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "Math/Quat.h"
 
-#include <vehicle/PxVehicleDrive4W.h>
-#include <vehicle/PxVehicleWheels.h>
-
 void UVehicleMovementComponent::BeginPlay()
 {
     Super::BeginPlay();
@@ -77,43 +74,52 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     const float ForwardInput = InputVector.Dot(VehicleRotation.GetForwardVector());
     const float RightInput = InputVector.Dot(VehicleRotation.GetRightVector());
 
-    if (FPhysicsScene* PhysicsScene = GetWorld()->GetPhysicsScene())
+
+    FPhysicsScene* PhysicsScene = GetWorld()->GetPhysicsScene();
+
+    if (!PhysicsScene)
     {
-        PhysicsScene->SetVehicleInput(VehicleInstance.GetVehicle(), ForwardInput > KINDA_SMALL_NUMBER, ForwardInput < -KINDA_SMALL_NUMBER, FInputSystem::IsKeyDown(EKeyCode::Space), RightInput < -KINDA_SMALL_NUMBER, RightInput > KINDA_SMALL_NUMBER);
+        return;
     }
 
     physx::PxVehicleWheels* Vehicle = VehicleInstance.GetVehicle();
-    physx::PxVehicleDrive4W* DriveVehicle = static_cast<physx::PxVehicleDrive4W*>(Vehicle);
 
-    const float SteeringInput =
-        DriveVehicle->mDriveDynData.getAnalogInput(physx::PxVehicleDrive4WControl::eANALOG_INPUT_STEER_RIGHT) -
-        DriveVehicle->mDriveDynData.getAnalogInput(physx::PxVehicleDrive4WControl::eANALOG_INPUT_STEER_LEFT);
+    PhysicsScene->SetVehicleInput(Vehicle, ForwardInput > KINDA_SMALL_NUMBER, ForwardInput < -KINDA_SMALL_NUMBER, FInputSystem::IsKeyDown(EKeyCode::Space), RightInput < -KINDA_SMALL_NUMBER, RightInput > KINDA_SMALL_NUMBER);
+
+    FVehicleWheelState WheelStates[4];
+
+    if (!PhysicsScene->GetVehicleWheelStates(Vehicle, WheelStates, 4, bIsVehicleInAir))
+    {
+        return;
+    }
 
     const FQuat CylinderAxisRotation = FQuat::MakeFromAxisAngle(FVector(1.0f, 0.0f, 0.0f), FMath::DegreesToRadians(90.0f));
 
-    for (physx::PxU32 i = 0; i < 4 && i < Vehicle->mWheelsSimData.getNbWheels(); ++i)
+    for (int32 i = 0; i < 4; ++i)
     {
         UStaticMeshComponent* WheelComponent = WheelVisuals[i];
+
         if (!WheelComponent)
         {
             continue;
         }
 
-        const physx::PxVec3& WheelOffset = Vehicle->mWheelsSimData.getWheelCentreOffset(i);
-        const physx::PxVehicleWheelData& WheelData = Vehicle->mWheelsSimData.getWheelData(i);
+        const FVehicleWheelState& WheelState = WheelStates[i];
 
-        const float WheelSteerAngle = i < 2 ? SteeringInput * WheelData.mMaxSteer : 0.0f;
-        const float WheelRotationAngle = Vehicle->mWheelsDynData.getWheelRotationAngle(i);
+        const float WheelSteerAngle = WheelState.SteerAngle;
+        const float WheelRotationAngle = WheelState.WheelRotationAngle;
+
+        const FVector WheelLocation = WheelState.WheelCenterOffset - WheelState.SuspensionTravelDirection * WheelState.SuspensionJounce;
 
         const FQuat SteeringRotation = FQuat::MakeFromAxisAngle(FVector(0.0f, 0.0f, 1.0f), WheelSteerAngle);
         const FQuat SpinRotation = FQuat::MakeFromAxisAngle(FVector(0.0f, 0.0f, 1.0f), WheelRotationAngle);
         const FQuat WheelRotation = SteeringRotation * CylinderAxisRotation * SpinRotation;
 
-        const FVector WheelLocation(WheelOffset.x, WheelOffset.y, WheelOffset.z);
-        const FVector WheelScale(WheelData.mRadius, WheelData.mWidth, WheelData.mRadius);
+        const FVector WheelScale(WheelState.WheelRadius, WheelState.WheelWidth, WheelState.WheelRadius);
 
         WheelComponent->SetTransform(FTransform(WheelRotation, WheelLocation, WheelScale));
     }
+
 }
 
 void UVehicleMovementComponent::OnUnregister()

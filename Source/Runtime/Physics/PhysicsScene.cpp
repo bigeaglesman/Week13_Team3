@@ -15,6 +15,7 @@
 #include <vehicle/PxVehicleTireFriction.h>
 #include <vehicle/PxVehicleDrive4W.h>
 #include <vehicle/PxVehicleUtilControl.h>
+#include <vehicle/PxVehicleUtil.h>
 
 #include "Physics/PhysXSceneLock.h"
 
@@ -29,6 +30,8 @@ struct FVehicleSceneQueryData
 	std::vector<USceneComponent*> SyncComponents;
 	std::vector<PxRaycastQueryResult> RaycastResults;
 	std::vector<PxVehicleDrive4WRawInputData> RawInputs;
+	std::vector<std::vector<PxWheelQueryResult>> WheelQueryResults;
+	std::vector<PxVehicleWheelQueryResult> VehicleWheelQueryResults;
 
 	PxU32 TotalWheelCount = 0;
 	PxU32 MaxWheelCount = 0;
@@ -408,7 +411,7 @@ void FPhysicsScene::StepOnce(float Step)
 
 		PxVehicleSuspensionRaycasts(QueryData.BatchQuery, VehicleCount, QueryData.Vehicles.data(), QueryData.TotalWheelCount, QueryData.RaycastResults.data());
 
-		PxVehicleUpdates(Step, Scene->getGravity(), *QueryData.FrictionPairs, VehicleCount, QueryData.Vehicles.data(), nullptr);
+		PxVehicleUpdates(Step, Scene->getGravity(), *QueryData.FrictionPairs, VehicleCount, QueryData.Vehicles.data(), QueryData.VehicleWheelQueryResults.data());
 	}
 
 	{
@@ -511,6 +514,13 @@ bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle, USceneComponent* SyncCo
 	QueryData.Vehicles.push_back(Vehicle);
 	QueryData.SyncComponents.push_back(SyncComponent);
 	QueryData.RawInputs.emplace_back();
+
+	QueryData.WheelQueryResults.emplace_back(WheelCount);
+
+	PxVehicleWheelQueryResult& WheelQuery = QueryData.VehicleWheelQueryResults.emplace_back();
+	WheelQuery.wheelQueryResults = QueryData.WheelQueryResults.back().data();
+	WheelQuery.nbWheelQueryResults = WheelCount;
+
 	QueryData.TotalWheelCount += WheelCount;
 
 	return true;
@@ -537,6 +547,15 @@ void FPhysicsScene::RemoveVehicle(PxVehicleWheels* Vehicle)
 
 	QueryData.RawInputs.erase(QueryData.RawInputs.begin() + VehicleIndex);
 	QueryData.SyncComponents.erase(QueryData.SyncComponents.begin() + VehicleIndex);
+	QueryData.WheelQueryResults.erase(QueryData.WheelQueryResults.begin() + VehicleIndex);
+	QueryData.VehicleWheelQueryResults.erase(QueryData.VehicleWheelQueryResults.begin() + VehicleIndex);
+
+	for (size_t i = 0; i < QueryData.VehicleWheelQueryResults.size(); ++i)
+	{
+		QueryData.VehicleWheelQueryResults[i].wheelQueryResults = QueryData.WheelQueryResults[i].data();
+		QueryData.VehicleWheelQueryResults[i].nbWheelQueryResults = static_cast<PxU32>(QueryData.WheelQueryResults[i].size());
+	}
+
 	QueryData.TotalWheelCount -= Vehicle->mWheelsSimData.getNbWheels();
 	QueryData.Vehicles.erase(It);
 }
@@ -564,6 +583,89 @@ void FPhysicsScene::SetVehicleInput(PxVehicleWheels* Vehicle, bool bAccelerate, 
 	RawInput.setDigitalHandbrake(bHandbrake);
 	RawInput.setDigitalSteerLeft(bSteerLeft);
 	RawInput.setDigitalSteerRight(bSteerRight);
+}
+
+bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehicleWheelState* OutWheelStates, int32 MaxWheelCount, bool& OutIsInAir) const
+{
+	OutIsInAir = true;
+
+	if (!Scene || !Vehicle || !VehicleSceneQueryData || !OutWheelStates || MaxWheelCount <= 0)
+	{
+		return false;
+	}
+
+	SCOPED_SCENE_READ_LOCK(Scene);
+
+	const FVehicleSceneQueryData& QueryData = *VehicleSceneQueryData;
+	auto It = std::find(QueryData.Vehicles.begin(), QueryData.Vehicles.end(), Vehicle);
+
+	if (It == QueryData.Vehicles.end())
+	{
+		return false;
+	}
+
+	const size_t VehicleIndex = static_cast<size_t>(It - QueryData.Vehicles.begin());
+
+	if (VehicleIndex >= QueryData.VehicleWheelQueryResults.size())
+	{
+		return false;
+	}
+
+	const PxU32 WheelCount = Vehicle->mWheelsSimData.getNbWheels();
+
+	if (MaxWheelCount < static_cast<int32>(WheelCount))
+	{
+		return false;
+	}
+
+	const PxVehicleWheelQueryResult& VehicleResults = QueryData.VehicleWheelQueryResults[VehicleIndex];
+
+	if (!VehicleResults.wheelQueryResults || VehicleResults.nbWheelQueryResults < WheelCount)
+	{
+		return false;
+	}
+
+	OutIsInAir = PxVehicleIsInAir(VehicleResults);
+
+	for (PxU32 i = 0; i < WheelCount; ++i)
+	{
+		const PxWheelQueryResult& WheelResult = VehicleResults.wheelQueryResults[i];
+		const PxVehicleWheelData& WheelData = Vehicle->mWheelsSimData.getWheelData(i);
+
+		FVehicleWheelState& State = OutWheelStates[i];
+
+		State.bIsInAir = WheelResult.isInAir;
+		State.bHasContact = !WheelResult.isInAir && WheelResult.tireContactShape != nullptr;
+
+		State.SuspensionLineStart = ToFVector(WheelResult.suspLineStart);
+		State.SuspensionLineDirection = ToFVector(WheelResult.suspLineDir);
+		State.SuspensionLineLength = WheelResult.suspLineLength;
+
+		State.WheelCenterOffset = ToFVector(Vehicle->mWheelsSimData.getWheelCentreOffset(i));
+		State.SuspensionTravelDirection = ToFVector(Vehicle->mWheelsSimData.getSuspTravelDirection(i));
+
+		State.TireContactPoint = ToFVector(WheelResult.tireContactPoint);
+		State.TireContactNormal = ToFVector(WheelResult.tireContactNormal);
+		State.TireLongitudinalDirection = ToFVector(WheelResult.tireLongitudinalDir);
+		State.TireLateralDirection = ToFVector(WheelResult.tireLateralDir);
+
+		State.WheelRadius = WheelData.mRadius;
+		State.WheelWidth = WheelData.mWidth;
+
+		State.SuspensionJounce = WheelResult.suspJounce;
+		State.SuspensionSpringForce = WheelResult.suspSpringForce;
+
+		State.TireFriction = WheelResult.tireFriction;
+		State.LongitudinalSlip = WheelResult.longitudinalSlip;
+		State.LateralSlip = WheelResult.lateralSlip;
+
+		State.SteerAngle = WheelResult.steerAngle;
+		State.WheelRotationAngle = Vehicle->mWheelsDynData.getWheelRotationAngle(i);
+
+		State.TireSurfaceType = static_cast<int32>(WheelResult.tireSurfaceType);
+	}
+
+	return true;
 }
 
 void FPhysicsScene::SetDebugVisualization(bool bEnable)

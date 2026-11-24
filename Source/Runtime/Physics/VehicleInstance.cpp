@@ -101,16 +101,31 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
         WheelData.mWidth = 0.24f;
         WheelData.mMass = 20.0f;
         WheelData.mMOI = 1.296f;
+        WheelData.mDampingRate = 0.25f;
         WheelData.mMaxSteer = (i < 2) ? 0.55f : 0.0f;
-        WheelData.mMaxBrakeTorque = 1500.0f;
+        WheelData.mMaxBrakeTorque = (i < 2) ? 1800.0f : 1400.0f;
         WheelData.mMaxHandBrakeTorque = (i >= 2) ? 3000.0f : 0.0f;
         WheelsSimData->setWheelData(i, WheelData);
 
         PxVehicleSuspensionData SuspensionData = WheelsSimData->getSuspensionData(i);
-        SuspensionData.setMassAndPreserveNaturalFrequency(SprungMasses[i]);
+
+        SuspensionData.mSprungMass = SprungMasses[i];
+        SuspensionData.mMaxCompression = 0.25f;
+        SuspensionData.mMaxDroop = 0.12f;
+        SuspensionData.mSpringStrength = (9.81f * SuspensionData.mSprungMass) / SuspensionData.mMaxDroop;
+        SuspensionData.mSpringDamperRate = 2.0f * 0.75f * PxSqrt(SuspensionData.mSpringStrength * SuspensionData.mSprungMass);
+
         WheelsSimData->setSuspensionData(i, SuspensionData);
 
         PxVehicleTireData TireData;
+
+        TireData.mFrictionVsSlipGraph[0][0] = 0.0f;
+        TireData.mFrictionVsSlipGraph[0][1] = 0.90f;
+        TireData.mFrictionVsSlipGraph[1][0] = 0.10f;
+        TireData.mFrictionVsSlipGraph[1][1] = 1.05f;
+        TireData.mFrictionVsSlipGraph[2][0] = 1.00f;
+        TireData.mFrictionVsSlipGraph[2][1] = 0.82f;
+
         WheelsSimData->setTireData(i, TireData);
 
         const PxVec3 WheelCenterCOMOffset = WheelCenterActorOffsets[i] - ChassisData.mCMOffset;
@@ -127,9 +142,39 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
     PxVehicleDriveSimData4W DriveData;
 
     PxVehicleEngineData EngineData;
+    EngineData.mMOI = 1.0f;
+    EngineData.mPeakTorque = 420.0f;
+    EngineData.mMaxOmega = 650.0f;
+    EngineData.mDampingRateFullThrottle = 0.15f;
+    EngineData.mDampingRateZeroThrottleClutchEngaged = 2.0f;
+    EngineData.mDampingRateZeroThrottleClutchDisengaged = 0.35f;
+
     PxVehicleGearsData GearsData;
+    GearsData.mFinalRatio = 3.7f;
+    GearsData.mNbRatios = 7;
+    GearsData.mSwitchTime = 0.35f;
+    GearsData.setGearRatio(PxVehicleGearsData::eREVERSE, -3.2f);
+    GearsData.setGearRatio(PxVehicleGearsData::eNEUTRAL, 0.0f);
+    GearsData.setGearRatio(PxVehicleGearsData::eFIRST, 3.6f);
+    GearsData.setGearRatio(PxVehicleGearsData::eSECOND, 2.2f);
+    GearsData.setGearRatio(PxVehicleGearsData::eTHIRD, 1.5f);
+    GearsData.setGearRatio(PxVehicleGearsData::eFOURTH, 1.15f);
+    GearsData.setGearRatio(PxVehicleGearsData::eFIFTH, 0.9f);
+
     PxVehicleClutchData ClutchData;
+    ClutchData.mStrength = 10.0f;
+    ClutchData.mAccuracyMode = PxVehicleClutchAccuracyMode::eBEST_POSSIBLE;
+
     PxVehicleAutoBoxData AutoBoxData;
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIRST, 0.88f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eSECOND, 0.88f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eTHIRD, 0.88f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFOURTH, 0.88f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eSECOND, 0.45f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eTHIRD, 0.45f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFOURTH, 0.45f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFIFTH, 0.45f);
+    AutoBoxData.setLatency(0.35f);
 
     DriveData.setEngineData(EngineData);
     DriveData.setGearsData(GearsData);
@@ -138,6 +183,12 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
 
     PxVehicleDifferential4WData DifferentialData;
     DifferentialData.mType = PxVehicleDifferential4WData::eDIFF_TYPE_LS_4WD;
+    DifferentialData.mFrontRearSplit = 0.45f;
+    DifferentialData.mFrontLeftRightSplit = 0.5f;
+    DifferentialData.mRearLeftRightSplit = 0.5f;
+    DifferentialData.mCentreBias = 1.3f;
+    DifferentialData.mFrontBias = 1.3f;
+    DifferentialData.mRearBias = 1.3f;
     DriveData.setDiffData(DifferentialData);
 
     PxVehicleAckermannGeometryData AckermannData;

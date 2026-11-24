@@ -155,6 +155,10 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         DriveState.CurrentGear == physx::PxVehicleGearsData::eREVERSE ||
         DriveState.TargetGear == physx::PxVehicleGearsData::eREVERSE;
 
+    const bool bVehicleInNeutral =
+        DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL &&
+        DriveState.TargetGear == physx::PxVehicleGearsData::eNEUTRAL;
+
     if (bNeutralPressed)
     {
         PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eNEUTRAL, false, true);
@@ -163,7 +167,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
     else if (bForwardCommand)
     {
-        const bool bMustStop = bVehicleInReverse || DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL;
+        const bool bMustStop = bVehicleInReverse || bVehicleInNeutral;
 
         if (bMustStop && std::abs(DriveState.ForwardSpeed) > 0.5f)
         {
@@ -171,7 +175,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         }
         else
         {
-            if (bVehicleInReverse || DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL)
+            if (bVehicleInReverse || bVehicleInNeutral)
             {
                 PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eFIRST, bAutomaticTransmission, true);
             }

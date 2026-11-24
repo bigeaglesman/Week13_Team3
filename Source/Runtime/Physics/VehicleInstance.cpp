@@ -126,7 +126,7 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
         PxVehicleTireData TireData;
 
         TireData.mFrictionVsSlipGraph[0][0] = 0.0f;
-        TireData.mFrictionVsSlipGraph[0][1] = 0.95f;
+        TireData.mFrictionVsSlipGraph[0][1] = 1.0f;
         TireData.mFrictionVsSlipGraph[1][0] = 0.10f;
         TireData.mFrictionVsSlipGraph[1][1] = 1.15f;
         TireData.mFrictionVsSlipGraph[2][0] = 1.00f;
@@ -203,7 +203,7 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
 
     PxVehicleDifferential4WData DifferentialData;
     DifferentialData.mType = PxVehicleDifferential4WData::eDIFF_TYPE_LS_4WD;
-    DifferentialData.mFrontRearSplit = 0.45f;
+    DifferentialData.mFrontRearSplit = 0.55f;
     DifferentialData.mFrontLeftRightSplit = 0.5f;
     DifferentialData.mRearLeftRightSplit = 0.5f;
     DifferentialData.mCentreBias = 1.3f;

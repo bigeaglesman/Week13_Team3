@@ -6,6 +6,8 @@
 #include "VehicleMovementComponent.generated.h"
 
 class UStaticMeshComponent;
+class UCameraComponent;
+class USpringArmComponent;
 class UVehicleHUD;
 
 UCLASS()
@@ -34,6 +36,12 @@ protected:
 
 private:
     UStaticMeshComponent* WheelVisuals[4] = {};
+    UCameraComponent* VehicleCamera = nullptr;
+    USpringArmComponent* VehicleSpringArm = nullptr;
+    float BaseCameraFOV = 60.0f;
+    float CurrentCameraFOV = 60.0f;
+    float BaseSpringArmLength = 13.5f;
+    float CurrentSpringArmLength = 13.5f;
     FVehicleInstance VehicleInstance;
 
     bool bIsVehicleInAir = true;

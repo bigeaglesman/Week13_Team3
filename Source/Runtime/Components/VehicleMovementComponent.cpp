@@ -9,6 +9,8 @@
 #include "Physics/PhysicsScene.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Math/Quat.h"
 #include "UI/VehicleHUD.h"
 #include "UI/UserWidget.h"
@@ -30,6 +32,30 @@ void UVehicleMovementComponent::BeginPlay()
     if (!Owner)
     {
         return;
+    }
+
+    VehicleCamera = Cast<UCameraComponent>(Owner->FindComponentByName(FName("VehicleTestCamera")));
+
+    if (VehicleCamera)
+    {
+        BaseCameraFOV = VehicleCamera->GetFieldOfView();
+        CurrentCameraFOV = BaseCameraFOV;
+    }
+    else
+    {
+        HTR_LOG(Warning, "[Vehicle] VehicleTestCamera component is missing.");
+    }
+
+    VehicleSpringArm = Cast<USpringArmComponent>(Owner->FindComponentByName(FName("VehicleSpringArm")));
+
+    if (VehicleSpringArm)
+    {
+        BaseSpringArmLength = VehicleSpringArm->TargetArmLength;
+        CurrentSpringArmLength = BaseSpringArmLength;
+    }
+    else
+    {
+        HTR_LOG(Warning, "[Vehicle] VehicleSpringArm component is missing.");
     }
 
     static const FName WheelComponentNames[4] =
@@ -133,6 +159,27 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
 
     VehicleSpeed = DriveState.ForwardSpeed;
+
+    if (VehicleCamera)
+    {
+        const float SpeedAlpha = FMath::Clamp(std::abs(VehicleSpeed) / 65.0f, 0.0f, 1.0f);
+        const float TargetFOV = BaseCameraFOV + 12.0f * SpeedAlpha;
+        const float FOVAlpha = FMath::Clamp(DeltaTime * 4.0f, 0.0f, 1.0f);
+
+        CurrentCameraFOV += (TargetFOV - CurrentCameraFOV) * FOVAlpha;
+        VehicleCamera->SetFieldOfView(CurrentCameraFOV);
+    }
+
+    if (VehicleSpringArm)
+    {
+        const float SpeedAlpha = FMath::Clamp(std::abs(VehicleSpeed) / 65.0f, 0.0f, 1.0f);
+        const float TargetArmLength = BaseSpringArmLength + 2.5f * SpeedAlpha;
+        const float ArmAlpha = FMath::Clamp(DeltaTime * 2.0f, 0.0f, 1.0f);
+
+        CurrentSpringArmLength += (TargetArmLength - CurrentSpringArmLength) * ArmAlpha;
+        VehicleSpringArm->TargetArmLength = CurrentSpringArmLength;
+    }
+
     EngineRPM = DriveState.EngineRPM;
     CurrentGear = DriveState.CurrentGear;
 
@@ -169,7 +216,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     {
         const bool bMustStop = bVehicleInReverse || bVehicleInNeutral;
 
-        if (bMustStop && std::abs(DriveState.ForwardSpeed) > 0.5f)
+        if (bMustStop && DriveState.LinearSpeed > 0.5f)
         {
             bBrake = true;
         }
@@ -187,7 +234,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     {
         const bool bMustStop = !bVehicleInReverse;
 
-        if (bMustStop && std::abs(DriveState.ForwardSpeed) > 0.5f)
+        if (bMustStop && DriveState.LinearSpeed > 0.5f)
         {
             bBrake = true;
         }
@@ -225,7 +272,17 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     BrakeInput = bBrake ? 1.0f : 0.0f;
     SteeringInput = FMath::Clamp(RightInput, -1.0f, 1.0f);
 
-    PhysicsScene->SetVehicleInput(Vehicle, bAccelerate, bBrake, IsKeyDown(EKeyCode::Space), RightInput < -KINDA_SMALL_NUMBER, RightInput > KINDA_SMALL_NUMBER);
+    const bool bHandbrakeDown = IsKeyDown(EKeyCode::Space);
+
+    static bool bPreviousHandbrakeDown = false;
+
+    if (bHandbrakeDown != bPreviousHandbrakeDown)
+    {
+        HTR_LOG(Info, "[VehicleInput] Space={}", bHandbrakeDown);
+        bPreviousHandbrakeDown = bHandbrakeDown;
+    }
+
+    PhysicsScene->SetVehicleInput(Vehicle, bAccelerate, bBrake, bHandbrakeDown, RightInput < -KINDA_SMALL_NUMBER, RightInput > KINDA_SMALL_NUMBER);
 
     FVehicleWheelState WheelStates[4];
 
@@ -262,7 +319,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         const float WheelSteerAngle = WheelState.SteerAngle;
         const float WheelRotationAngle = WheelState.WheelRotationAngle;
 
-        const FVector WheelLocation = WheelState.WheelCenterOffset - WheelState.SuspensionTravelDirection * WheelState.SuspensionJounce;
+        const FVector WheelLocation = WheelState.WheelCenterOffset + FVector(0.0f, 0.0f, -0.25f) - WheelState.SuspensionTravelDirection * WheelState.SuspensionJounce;
 
         const FQuat SteeringRotation = FQuat::MakeFromAxisAngle(FVector(0.0f, 0.0f, 1.0f), WheelSteerAngle);
         const FQuat SpinRotation = FQuat::MakeFromAxisAngle(FVector(0.0f, 0.0f, 1.0f), WheelRotationAngle);

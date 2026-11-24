@@ -117,7 +117,7 @@ struct FVehicleSceneQueryData
 
 		FrictionPairs->setup(1, static_cast<PxU32>(Materials.size()), Materials.data(), SurfaceTypes.data());
 
-		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Asphalt), 0, 1.0f);
+		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Asphalt), 0, 1.3f);
 		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Dirt), 0, 0.72f);
 		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Ice), 0, 0.15f);
 		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Grass), 0, 0.55f);
@@ -461,18 +461,19 @@ void FPhysicsScene::StepOnce(float Step)
 		static const PxFixedSizeLookupTable<8> SteerVsForwardSpeedTable = []()
 			{
 				PxFixedSizeLookupTable<8> Table;
-				Table.addPair(0.0f, 0.9f);
-				Table.addPair(5.0f, 0.9f);
-				Table.addPair(30.0f, 0.48f);
-				Table.addPair(120.0f, 0.28f);
+				Table.addPair(0.0f, 0.75f);
+				Table.addPair(5.0f, 0.75f);
+				Table.addPair(30.0f, 0.125f);
+				Table.addPair(120.0f, 0.1f);
 				return Table;
 			}();
 
 		for (PxU32 i = 0; i < VehicleCount; ++i)
 		{
 			PxVehicleDrive4W* DriveVehicle = static_cast<PxVehicleDrive4W*>(QueryData.Vehicles[i]);
+			const bool bVehicleInAir = PxVehicleIsInAir(QueryData.VehicleWheelQueryResults[i]);
 
-			PxVehicleDrive4WSmoothDigitalRawInputsAndSetAnalogInputs(KeySmoothingData, SteerVsForwardSpeedTable, QueryData.RawInputs[i], Step, false, *DriveVehicle);
+			PxVehicleDrive4WSmoothDigitalRawInputsAndSetAnalogInputs(KeySmoothingData, SteerVsForwardSpeedTable, QueryData.RawInputs[i], Step, bVehicleInAir, *DriveVehicle);
 		}
 
 		PxVehicleSuspensionRaycasts(QueryData.BatchQuery, VehicleCount, QueryData.Vehicles.data(), QueryData.TotalWheelCount, QueryData.RaycastResults.data());
@@ -748,6 +749,7 @@ bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehi
 	}
 
 	OutIsInAir = PxVehicleIsInAir(VehicleResults);
+	const PxVec3 ChassisCMOffset = Vehicle->getRigidDynamicActor()->getCMassLocalPose().p;
 
 	for (PxU32 i = 0; i < WheelCount; ++i)
 	{
@@ -763,7 +765,7 @@ bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehi
 		State.SuspensionLineDirection = ToFVector(WheelResult.suspLineDir);
 		State.SuspensionLineLength = WheelResult.suspLineLength;
 
-		State.WheelCenterOffset = ToFVector(Vehicle->mWheelsSimData.getWheelCentreOffset(i));
+		State.WheelCenterOffset = ToFVector(Vehicle->mWheelsSimData.getWheelCentreOffset(i) + ChassisCMOffset);
 		State.SuspensionTravelDirection = ToFVector(Vehicle->mWheelsSimData.getSuspTravelDirection(i));
 
 		State.TireContactPoint = ToFVector(WheelResult.tireContactPoint);
@@ -808,8 +810,10 @@ bool FPhysicsScene::GetVehicleDriveState(PxVehicleWheels* Vehicle, FVehicleDrive
 	}
 
 	const PxVehicleDrive4W* DriveVehicle = static_cast<const PxVehicleDrive4W*>(Vehicle);
+	const PxRigidDynamic* ChassisActor = Vehicle->getRigidDynamicActor();
 
 	OutState.ForwardSpeed = Vehicle->computeForwardSpeed();
+	OutState.LinearSpeed = ChassisActor ? ChassisActor->getLinearVelocity().magnitude() : 0.0f;
 	OutState.EngineRPM = DriveVehicle->mDriveDynData.getEngineRotationSpeed() * 60.0f / (2.0f * 3.1415926535f);
 	OutState.CurrentGear = static_cast<int32>(DriveVehicle->mDriveDynData.getCurrentGear());
 	OutState.TargetGear = static_cast<int32>(DriveVehicle->mDriveDynData.getTargetGear());

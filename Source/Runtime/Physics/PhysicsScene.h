@@ -70,6 +70,7 @@ struct FVehicleWheelState
 struct FVehicleDriveState
 {
 	float ForwardSpeed = 0.0f;
+	float LinearSpeed = 0.0f;
 	float EngineRPM = 0.0f;
 
 	int32 CurrentGear = 0;

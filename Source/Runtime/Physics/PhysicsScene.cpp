@@ -454,17 +454,17 @@ void FPhysicsScene::StepOnce(float Step)
 
 		static const PxVehicleKeySmoothingData KeySmoothingData =
 		{
-			{ 7.0f, 8.0f, 8.0f, 5.0f, 5.0f },
-			{ 9.0f, 10.0f, 10.0f, 7.0f, 7.0f }
+			{ 7.0f, 8.0f, 2.5f, 5.0f, 5.0f },
+			{ 9.0f, 10.0f, 8.0f, 7.0f, 7.0f }
 		};
 
 		static const PxFixedSizeLookupTable<8> SteerVsForwardSpeedTable = []()
 			{
 				PxFixedSizeLookupTable<8> Table;
-				Table.addPair(0.0f, 1.0f);
-				Table.addPair(5.0f, 1.0f);
-				Table.addPair(30.0f, 0.4f);
-				Table.addPair(120.0f, 0.2f);
+				Table.addPair(0.0f, 0.9f);
+				Table.addPair(5.0f, 0.9f);
+				Table.addPair(30.0f, 0.48f);
+				Table.addPair(120.0f, 0.28f);
 				return Table;
 			}();
 

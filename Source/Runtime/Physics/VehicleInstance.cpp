@@ -69,12 +69,13 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
     // 차체 질량과 관성 텐서
     PxVehicleChassisData ChassisData;
     ChassisData.mMass = 1200.0f;
-    ChassisData.mMOI = PxVec3(305.0f, 1345.0f, 1552.0f);
-    ChassisData.mCMOffset = PxVec3(0.0f, 0.0f, 0.0f);
+    ChassisData.mMOI = PxVec3(450.0f, 1345.0f, 1552.0f);
+    ChassisData.mCMOffset = PxVec3(0.0f, 0.0f, -0.25f);
 
     NewChassis->setMass(ChassisData.mMass);
     NewChassis->setMassSpaceInertiaTensor(ChassisData.mMOI);
     NewChassis->setCMassLocalPose(PxTransform(ChassisData.mCMOffset));
+    NewChassis->setAngularDamping(0.7f);
     NewChassis->userData = nullptr;
 
     // 2. 4개 바퀴의 기본 위치: X=전방, Y=좌우, Z=상하
@@ -109,7 +110,7 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
         WheelData.mDampingRate = 0.25f;
         WheelData.mMaxSteer = (i < 2) ? 0.55f : 0.0f;
         WheelData.mMaxBrakeTorque = (i < 2) ? 1800.0f : 1400.0f;
-        WheelData.mMaxHandBrakeTorque = (i >= 2) ? 3000.0f : 0.0f;
+        WheelData.mMaxHandBrakeTorque = (i >= 2) ? 900.0f : 0.0f;
         WheelsSimData->setWheelData(i, WheelData);
 
         PxVehicleSuspensionData SuspensionData = WheelsSimData->getSuspensionData(i);
@@ -118,18 +119,18 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
         SuspensionData.mMaxCompression = 0.25f;
         SuspensionData.mMaxDroop = 0.12f;
         SuspensionData.mSpringStrength = (9.81f * SuspensionData.mSprungMass) / SuspensionData.mMaxDroop;
-        SuspensionData.mSpringDamperRate = 2.0f * 0.75f * PxSqrt(SuspensionData.mSpringStrength * SuspensionData.mSprungMass);
+        SuspensionData.mSpringDamperRate = 2.0f * 1.0f * PxSqrt(SuspensionData.mSpringStrength * SuspensionData.mSprungMass);
 
         WheelsSimData->setSuspensionData(i, SuspensionData);
 
         PxVehicleTireData TireData;
 
         TireData.mFrictionVsSlipGraph[0][0] = 0.0f;
-        TireData.mFrictionVsSlipGraph[0][1] = 0.90f;
+        TireData.mFrictionVsSlipGraph[0][1] = 0.95f;
         TireData.mFrictionVsSlipGraph[1][0] = 0.10f;
-        TireData.mFrictionVsSlipGraph[1][1] = 1.05f;
+        TireData.mFrictionVsSlipGraph[1][1] = 1.15f;
         TireData.mFrictionVsSlipGraph[2][0] = 1.00f;
-        TireData.mFrictionVsSlipGraph[2][1] = 0.82f;
+        TireData.mFrictionVsSlipGraph[2][1] = 0.92f;
 
         WheelsSimData->setTireData(i, TireData);
 
@@ -143,6 +144,19 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
         WheelsSimData->setWheelShapeMapping(i, -1);
         WheelsSimData->setSceneQueryFilterData(i, PxFilterData(VehicleDrivableSurfaceQueryFlag, 0, 0, 0));
     }
+
+    // 좌우 바퀴의 서스펜션 압축량 차이를 억제하는 안티롤 바
+    PxVehicleAntiRollBarData FrontAntiRollBar;
+    FrontAntiRollBar.mWheel0 = 0;
+    FrontAntiRollBar.mWheel1 = 1;
+    FrontAntiRollBar.mStiffness = 18000.0f;
+    WheelsSimData->addAntiRollBarData(FrontAntiRollBar);
+
+    PxVehicleAntiRollBarData RearAntiRollBar;
+    RearAntiRollBar.mWheel0 = 2;
+    RearAntiRollBar.mWheel1 = 3;
+    RearAntiRollBar.mStiffness = 16000.0f;
+    WheelsSimData->addAntiRollBarData(RearAntiRollBar);
 
     // 4. 4륜 구동 데이터의 기본 설정
     PxVehicleDriveSimData4W DriveData;

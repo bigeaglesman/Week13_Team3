@@ -12,6 +12,7 @@ class UVehicleMovementComponent : public UPawnMovementComponent
 
 public:
     virtual void BeginPlay() override;
+    virtual void TickComponent(float DeltaTime) override;
 
 protected:
     virtual void OnUnregister() override;

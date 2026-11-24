@@ -12,6 +12,8 @@
 #include <PxBatchQueryDesc.h>
 #include <vehicle/PxVehicleUpdate.h>
 #include <vehicle/PxVehicleTireFriction.h>
+#include <vehicle/PxVehicleDrive4W.h>
+#include <vehicle/PxVehicleUtilControl.h>
 
 #include "Physics/PhysXSceneLock.h"
 
@@ -24,6 +26,7 @@ struct FVehicleSceneQueryData
 
 	std::vector<PxVehicleWheels*> Vehicles;
 	std::vector<PxRaycastQueryResult> RaycastResults;
+	std::vector<PxVehicleDrive4WRawInputData> RawInputs;
 
 	PxU32 TotalWheelCount = 0;
 	PxU32 MaxWheelCount = 0;
@@ -329,6 +332,29 @@ void FPhysicsScene::StepOnce(float Step)
 		FVehicleSceneQueryData& QueryData = *VehicleSceneQueryData;
 		const PxU32 VehicleCount = static_cast<PxU32>(QueryData.Vehicles.size());
 
+		static const PxVehicleKeySmoothingData KeySmoothingData =
+		{
+			{ 3.0f, 3.0f, 3.0f, 2.5f, 2.5f },
+			{ 5.0f, 5.0f, 5.0f, 5.0f, 5.0f }
+		};
+
+		static const PxFixedSizeLookupTable<8> SteerVsForwardSpeedTable = []()
+			{
+				PxFixedSizeLookupTable<8> Table;
+				Table.addPair(0.0f, 0.75f);
+				Table.addPair(5.0f, 0.75f);
+				Table.addPair(30.0f, 0.125f);
+				Table.addPair(120.0f, 0.1f);
+				return Table;
+			}();
+
+		for (PxU32 i = 0; i < VehicleCount; ++i)
+		{
+			PxVehicleDrive4W* DriveVehicle = static_cast<PxVehicleDrive4W*>(QueryData.Vehicles[i]);
+
+			PxVehicleDrive4WSmoothDigitalRawInputsAndSetAnalogInputs(KeySmoothingData, SteerVsForwardSpeedTable, QueryData.RawInputs[i], Step, false, *DriveVehicle);
+		}
+
 		PxVehicleSuspensionRaycasts(QueryData.BatchQuery, VehicleCount, QueryData.Vehicles.data(), QueryData.TotalWheelCount, QueryData.RaycastResults.data());
 
 		PxVehicleUpdates(Step, Scene->getGravity(), *QueryData.FrictionPairs, VehicleCount, QueryData.Vehicles.data(), nullptr);
@@ -428,6 +454,7 @@ bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle)
 	}
 
 	QueryData.Vehicles.push_back(Vehicle);
+	QueryData.RawInputs.emplace_back();
 	QueryData.TotalWheelCount += WheelCount;
 
 	return true;
@@ -450,8 +477,36 @@ void FPhysicsScene::RemoveVehicle(PxVehicleWheels* Vehicle)
 		return;
 	}
 
+	const size_t VehicleIndex = static_cast<size_t>(It - QueryData.Vehicles.begin());
+
+	QueryData.RawInputs.erase(QueryData.RawInputs.begin() + VehicleIndex);
 	QueryData.TotalWheelCount -= Vehicle->mWheelsSimData.getNbWheels();
 	QueryData.Vehicles.erase(It);
+}
+
+void FPhysicsScene::SetVehicleInput(PxVehicleWheels* Vehicle, bool bAccelerate, bool bBrake, bool bHandbrake, bool bSteerLeft, bool bSteerRight)
+{
+	if (!Vehicle || !VehicleSceneQueryData)
+	{
+		return;
+	}
+
+	auto& QueryData = *VehicleSceneQueryData;
+	auto It = std::find(QueryData.Vehicles.begin(), QueryData.Vehicles.end(), Vehicle);
+
+	if (It == QueryData.Vehicles.end())
+	{
+		return;
+	}
+
+	const size_t VehicleIndex = static_cast<size_t>(It - QueryData.Vehicles.begin());
+	PxVehicleDrive4WRawInputData& RawInput = QueryData.RawInputs[VehicleIndex];
+
+	RawInput.setDigitalAccel(bAccelerate);
+	RawInput.setDigitalBrake(bBrake);
+	RawInput.setDigitalHandbrake(bHandbrake);
+	RawInput.setDigitalSteerLeft(bSteerLeft);
+	RawInput.setDigitalSteerRight(bSteerRight);
 }
 
 void FPhysicsScene::SetDebugVisualization(bool bEnable)

@@ -166,11 +166,6 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
         NewVehicle->mDriveDynData.setUseAutoGears(true);
     }
 
-    // 7. 차량 초기 상태 설정
-    NewVehicle->setToRestState();
-    NewVehicle->mDriveDynData.forceGearChange(PxVehicleGearsData::eFIRST);
-    NewVehicle->mDriveDynData.setUseAutoGears(true);
-
     ChassisActor = NewChassis;
     Vehicle = NewVehicle;
 

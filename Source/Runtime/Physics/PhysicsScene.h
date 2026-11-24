@@ -65,6 +65,8 @@ public:
 	bool AddVehicle(physx::PxVehicleWheels* Vehicle);
 	void RemoveVehicle(physx::PxVehicleWheels* Vehicle);
 
+	void SetVehicleInput(physx::PxVehicleWheels* Vehicle, bool bAccelerate, bool bBrake, bool bHandbrake, bool bSteerLeft, bool bSteerRight);
+
 	static constexpr float FixedStep = 1.0f / 60.0f;
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다
 

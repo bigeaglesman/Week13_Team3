@@ -8,11 +8,13 @@ class USceneComponent;
 class FLineBatcher;
 struct FBodyInstance;
 class FPhysicsSimulationEventCallback;
+class UPrimitiveComponent;
 
 namespace physx
 {
 	class PxScene;
 	class PxVehicleWheels;
+	class PxRigidActor;
 }
 
 struct FVehicleSceneQueryData;
@@ -23,10 +25,13 @@ struct FCollisionNotifyInfo
 {
 	FBodyInstance* BodyA = nullptr;   // 바디가 지워지면 nullptr로 바뀐다
 	FBodyInstance* BodyB = nullptr;
+	UPrimitiveComponent* ComponentA = nullptr;
+	UPrimitiveComponent* ComponentB = nullptr;
 	bool bNotifyA = false;            // A 쪽 컴포넌트에 OnComponentHit을 보낼지 (A의 bNotifyRigidBodyCollision)
 	bool bNotifyB = false;
 	FVector ImpactPoint = FVector(0, 0, 0);
 	FVector ImpactNormal = FVector(0, 0, 0);   // B에서 A 쪽을 향한다
+	FVector NormalImpulse = FVector(0, 0, 0);
 };
 
 struct FVehicleWheelState
@@ -120,6 +125,10 @@ public:
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다
 
 private:
+	friend class FPhysicsSimulationEventCallback;
+
+	UPrimitiveComponent* FindVehicleComponent(const physx::PxRigidActor* Actor) const;
+
 	void SetDebugVisualization(bool bEnable);
 	void StepOnce(float Step);
 

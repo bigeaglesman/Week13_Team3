@@ -15,6 +15,7 @@ struct FHitResult
 	FVector ImpactPoint = FVector();
 	FVector Normal; //For swept
 	FVector ImpactNormal;
+	FVector NormalImpulse = FVector(0, 0, 0);
 
 	FVector TraceStart;
 	FVector TraceEnd;

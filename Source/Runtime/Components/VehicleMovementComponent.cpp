@@ -8,7 +8,10 @@
 #include "GameFramework/PlayerController.h"
 #include "Physics/PhysicsScene.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Math/Quat.h"
+#include "UI/VehicleHUD.h"
+#include "UI/UserWidget.h"
 
 #include <cmath>
 #include <vehicle/PxVehicleComponents.h>
@@ -50,10 +53,28 @@ void UVehicleMovementComponent::BeginPlay()
     FPhysicsScene* PhysicsScene = GetWorld()->GetPhysicsScene();
     const FTransform VehicleTransform(UpdatedComponent->GetWorldRotation().Quaternion(), UpdatedComponent->GetWorldLocation(), UpdatedComponent->GetWorldScale3D());
 
-    if (!VehicleInstance.InitVehicle(PhysicsScene, VehicleTransform))
+    UPrimitiveComponent* VehiclePrimitive = Cast<UPrimitiveComponent>(UpdatedComponent);
+    const bool bNotifyRigidBodyCollision = VehiclePrimitive && VehiclePrimitive->BodyInstance.bNotifyRigidBodyCollision;
+
+    if (!VehicleInstance.InitVehicle(PhysicsScene, VehicleTransform, bNotifyRigidBodyCollision))
     {
         HTR_LOG(Error, "[Vehicle] Failed to initialize vehicle instance.");
         return;
+    }
+
+    if (GetWorld()->GetPlayerPawn() == GetPawnOwner())
+    {
+        VehicleHUD = Cast<UVehicleHUD>(CreateWidget(GetWorld(), "Assets/UI/VehicleHUD.widget"));
+
+        if (VehicleHUD)
+        {
+            VehicleHUD->SetVehicleMovementComponent(this);
+            VehicleHUD->AddToViewport(10);
+        }
+        else
+        {
+            HTR_LOG(Warning, "[Vehicle] Failed to create VehicleHUD.");
+        }
     }
 
     if (!PhysicsScene->AddVehicle(VehicleInstance.GetVehicle(), UpdatedComponent))
@@ -206,6 +227,10 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         }
     }
 
+    ThrottleInput = bAccelerate ? 1.0f : 0.0f;
+    BrakeInput = bBrake ? 1.0f : 0.0f;
+    SteeringInput = FMath::Clamp(RightInput, -1.0f, 1.0f);
+
     PhysicsScene->SetVehicleInput(Vehicle, bAccelerate, bBrake, IsKeyDown(EKeyCode::Space), RightInput < -KINDA_SMALL_NUMBER, RightInput > KINDA_SMALL_NUMBER);
 
     FVehicleWheelState WheelStates[4];
@@ -213,6 +238,18 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     if (!PhysicsScene->GetVehicleWheelStates(Vehicle, WheelStates, 4, bIsVehicleInAir))
     {
         return;
+    }
+
+    WheelContactCount = 0;
+
+    for (int32 i = 0; i < 4; ++i)
+    {
+        WheelContactStates[i] = WheelStates[i].bHasContact;
+
+        if (WheelContactStates[i])
+        {
+            ++WheelContactCount;
+        }
     }
 
     const FQuat CylinderAxisRotation = FQuat::MakeFromAxisAngle(FVector(1.0f, 0.0f, 0.0f), FMath::DegreesToRadians(90.0f));
@@ -246,6 +283,12 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
 void UVehicleMovementComponent::OnUnregister()
 {
+    if (VehicleHUD)
+    {
+        VehicleHUD->Destroy();
+        VehicleHUD = nullptr;
+    }
+
     if (VehicleInstance.IsValid() && GetWorld())
     {
         if (FPhysicsScene* PhysicsScene = GetWorld()->GetPhysicsScene())

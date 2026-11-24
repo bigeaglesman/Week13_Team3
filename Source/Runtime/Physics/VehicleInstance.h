@@ -20,7 +20,7 @@ public:
     FVehicleInstance(const FVehicleInstance&) = delete;
     FVehicleInstance& operator=(const FVehicleInstance&) = delete;
 
-    bool InitVehicle(FPhysicsScene* InPhysicsScene, const FTransform& Transform);
+    bool InitVehicle(FPhysicsScene* InPhysicsScene, const FTransform& Transform, bool bNotifyRigidBodyCollision);
     void TermVehicle();
     physx::PxVehicleWheels* GetVehicle() const;
 

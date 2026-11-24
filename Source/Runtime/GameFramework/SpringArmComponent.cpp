@@ -10,6 +10,8 @@
 #include "Render/LineBatcher.h"
 #include "UObject/UObjectIterator.h"
 
+#include "Input/InputSystem.h"
+
 USpringArmComponent::USpringArmComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -19,6 +21,16 @@ USpringArmComponent::USpringArmComponent()
 void USpringArmComponent::TickComponent(float DeltaTime)
 {
 	Super::TickComponent(DeltaTime);
+
+	if (bEnableMouseWheelZoom)
+	{
+		const int32 WheelDelta = FInputSystem::GetWheelDelta();
+
+		if (WheelDelta != 0)
+		{
+			TargetArmLength = FMath::Clamp(TargetArmLength - static_cast<float>(WheelDelta) * ZoomSpeed, MinArmLength, MaxArmLength);
+		}
+	}
 
 	UpdateDesiredArmLocation(
 		bDoCollisionTest,

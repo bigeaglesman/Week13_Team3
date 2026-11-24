@@ -291,13 +291,24 @@ void UPrimitiveComponent::EndComponentOverlap(UPrimitiveComponent* OtherComp)
 
 void UPrimitiveComponent::DispatchHit(UPrimitiveComponent* OtherComp)
 {
-	if (!OtherComp) 
+	FHitResult Hit;
+	Hit.HitComponent = this;
+	Hit.bBlockingHit = true;
+	DispatchHit(OtherComp, Hit);
+}
+
+void UPrimitiveComponent::DispatchHit(UPrimitiveComponent* OtherComp, const FHitResult& Hit)
+{
+	if (!OtherComp)
+	{
 		return;
+	}
 
 	AActor* Owner = GetOwner();
 	AActor* OtherActor = OtherComp->GetOwner();
 
 	OnComponentHit.Broadcast(this, OtherActor, OtherComp);
+	OnComponentHitDetailed.Broadcast(this, OtherActor, OtherComp, Hit);
 
 	if (Owner && OtherActor)
 	{

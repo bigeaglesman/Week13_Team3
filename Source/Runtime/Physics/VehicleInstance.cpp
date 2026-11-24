@@ -5,6 +5,8 @@
 #include "Physics/PhysicsScene.h"
 #include "Physics/PhysXConversion.h"
 #include "Physics/PhysXSceneLock.h"
+#include "Physics/PhysicalMaterial.h"
+#include "Physics/BodyInstance.h"
 
 #include <PxPhysicsAPI.h>
 #include <PxScene.h>
@@ -23,7 +25,7 @@ FVehicleInstance::~FVehicleInstance()
     TermVehicle();
 }
 
-bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransform& Transform)
+bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransform& Transform, bool bNotifyRigidBodyCollision)
 {
     if (IsValid() || !InPhysicsScene || !InPhysicsScene->IsValid())
     {
@@ -55,6 +57,8 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
 
     // 현재 단계의 차체 충돌 형상: 길이 3.6m, 너비 1.6m, 높이 0.7m
     PxShape* ChassisShape = PxRigidActorExt::createExclusiveShape(*NewChassis, PxBoxGeometry(1.8f, 0.8f, 0.35f), *Material);
+    ChassisShape->setSimulationFilterData(PxFilterData(0u, bNotifyRigidBodyCollision ? FBodyInstance::FilterFlag_NotifyHit : 0u, 0u, 0u));
+
     if (!ChassisShape)
     {
         NewChassis->release();
@@ -136,6 +140,7 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
 
         // 아직 Actor에 바퀴 Shape가 없으므로 명시적으로 연결을 끊는다.
         WheelsSimData->setWheelShapeMapping(i, -1);
+        WheelsSimData->setSceneQueryFilterData(i, PxFilterData(VehicleDrivableSurfaceQueryFlag, 0, 0, 0));
     }
 
     // 4. 4륜 구동 데이터의 기본 설정

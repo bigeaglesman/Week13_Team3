@@ -1,4 +1,5 @@
 #include "EnginePCH.h"
+#include "Components/PrimitiveComponent.h"
 #include "Physics/BodyInstance.h"
 #include "Physics/AggregateGeom.h"
 #include "Physics/PhysicsCore.h"
@@ -6,6 +7,7 @@
 #include "Physics/PhysXConversion.h"
 #include "Physics/PhysicalMaterial.h"
 #include "Physics/PhysicsCooking.h"
+#include "Physics/PhysicalMaterial.h"
 
 #include <PxPhysicsAPI.h>
 #include "Physics/PhysXSceneLock.h"
@@ -59,6 +61,7 @@ void FBodyInstance::InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom
 		{
 			Shape->setLocalPose(LocalPose);
 			Shape->setSimulationFilterData(FilterData);
+			Shape->setQueryFilterData(PxFilterData(InOwner->bIsVehicleDrivableSurface ? VehicleDrivableSurfaceQueryFlag : 0u, 0, 0, 0));
 		}
 	};
 

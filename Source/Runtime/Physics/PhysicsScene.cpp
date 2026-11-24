@@ -7,6 +7,8 @@
 #include "Components/SceneComponent.h"
 #include "Render/LineBatcher.h"
 #include "Core/Stats/LightweightStats.h"
+#include "Physics/PhysicalMaterial.h"
+#include "UObject/UObjectIterator.h"
 
 #include <PxPhysicsAPI.h>
 #include <PxBatchQuery.h>
@@ -20,6 +22,14 @@
 #include "Physics/PhysXSceneLock.h"
 
 using namespace physx;
+
+namespace
+{
+	PxQueryHitType::Enum VehicleSuspensionPreFilter(PxFilterData QueryFilterData, PxFilterData ObjectFilterData, const void*, PxU32, PxHitFlags&)
+	{
+		return (QueryFilterData.word0 & ObjectFilterData.word0) != 0 ? PxQueryHitType::eBLOCK : PxQueryHitType::eNONE;
+	}
+}
 
 struct FVehicleSceneQueryData
 {
@@ -52,18 +62,66 @@ struct FVehicleSceneQueryData
 			return false;
 		}
 
-		FrictionPairs = PxVehicleDrivableSurfaceToTireFrictionPairs::allocate(1, 1);
+		FrictionPairs = PxVehicleDrivableSurfaceToTireFrictionPairs::allocate(1, PxVehicleDrivableSurfaceToTireFrictionPairs::eMAX_NB_SURFACE_TYPES);
 		if (!FrictionPairs)
 		{
 			return false;
 		}
 
-		const PxMaterial* Materials[1] = { DefaultMaterial };
-		PxVehicleDrivableSurfaceType SurfaceTypes[1];
-		SurfaceTypes[0].mType = 0;
+		std::vector<const PxMaterial*> Materials;
+		std::vector<PxVehicleDrivableSurfaceType> SurfaceTypes;
 
-		FrictionPairs->setup(1, 1, Materials, SurfaceTypes);
-		FrictionPairs->setTypePairFriction(0, 0, 1.0f);
+		Materials.push_back(DefaultMaterial);
+
+		PxVehicleDrivableSurfaceType DefaultSurfaceType;
+		DefaultSurfaceType.mType = static_cast<PxU32>(EVehicleSurfaceType::Asphalt);
+		SurfaceTypes.push_back(DefaultSurfaceType);
+
+		for (TObjectIterator<UPhysicalMaterial> It; It; ++It)
+		{
+			UPhysicalMaterial* PhysicalMaterial = *It;
+			if (!PhysicalMaterial)
+			{
+				continue;
+			}
+
+			PxMaterial* Material = PhysicalMaterial->GetPxMaterial();
+			if (!Material)
+			{
+				continue;
+			}
+
+			const PxU32 SurfaceType = static_cast<PxU32>(PhysicalMaterial->VehicleSurfaceType);
+			if (SurfaceType > static_cast<PxU32>(EVehicleSurfaceType::Metal))
+			{
+				continue;
+			}
+
+			if (std::find(Materials.begin(), Materials.end(), Material) != Materials.end())
+			{
+				continue;
+			}
+
+			if (Materials.size() >= PxVehicleDrivableSurfaceToTireFrictionPairs::eMAX_NB_SURFACE_TYPES)
+			{
+				HTR_LOG(Warning, "[Vehicle] Maximum drivable surface material count reached.");
+				break;
+			}
+
+			Materials.push_back(Material);
+
+			PxVehicleDrivableSurfaceType SurfaceTypeData;
+			SurfaceTypeData.mType = SurfaceType;
+			SurfaceTypes.push_back(SurfaceTypeData);
+		}
+
+		FrictionPairs->setup(1, static_cast<PxU32>(Materials.size()), Materials.data(), SurfaceTypes.data());
+
+		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Asphalt), 0, 1.0f);
+		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Dirt), 0, 0.72f);
+		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Ice), 0, 0.15f);
+		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Grass), 0, 0.55f);
+		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Metal), 0, 0.85f);
 
 		return true;
 	}
@@ -85,6 +143,7 @@ struct FVehicleSceneQueryData
 
 		PxBatchQueryDesc QueryDesc(NewCapacity, 0, 0);
 		QueryDesc.queryMemory.userRaycastResultBuffer = NewRaycastResults.data();
+		QueryDesc.preFilterShader = VehicleSuspensionPreFilter;
 
 		PxBatchQuery* NewBatchQuery = Scene->createBatchQuery(QueryDesc);
 		if (!NewBatchQuery)
@@ -160,7 +219,11 @@ public:
 
 		FBodyInstance* BodyA = static_cast<FBodyInstance*>(PairHeader.actors[0]->userData);
 		FBodyInstance* BodyB = static_cast<FBodyInstance*>(PairHeader.actors[1]->userData);
-		if (!BodyA || !BodyB)
+
+		UPrimitiveComponent* CompA = BodyA ? BodyA->GetOwnerComponent() : Owner.FindVehicleComponent(PairHeader.actors[0]);
+		UPrimitiveComponent* CompB = BodyB ? BodyB->GetOwnerComponent() : Owner.FindVehicleComponent(PairHeader.actors[1]);
+
+		if (!CompA || !CompB)
 		{
 			return;
 		}
@@ -180,8 +243,10 @@ public:
 			FCollisionNotifyInfo Info;
 			Info.BodyA = BodyA;
 			Info.BodyB = BodyB;
-			Info.bNotifyA = BodyA->bNotifyRigidBodyCollision;
-			Info.bNotifyB = BodyB->bNotifyRigidBodyCollision;
+			Info.ComponentA = CompA;
+			Info.ComponentB = CompB;
+			Info.bNotifyA = BodyA ? BodyA->bNotifyRigidBodyCollision : CompA->BodyInstance.bNotifyRigidBodyCollision;
+			Info.bNotifyB = BodyB ? BodyB->bNotifyRigidBodyCollision : CompB->BodyInstance.bNotifyRigidBodyCollision;
 
 			// 접점 하나만 가져온다. PhysX 노멀은 두 번째 도형(B)에서 첫 번째(A)를 향한다.
 			PxContactPairPoint Point;
@@ -189,6 +254,7 @@ public:
 			{
 				Info.ImpactPoint = ToFVector(Point.position);
 				Info.ImpactNormal = ToFVector(Point.normal);
+				Info.NormalImpulse = ToFVector(Point.impulse);
 			}
 
 			Owner.AddPendingCollisionNotify(Info);
@@ -434,8 +500,19 @@ void FPhysicsScene::RemovePendingNotifies(const FBodyInstance* Body)
 	// 지우지 않고 비워 둔다. 보내는 도중(DispatchPhysNotifications)에 불려도 인덱스가 밀리지 않는다.
 	for (FCollisionNotifyInfo& Info : PendingCollisionNotifies)
 	{
-		if (Info.BodyA == Body) Info.BodyA = nullptr;
-		if (Info.BodyB == Body) Info.BodyB = nullptr;
+		if (Info.BodyA == Body)
+		{
+			Info.BodyA = nullptr;
+			Info.ComponentA = nullptr;
+			Info.bNotifyA = false;
+		}
+
+		if (Info.BodyB == Body)
+		{
+			Info.BodyB = nullptr;
+			Info.ComponentB = nullptr;
+			Info.bNotifyB = false;
+		}
 	}
 }
 
@@ -449,25 +526,33 @@ void FPhysicsScene::DispatchPhysNotifications()
 	{
 		const FCollisionNotifyInfo& Info = PendingCollisionNotifies[i];
 
-		if (Info.bNotifyA && Info.BodyA && Info.BodyB)
+		if (Info.bNotifyA && Info.ComponentA && Info.ComponentB && Info.ComponentA != Info.ComponentB)
 		{
-			UPrimitiveComponent* CompA = Info.BodyA->GetOwnerComponent();
-			UPrimitiveComponent* CompB = Info.BodyB->GetOwnerComponent();
-			if (CompA && CompB && CompA != CompB)
-			{
-				CompA->DispatchHit(CompB);
-			}
+			FHitResult Hit;
+			Hit.HitComponent = Info.ComponentA;
+			Hit.Location = Info.ImpactPoint;
+			Hit.ImpactPoint = Info.ImpactPoint;
+			Hit.Normal = Info.ImpactNormal;
+			Hit.ImpactNormal = Info.ImpactNormal;
+			Hit.NormalImpulse = Info.NormalImpulse;
+			Hit.bBlockingHit = true;
+
+			Info.ComponentA->DispatchHit(Info.ComponentB, Hit);
 		}
 
 		// A 쪽 이벤트에서 B가 지워졌을 수 있으니 다시 확인한다.
-		if (Info.bNotifyB && Info.BodyA && Info.BodyB)
+		if (Info.bNotifyB && Info.ComponentA && Info.ComponentB && Info.ComponentA != Info.ComponentB)
 		{
-			UPrimitiveComponent* CompA = Info.BodyA->GetOwnerComponent();
-			UPrimitiveComponent* CompB = Info.BodyB->GetOwnerComponent();
-			if (CompA && CompB && CompA != CompB)
-			{
-				CompB->DispatchHit(CompA);
-			}
+			FHitResult Hit;
+			Hit.HitComponent = Info.ComponentB;
+			Hit.Location = Info.ImpactPoint;
+			Hit.ImpactPoint = Info.ImpactPoint;
+			Hit.Normal = -Info.ImpactNormal;
+			Hit.ImpactNormal = -Info.ImpactNormal;
+			Hit.NormalImpulse = -Info.NormalImpulse;
+			Hit.bBlockingHit = true;
+
+			Info.ComponentB->DispatchHit(Info.ComponentA, Hit);
 		}
 	}
 	PendingCollisionNotifies.Empty();
@@ -545,6 +630,23 @@ void FPhysicsScene::RemoveVehicle(PxVehicleWheels* Vehicle)
 
 	const size_t VehicleIndex = static_cast<size_t>(It - QueryData.Vehicles.begin());
 
+	UPrimitiveComponent* RemovedComponent = Cast<UPrimitiveComponent>(QueryData.SyncComponents[VehicleIndex]);
+
+	for (FCollisionNotifyInfo& Info : PendingCollisionNotifies)
+	{
+		if (Info.ComponentA == RemovedComponent)
+		{
+			Info.ComponentA = nullptr;
+			Info.bNotifyA = false;
+		}
+
+		if (Info.ComponentB == RemovedComponent)
+		{
+			Info.ComponentB = nullptr;
+			Info.bNotifyB = false;
+		}
+	}
+
 	QueryData.RawInputs.erase(QueryData.RawInputs.begin() + VehicleIndex);
 	QueryData.SyncComponents.erase(QueryData.SyncComponents.begin() + VehicleIndex);
 	QueryData.WheelQueryResults.erase(QueryData.WheelQueryResults.begin() + VehicleIndex);
@@ -558,6 +660,26 @@ void FPhysicsScene::RemoveVehicle(PxVehicleWheels* Vehicle)
 
 	QueryData.TotalWheelCount -= Vehicle->mWheelsSimData.getNbWheels();
 	QueryData.Vehicles.erase(It);
+}
+
+UPrimitiveComponent* FPhysicsScene::FindVehicleComponent(const PxRigidActor* Actor) const
+{
+	if (!VehicleSceneQueryData || !Actor)
+	{
+		return nullptr;
+	}
+
+	const auto& QueryData = *VehicleSceneQueryData;
+
+	for (size_t i = 0; i < QueryData.Vehicles.size(); ++i)
+	{
+		if (QueryData.Vehicles[i] && QueryData.Vehicles[i]->getRigidDynamicActor() == Actor)
+		{
+			return Cast<UPrimitiveComponent>(QueryData.SyncComponents[i]);
+		}
+	}
+
+	return nullptr;
 }
 
 void FPhysicsScene::SetVehicleInput(PxVehicleWheels* Vehicle, bool bAccelerate, bool bBrake, bool bHandbrake, bool bSteerLeft, bool bSteerRight)

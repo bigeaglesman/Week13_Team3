@@ -6,6 +6,7 @@
 #include "VehicleMovementComponent.generated.h"
 
 class UStaticMeshComponent;
+class UVehicleHUD;
 
 UCLASS()
 class UVehicleMovementComponent : public UPawnMovementComponent
@@ -21,6 +22,12 @@ public:
     float GetEngineRPM() const { return EngineRPM; }
     int32 GetCurrentGear() const { return CurrentGear; }
     bool IsAutomaticTransmission() const { return bAutomaticTransmission; }
+
+    float GetThrottleInput() const { return ThrottleInput; }
+    float GetBrakeInput() const { return BrakeInput; }
+    float GetSteeringInput() const { return SteeringInput; }
+    int32 GetWheelContactCount() const { return WheelContactCount; }
+    bool IsWheelInContact(int32 Index) const { return Index >= 0 && Index < 4 && WheelContactStates[Index]; }
 
 protected:
     virtual void OnUnregister() override;
@@ -40,4 +47,13 @@ private:
     bool bPreviousAutomaticToggleKeyDown = false;
     bool bPreviousGearUpKeyDown = false;
     bool bPreviousGearDownKeyDown = false;
+
+    float ThrottleInput = 0.0f;
+    float BrakeInput = 0.0f;
+    float SteeringInput = 0.0f;
+
+    bool WheelContactStates[4] = {};
+    int32 WheelContactCount = 0;
+
+    UVehicleHUD* VehicleHUD = nullptr;
 };

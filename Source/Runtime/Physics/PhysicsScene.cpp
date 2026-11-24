@@ -813,7 +813,24 @@ bool FPhysicsScene::GetVehicleDriveState(PxVehicleWheels* Vehicle, FVehicleDrive
 	const PxRigidDynamic* ChassisActor = Vehicle->getRigidDynamicActor();
 
 	OutState.ForwardSpeed = Vehicle->computeForwardSpeed();
-	OutState.LinearSpeed = ChassisActor ? ChassisActor->getLinearVelocity().magnitude() : 0.0f;
+
+	if (ChassisActor)
+	{
+		const PxTransform ChassisPose = ChassisActor->getGlobalPose();
+		const PxVec3 WorldLinearVelocity = ChassisActor->getLinearVelocity();
+		const PxVec3 WorldAngularVelocity = ChassisActor->getAngularVelocity();
+
+		OutState.LinearSpeed = WorldLinearVelocity.magnitude();
+		OutState.LocalLinearVelocity = ToFVector(ChassisPose.q.rotateInv(WorldLinearVelocity));
+		OutState.LocalAngularVelocity = ToFVector(ChassisPose.q.rotateInv(WorldAngularVelocity));
+	}
+	else
+	{
+		OutState.LinearSpeed = 0.0f;
+		OutState.LocalLinearVelocity = FVector(0.0f, 0.0f, 0.0f);
+		OutState.LocalAngularVelocity = FVector(0.0f, 0.0f, 0.0f);
+	}
+
 	OutState.EngineRPM = DriveVehicle->mDriveDynData.getEngineRotationSpeed() * 60.0f / (2.0f * 3.1415926535f);
 	OutState.CurrentGear = static_cast<int32>(DriveVehicle->mDriveDynData.getCurrentGear());
 	OutState.TargetGear = static_cast<int32>(DriveVehicle->mDriveDynData.getTargetGear());

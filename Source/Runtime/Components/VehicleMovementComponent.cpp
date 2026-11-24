@@ -161,6 +161,8 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
 
     VehicleSpeed = DriveState.LinearSpeed;
+    LocalLinearVelocity = DriveState.LocalLinearVelocity;
+    LocalAngularVelocity = DriveState.LocalAngularVelocity;
 
     if (VehicleCamera)
     {
@@ -303,7 +305,19 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
     for (int32 i = 0; i < 4; ++i)
     {
-        WheelContactStates[i] = WheelStates[i].bHasContact;
+        const FVehicleWheelState& WheelState = WheelStates[i];
+
+        WheelContactStates[i] = WheelState.bHasContact;
+
+        FVehicleWheelTelemetry& Telemetry = WheelTelemetry[i];
+        Telemetry.bIsInAir = WheelState.bIsInAir;
+        Telemetry.bHasContact = WheelState.bHasContact;
+        Telemetry.LongitudinalSlip = WheelState.LongitudinalSlip;
+        Telemetry.LateralSlip = WheelState.LateralSlip;
+        Telemetry.TireFriction = WheelState.TireFriction;
+        Telemetry.SuspensionJounce = WheelState.SuspensionJounce;
+        Telemetry.SuspensionSpringForce = WheelState.SuspensionSpringForce;
+        Telemetry.TireSurfaceType = WheelState.TireSurfaceType;
 
         if (WheelContactStates[i])
         {
@@ -327,7 +341,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         const float WheelSteerAngle = WheelState.SteerAngle;
         const float WheelRotationAngle = WheelState.WheelRotationAngle;
 
-        const FVector WheelLocation = WheelState.WheelCenterOffset + FVector(0.0f, 0.0f, -0.25f) - WheelState.SuspensionTravelDirection * WheelState.SuspensionJounce;
+        const FVector WheelLocation = WheelState.WheelCenterOffset - WheelState.SuspensionTravelDirection * WheelState.SuspensionJounce;
 
         const FQuat SteeringRotation = FQuat::MakeFromAxisAngle(FVector(0.0f, 0.0f, 1.0f), WheelSteerAngle);
         const FQuat SpinRotation = FQuat::MakeFromAxisAngle(FVector(0.0f, 0.0f, 1.0f), WheelRotationAngle);

@@ -71,6 +71,10 @@ struct FVehicleDriveState
 {
 	float ForwardSpeed = 0.0f;
 	float LinearSpeed = 0.0f;
+
+	FVector LocalLinearVelocity = FVector(0.0f, 0.0f, 0.0f);
+	FVector LocalAngularVelocity = FVector(0.0f, 0.0f, 0.0f);
+
 	float EngineRPM = 0.0f;
 
 	int32 CurrentGear = 0;

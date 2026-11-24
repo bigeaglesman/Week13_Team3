@@ -1,4 +1,4 @@
-﻿#include "EnginePCH.h"
+#include "EnginePCH.h"
 #include "Render/SceneRenderer.h"
 #include "Render/Renderer.h"
 #include "Render/SceneLightResources.h"
@@ -18,6 +18,7 @@
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Render/PostProcess/HeightFogRenderer.h"
 #include "Render/PostProcess/CameraOverlayRenderer.h"
+#include "Render/PostProcess/DiaphragmDOF.h"
 #include "Render/PostProcess/FXAARenderer.h"
 #include "Render/PostProcess/ToneMapData.h"
 #include "Render/DecalData.h"
@@ -1051,6 +1052,31 @@ bool FSceneRenderer::AddPostProcessingPasses(FRenderGraphBuilder& Graph, FRender
 		FRenderGraphRasterPassDesc Pass = MakeViewportPass("SceneDepthVisualization", SceneColor);
 		Pass.ReadTextures = { Depth };
 		if (!Graph.AddRasterPass(std::move(Pass), Callbacks.DepthVisualization)) return false;
+	}
+
+	const bool bAllowDOF = ViewFamily.EngineShowFlags.DepthOfField &&
+		ViewFamily.ViewMode != VMI_SceneDepth &&
+		ViewFamily.ViewMode != VMI_WorldNormal &&
+		ViewFamily.ViewMode != VMI_LightCulling &&
+		ViewFamily.ViewMode != VMI_Wireframe &&
+		FDiaphragmDOFRenderer::ShouldRun(View);
+	if (bAllowDOF)
+	{
+		if (FDiaphragmDOFRenderer* DOF = Renderer->GetDiaphragmDOF())
+		{
+			FTexture2D* ColorTargetForDOF = Targets.SceneColor.get();
+			FTexture2D* DepthTarget = Targets.Depth.get();
+			FRenderGraphRasterPassDesc Pass = MakeViewportPass(
+				GDOFDebug.bVisualizeCoC ? "DepthOfField_VisualizeCoC" : "DepthOfField",
+				SceneColor);
+			Pass.ReadTextures = { Depth };
+			if (!Graph.AddRasterPass(std::move(Pass),
+				[this, DOF, Options, ColorTargetForDOF, DepthTarget]
+				{
+					SCOPED_GPU_STAT(GPUStats::STAT_GPU_DepthOfField);
+					DOF->OnRender(View, Options, ColorTargetForDOF, DepthTarget);
+				})) return false;
+		}
 	}
 
 	if (ViewFamily.ViewMode != VMI_WorldNormal && ViewFamily.ViewMode != VMI_SceneDepth &&

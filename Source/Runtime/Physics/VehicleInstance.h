@@ -6,6 +6,7 @@ namespace physx
 {
     class PxRigidDynamic;
     class PxVehicleDrive4W;
+    class PxVehicleWheels;
 }
 
 class FPhysicsScene;
@@ -21,6 +22,7 @@ public:
 
     bool InitVehicle(FPhysicsScene* InPhysicsScene, const FTransform& Transform);
     void TermVehicle();
+    physx::PxVehicleWheels* GetVehicle() const;
 
     bool IsValid() const { return ChassisActor != nullptr && Vehicle != nullptr; }
 

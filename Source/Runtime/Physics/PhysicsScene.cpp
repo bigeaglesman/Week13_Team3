@@ -8,9 +8,94 @@
 #include "Core/Stats/LightweightStats.h"
 
 #include <PxPhysicsAPI.h>
+#include <PxBatchQuery.h>
+#include <PxBatchQueryDesc.h>
+#include <vehicle/PxVehicleUpdate.h>
+#include <vehicle/PxVehicleTireFriction.h>
+
 #include "Physics/PhysXSceneLock.h"
 
 using namespace physx;
+
+struct FVehicleSceneQueryData
+{
+	PxBatchQuery* BatchQuery = nullptr;
+	PxVehicleDrivableSurfaceToTireFrictionPairs* FrictionPairs = nullptr;
+
+	std::vector<PxVehicleWheels*> Vehicles;
+	std::vector<PxRaycastQueryResult> RaycastResults;
+
+	PxU32 TotalWheelCount = 0;
+	PxU32 MaxWheelCount = 0;
+
+	~FVehicleSceneQueryData()
+	{
+		if (FrictionPairs)
+		{
+			FrictionPairs->release();
+			FrictionPairs = nullptr;
+		}
+	}
+
+	bool Initialize(PxMaterial* DefaultMaterial)
+	{
+		if (!DefaultMaterial)
+		{
+			return false;
+		}
+
+		FrictionPairs = PxVehicleDrivableSurfaceToTireFrictionPairs::allocate(1, 1);
+		if (!FrictionPairs)
+		{
+			return false;
+		}
+
+		const PxMaterial* Materials[1] = { DefaultMaterial };
+		PxVehicleDrivableSurfaceType SurfaceTypes[1];
+		SurfaceTypes[0].mType = 0;
+
+		FrictionPairs->setup(1, 1, Materials, SurfaceTypes);
+		FrictionPairs->setTypePairFriction(0, 0, 1.0f);
+
+		return true;
+	}
+
+	bool EnsureCapacity(PxScene* Scene, PxU32 RequiredWheelCount)
+	{
+		if (!Scene || RequiredWheelCount == 0)
+		{
+			return false;
+		}
+
+		if (BatchQuery && RequiredWheelCount <= MaxWheelCount)
+		{
+			return true;
+		}
+
+		const PxU32 NewCapacity = std::max(RequiredWheelCount, MaxWheelCount > 0 ? MaxWheelCount * 2 : RequiredWheelCount);
+		std::vector<PxRaycastQueryResult> NewRaycastResults(NewCapacity);
+
+		PxBatchQueryDesc QueryDesc(NewCapacity, 0, 0);
+		QueryDesc.queryMemory.userRaycastResultBuffer = NewRaycastResults.data();
+
+		PxBatchQuery* NewBatchQuery = Scene->createBatchQuery(QueryDesc);
+		if (!NewBatchQuery)
+		{
+			return false;
+		}
+
+		if (BatchQuery)
+		{
+			BatchQuery->release();
+		}
+
+		BatchQuery = NewBatchQuery;
+		RaycastResults.swap(NewRaycastResults);
+		MaxWheelCount = NewCapacity;
+
+		return true;
+	}
+};
 
 DECLARE_CYCLE_STAT("Physics: Simulate", STAT_PhysicsSimulate);
 DECLARE_CYCLE_STAT("Physics: FetchResults", STAT_PhysicsFetchResults);
@@ -147,10 +232,25 @@ FPhysicsScene::~FPhysicsScene()
 {
 	if (Scene)
 	{
-		Scene->userData = nullptr;
+		{
+			SCOPED_SCENE_WRITE_LOCK(Scene);
+
+			if (VehicleSceneQueryData && VehicleSceneQueryData->BatchQuery)
+			{
+				VehicleSceneQueryData->BatchQuery->release();
+				VehicleSceneQueryData->BatchQuery = nullptr;
+			}
+
+			Scene->userData = nullptr;
+		}
+
 		Scene->release();
 		Scene = nullptr;
 	}
+
+	delete VehicleSceneQueryData;
+	VehicleSceneQueryData = nullptr;
+
 	delete EventCallback;
 	EventCallback = nullptr;
 }
@@ -223,6 +323,17 @@ void FPhysicsScene::StepOnce(float Step)
 {
 	// simulate ~ fetchResults 동안 엔진 쪽에서 씬을 건드리지 않도록 쓰기 락. onContact도 이 안에서 불린다.
 	SCOPED_SCENE_WRITE_LOCK(Scene);
+
+	if (VehicleSceneQueryData && !VehicleSceneQueryData->Vehicles.empty())
+	{
+		FVehicleSceneQueryData& QueryData = *VehicleSceneQueryData;
+		const PxU32 VehicleCount = static_cast<PxU32>(QueryData.Vehicles.size());
+
+		PxVehicleSuspensionRaycasts(QueryData.BatchQuery, VehicleCount, QueryData.Vehicles.data(), QueryData.TotalWheelCount, QueryData.RaycastResults.data());
+
+		PxVehicleUpdates(Step, Scene->getGravity(), *QueryData.FrictionPairs, VehicleCount, QueryData.Vehicles.data(), nullptr);
+	}
+
 	{
 		SCOPE_CYCLE_COUNTER(STAT_PhysicsSimulate);
 		Scene->simulate(Step);
@@ -280,6 +391,67 @@ void FPhysicsScene::DispatchPhysNotifications()
 		}
 	}
 	PendingCollisionNotifies.Empty();
+}
+
+bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle)
+{
+	if (!Scene || !Vehicle)
+	{
+		return false;
+	}
+
+	SCOPED_SCENE_WRITE_LOCK(Scene);
+
+	if (!VehicleSceneQueryData)
+	{
+		VehicleSceneQueryData = new FVehicleSceneQueryData();
+
+		if (!VehicleSceneQueryData->Initialize(FPhysicsCore::Get().GetDefaultMaterial()))
+		{
+			delete VehicleSceneQueryData;
+			VehicleSceneQueryData = nullptr;
+			return false;
+		}
+	}
+
+	auto& QueryData = *VehicleSceneQueryData;
+
+	if (std::find(QueryData.Vehicles.begin(), QueryData.Vehicles.end(), Vehicle) != QueryData.Vehicles.end())
+	{
+		return true;
+	}
+
+	const PxU32 WheelCount = Vehicle->mWheelsSimData.getNbWheels();
+	if (WheelCount == 0 || !QueryData.EnsureCapacity(Scene, QueryData.TotalWheelCount + WheelCount))
+	{
+		return false;
+	}
+
+	QueryData.Vehicles.push_back(Vehicle);
+	QueryData.TotalWheelCount += WheelCount;
+
+	return true;
+}
+
+void FPhysicsScene::RemoveVehicle(PxVehicleWheels* Vehicle)
+{
+	if (!Scene || !Vehicle || !VehicleSceneQueryData)
+	{
+		return;
+	}
+
+	SCOPED_SCENE_WRITE_LOCK(Scene);
+
+	auto& QueryData = *VehicleSceneQueryData;
+	auto It = std::find(QueryData.Vehicles.begin(), QueryData.Vehicles.end(), Vehicle);
+
+	if (It == QueryData.Vehicles.end())
+	{
+		return;
+	}
+
+	QueryData.TotalWheelCount -= Vehicle->mWheelsSimData.getNbWheels();
+	QueryData.Vehicles.erase(It);
 }
 
 void FPhysicsScene::SetDebugVisualization(bool bEnable)

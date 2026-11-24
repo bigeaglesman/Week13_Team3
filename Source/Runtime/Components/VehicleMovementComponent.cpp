@@ -15,16 +15,32 @@ void UVehicleMovementComponent::BeginPlay()
         return;
     }
 
+    FPhysicsScene* PhysicsScene = GetWorld()->GetPhysicsScene();
     const FTransform VehicleTransform(UpdatedComponent->GetWorldRotation().Quaternion(), UpdatedComponent->GetWorldLocation(), UpdatedComponent->GetWorldScale3D());
 
-    if (!VehicleInstance.InitVehicle(GetWorld()->GetPhysicsScene(), VehicleTransform))
+    if (!VehicleInstance.InitVehicle(PhysicsScene, VehicleTransform))
     {
         HTR_LOG(Error, "[Vehicle] Failed to initialize vehicle instance.");
+        return;
+    }
+
+    if (!PhysicsScene->AddVehicle(VehicleInstance.GetVehicle()))
+    {
+        HTR_LOG(Error, "[Vehicle] Failed to register vehicle in PhysicsScene.");
+        VehicleInstance.TermVehicle();
     }
 }
 
 void UVehicleMovementComponent::OnUnregister()
 {
+    if (VehicleInstance.IsValid() && GetWorld())
+    {
+        if (FPhysicsScene* PhysicsScene = GetWorld()->GetPhysicsScene())
+        {
+            PhysicsScene->RemoveVehicle(VehicleInstance.GetVehicle());
+        }
+    }
+
     VehicleInstance.TermVehicle();
     Super::OnUnregister();
 }

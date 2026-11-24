@@ -11,7 +11,10 @@ class FPhysicsSimulationEventCallback;
 namespace physx
 {
 	class PxScene;
+	class PxVehicleWheels;
 }
+
+struct FVehicleSceneQueryData;
 
 // simulate 도중 PhysX가 알려 준 충돌 하나. 시뮬레이션이 끝난 뒤 게임 스레드에서 보낸다.
 // UE의 FCollisionNotifyInfo 자리다.
@@ -59,6 +62,9 @@ public:
 	// 바디가 지워질 때 부른다. 모아 둔 이벤트에서 이 바디를 지운다.
 	void RemovePendingNotifies(const FBodyInstance* Body);
 
+	bool AddVehicle(physx::PxVehicleWheels* Vehicle);
+	void RemoveVehicle(physx::PxVehicleWheels* Vehicle);
+
 	static constexpr float FixedStep = 1.0f / 60.0f;
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다
 
@@ -81,4 +87,6 @@ private:
 
 	FPhysicsSimulationEventCallback* EventCallback = nullptr;
 	TArray<FCollisionNotifyInfo>     PendingCollisionNotifies;
+
+	FVehicleSceneQueryData* VehicleSceneQueryData = nullptr;
 };

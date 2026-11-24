@@ -158,7 +158,7 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
     PxVehicleGearsData GearsData;
     GearsData.mFinalRatio = 3.7f;
     GearsData.mNbRatios = 7;
-    GearsData.mSwitchTime = 0.35f;
+    GearsData.mSwitchTime = 0.2f;
     GearsData.setGearRatio(PxVehicleGearsData::eREVERSE, -3.2f);
     GearsData.setGearRatio(PxVehicleGearsData::eNEUTRAL, 0.0f);
     GearsData.setGearRatio(PxVehicleGearsData::eFIRST, 3.6f);
@@ -172,15 +172,15 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
     ClutchData.mAccuracyMode = PxVehicleClutchAccuracyMode::eBEST_POSSIBLE;
 
     PxVehicleAutoBoxData AutoBoxData;
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIRST, 0.88f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eSECOND, 0.88f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eTHIRD, 0.88f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eFOURTH, 0.88f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eSECOND, 0.45f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eTHIRD, 0.45f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eFOURTH, 0.45f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eFIFTH, 0.45f);
-    AutoBoxData.setLatency(0.35f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIRST, 0.92f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eSECOND, 0.92f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eTHIRD, 0.92f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFOURTH, 0.92f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eSECOND, 0.60f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eTHIRD, 0.60f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFOURTH, 0.60f); 
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFIFTH, 0.60f);
+    AutoBoxData.setLatency(0.2f);
 
     DriveData.setEngineData(EngineData);
     DriveData.setGearsData(GearsData);

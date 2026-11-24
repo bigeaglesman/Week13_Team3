@@ -268,7 +268,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         const FQuat SpinRotation = FQuat::MakeFromAxisAngle(FVector(0.0f, 0.0f, 1.0f), WheelRotationAngle);
         const FQuat WheelRotation = SteeringRotation * CylinderAxisRotation * SpinRotation;
 
-        const FVector WheelScale(WheelState.WheelRadius, WheelState.WheelWidth, WheelState.WheelRadius);
+        const FVector WheelScale(WheelState.WheelRadius, WheelState.WheelRadius, WheelState.WheelWidth);
 
         WheelComponent->SetTransform(FTransform(WheelRotation, WheelLocation, WheelScale));
     }

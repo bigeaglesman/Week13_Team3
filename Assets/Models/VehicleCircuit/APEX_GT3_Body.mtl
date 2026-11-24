@@ -1,0 +1,25 @@
+# generated for KirbyEngine OBJ importer
+newmtl PaintBlue
+Kd 0.018 0.105 0.42
+
+newmtl PaintLight
+Kd 0.045 0.3 0.88
+
+newmtl Glass
+Kd 0.008 0.025 0.042
+
+newmtl Carbon
+Kd 0.012 0.018 0.026
+
+newmtl AccentGold
+Kd 0.95 0.58 0.045
+
+newmtl Headlamp
+Kd 0.78 0.88 0.98
+
+newmtl TailLamp
+Kd 0.88 0.025 0.018
+
+newmtl Metal
+Kd 0.55 0.61 0.68
+

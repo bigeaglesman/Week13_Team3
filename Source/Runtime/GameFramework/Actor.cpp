@@ -197,6 +197,7 @@ void AActor::Serialize(FStructuredArchive::FRecord Record)
 			SceneComponent && ParentName.empty() && SceneComponent != RootComponent)
 		{
 			SceneComponent->DetachFromParent(EAttachmentRule::KeepRelative);
+			SetRootComponent(SceneComponent);
 		}
 
 		Component->Serialize(ComponentRecord);

@@ -62,6 +62,13 @@ void UVehicleMovementComponent::BeginPlay()
         return;
     }
 
+    if (!PhysicsScene->AddVehicle(VehicleInstance.GetVehicle(), UpdatedComponent))
+    {
+        HTR_LOG(Error, "[Vehicle] Failed to register vehicle in PhysicsScene.");
+        VehicleInstance.TermVehicle();
+        return;
+    }
+
     if (GetWorld()->GetPlayerPawn() == GetPawnOwner())
     {
         VehicleHUD = Cast<UVehicleHUD>(CreateWidget(GetWorld(), "Assets/UI/VehicleHUD.widget"));
@@ -69,18 +76,13 @@ void UVehicleMovementComponent::BeginPlay()
         if (VehicleHUD)
         {
             VehicleHUD->SetVehicleMovementComponent(this);
+            VehicleHUD->OnDestroyed = [this]() { VehicleHUD = nullptr; };
             VehicleHUD->AddToViewport(10);
         }
         else
         {
             HTR_LOG(Warning, "[Vehicle] Failed to create VehicleHUD.");
         }
-    }
-
-    if (!PhysicsScene->AddVehicle(VehicleInstance.GetVehicle(), UpdatedComponent))
-    {
-        HTR_LOG(Error, "[Vehicle] Failed to register vehicle in PhysicsScene.");
-        VehicleInstance.TermVehicle();
     }
 }
 
@@ -93,13 +95,11 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         return;
     }
 
-    const FVector InputVector = ConsumeInputVector();
-    const FQuat VehicleRotation = UpdatedComponent->GetWorldRotation().Quaternion();
+    APlayerController* Controller = GetPawnOwner() ? GetPawnOwner()->GetController() : nullptr;
+    const auto IsKeyDown = [Controller](EKeyCode Key) { return Controller && Controller->IsKeyDown(static_cast<int32>(Key)); };
 
-    const float ForwardInput = InputVector.Dot(VehicleRotation.GetForwardVector());
-    const float RightInput = InputVector.Dot(VehicleRotation.GetRightVector());
-
-
+    const float ForwardInput = static_cast<float>(IsKeyDown(EKeyCode::W)) - static_cast<float>(IsKeyDown(EKeyCode::S));
+    const float RightInput = static_cast<float>(IsKeyDown(EKeyCode::D)) - static_cast<float>(IsKeyDown(EKeyCode::A));
 
     FPhysicsScene* PhysicsScene = GetWorld()->GetPhysicsScene();
 
@@ -109,13 +109,6 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
 
     physx::PxVehicleWheels* Vehicle = VehicleInstance.GetVehicle();
-
-    APlayerController* Controller = GetPawnOwner() ? GetPawnOwner()->GetController() : nullptr;
-
-    const auto IsKeyDown = [Controller](EKeyCode Key)
-        {
-            return Controller && Controller->IsKeyDown(static_cast<int32>(Key));
-        };
 
     const bool bNeutralKeyDown = IsKeyDown(EKeyCode::N);
     const bool bAutomaticToggleKeyDown = IsKeyDown(EKeyCode::M);
@@ -282,8 +275,10 @@ void UVehicleMovementComponent::OnUnregister()
 {
     if (VehicleHUD)
     {
-        VehicleHUD->Destroy();
+        UVehicleHUD* HUD = VehicleHUD;
         VehicleHUD = nullptr;
+        HUD->OnDestroyed = {};
+        HUD->Destroy();
     }
 
     if (VehicleInstance.IsValid() && GetWorld())

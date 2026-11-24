@@ -1,0 +1,204 @@
+{
+    "DesignSize": [
+        1920,
+        1080
+    ],
+    "ParentClass": "UVehicleHUD",
+    "Root": {
+        "Children": [
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0.0,
+                    "AlignmentY": 0.0,
+                    "Anchors": {
+                        "W": 0.0,
+                        "X": 0.0,
+                        "Y": 0.0,
+                        "Z": 0.0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1.0,
+                        "B": 1.0,
+                        "G": 1.0,
+                        "R": 1.0
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 36.0,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 44.0,
+                        "X": 48.0,
+                        "Y": 40.0,
+                        "Z": 900.0
+                    },
+                    "RenderOpacity": 1.0,
+                    "Text": "SPEED 0 km/h",
+                    "Visibility": 0,
+                    "WidgetName": "SpeedText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0.0,
+                    "AlignmentY": 0.0,
+                    "Anchors": {
+                        "W": 0.0,
+                        "X": 0.0,
+                        "Y": 0.0,
+                        "Z": 0.0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1.0,
+                        "B": 1.0,
+                        "G": 1.0,
+                        "R": 1.0
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 36.0,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 44.0,
+                        "X": 48.0,
+                        "Y": 92.0,
+                        "Z": 900.0
+                    },
+                    "RenderOpacity": 1.0,
+                    "Text": "GEAR 1 | AUTO",
+                    "Visibility": 0,
+                    "WidgetName": "GearText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0.0,
+                    "AlignmentY": 0.0,
+                    "Anchors": {
+                        "W": 0.0,
+                        "X": 0.0,
+                        "Y": 0.0,
+                        "Z": 0.0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1.0,
+                        "B": 1.0,
+                        "G": 1.0,
+                        "R": 1.0
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 36.0,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 44.0,
+                        "X": 48.0,
+                        "Y": 144.0,
+                        "Z": 900.0
+                    },
+                    "RenderOpacity": 1.0,
+                    "Text": "RPM 0",
+                    "Visibility": 0,
+                    "WidgetName": "RPMText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0.0,
+                    "AlignmentY": 0.0,
+                    "Anchors": {
+                        "W": 0.0,
+                        "X": 0.0,
+                        "Y": 0.0,
+                        "Z": 0.0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1.0,
+                        "B": 1.0,
+                        "G": 1.0,
+                        "R": 1.0
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 30.0,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 40.0,
+                        "X": 48.0,
+                        "Y": 196.0,
+                        "Z": 1200.0
+                    },
+                    "RenderOpacity": 1.0,
+                    "Text": "THROTTLE 0.00 | BRAKE 0.00 | STEER 0.00",
+                    "Visibility": 0,
+                    "WidgetName": "InputText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0.0,
+                    "AlignmentY": 0.0,
+                    "Anchors": {
+                        "W": 0.0,
+                        "X": 0.0,
+                        "Y": 0.0,
+                        "Z": 0.0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1.0,
+                        "B": 1.0,
+                        "G": 1.0,
+                        "R": 1.0
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 30.0,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 40.0,
+                        "X": 48.0,
+                        "Y": 244.0,
+                        "Z": 1400.0
+                    },
+                    "RenderOpacity": 1.0,
+                    "Text": "WHEELS FL:OFF FR:OFF RL:OFF RR:OFF | CONTACT 0/4",
+                    "Visibility": 0,
+                    "WidgetName": "WheelText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            }
+        ],
+        "Class": "UCanvasPanel",
+        "Properties": {
+            "AlignmentX": 0.0,
+            "AlignmentY": 0.0,
+            "Anchors": {
+                "W": 1.0,
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 1.0
+            },
+            "Offsets": {
+                "W": 0.0,
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "RenderOpacity": 1.0,
+            "Visibility": 3,
+            "WidgetName": "Root",
+            "ZOrder": 0,
+            "bAutoSize": false
+        }
+    },
+    "Version": 2
+}

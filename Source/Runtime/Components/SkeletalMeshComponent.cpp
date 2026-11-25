@@ -95,10 +95,30 @@ void USkeletalMeshComponent::TickClothing(float DeltaTime)
 		return;
 	}
 
-	// 3단계 확인용: 천 에셋만 만들어 둔다. 4단계에서 이 에셋으로 FClothingActorNv를 만들어 Solver에 넣는다.
-	GetOrCreateClothingAsset();
-
 	ClothingSimulation->FillContext(this, DeltaTime, *ClothingSimulationContext);
+
+	// 쓸 천 에셋이 바뀌었으면(처음, 섹션 번호 변경) 천을 다시 만든다. UE의 RecreateClothingActors
+	UClothingAssetCommon* Asset = GetOrCreateClothingAsset();
+	if (!Asset)
+	{
+		if (!ClothingSimulation->GetActors().IsEmpty())
+		{
+			ClothingSimulation->DestroyActors();
+		}
+		return;
+	}
+	if (!ClothingSimulation->HasActorForAsset(Asset))
+	{
+		ClothingSimulation->DestroyActors();
+		if (ClothSectionIndex == FailedClothSectionIndex || !ClothingSimulation->CreateActor(Asset, *ClothingSimulationContext))
+		{
+			FailedClothSectionIndex = ClothSectionIndex;   // 쿠킹 실패도 매 프레임 다시 시도하지 않는다
+			return;
+		}
+		ClothingSimulation->FillContext(this, DeltaTime, *ClothingSimulationContext);   // 새 천은 첫 프레임을 텔레포트로
+	}
+
+	ClothingSimulation->SetConfig(ClothConfig);
 	ClothingSimulation->Simulate(*ClothingSimulationContext);
 }
 

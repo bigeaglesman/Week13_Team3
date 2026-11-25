@@ -2,6 +2,7 @@
 
 #include "SkinnedMeshComponent.h"
 #include "Animation/AnimInstance.h"
+#include "ClothingSystem/ClothConfigNv.h"
 #include "SkeletalMeshComponent.generated.h"
 
 class UAnimInstance;
@@ -118,6 +119,10 @@ public:
 	// 섹션 위쪽 몇 %를 고정할지 (어깨에 붙는 부분). 천 에셋을 처음 만들 때만 쓴다.
 	UPROPERTY(EditAnywhere)
 	float ClothPinHeightRatio = 0.1f;
+
+	// 천 시뮬레이션 설정 (Phase Constraint 4종, 감쇠, 관성, 중력, 바람). 매 프레임 천에 들어가므로 PIE 중에도 바로 반영된다
+	UPROPERTY(EditAnywhere)
+	FClothConfigNv ClothConfig;
 
 	// ClothSectionIndex 섹션의 천 에셋. 메시에 아직 없으면 FClothingAssetFactory로 만들어 메시에 붙인다.
 	// 섹션이 없거나 만들 수 없으면 nullptr

@@ -213,8 +213,10 @@ project "Lua"
 -- 저장소에는 헤더(include/, extensions/include/)와 lib만 있다. 원본 소스는 GitHub NVIDIAGameWorks/NvCloth 1.1.6.
 --
 -- lib를 다시 빌드할 때:
---  - 소스: src/*.cpp, src/avx/*.cpp(이 파일만 /arch:AVX), src/ps/windows/*.cpp, extensions/src/*.cpp
+--  - 소스: src/*.cpp, src/avx/*.cpp(이 파일만 /arch:AVX), extensions/src/*.cpp
 --    (cuda/, dx/, neon/, ps/unix 제외). src/avx는 SwSolverKernel.cpp가 Win64에서 항상 참조하므로 빼면 링크가 깨진다.
+--  - src/ps/windows/PsWindowsAtomic.cpp는 넣지 않는다. PhysXFoundation_64.dll이 같은 physx::shdfnd::atomic* 함수를
+--    내보내서, 넣으면 exe 링크에서 LNK2005(중복 정의)가 난다. 빼면 NvCloth도 PhysX Foundation의 것을 쓴다.
 --  - PxShared 헤더는 PhysX 4.1 include를 쓴다 (NvCloth 동봉본과 주석만 다름).
 --  - x64, /MDd(debug)·/MD(release), /Z7, 아래 NvClothSettings()의 define + _CRT_SECURE_NO_DEPRECATE
 --  - 원본 헤더 수정 2곳 (lib와 저장소 헤더가 같아야 한다):

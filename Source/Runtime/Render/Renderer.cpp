@@ -14,6 +14,7 @@
 #include "Render/DecalData.h"
 
 #include "Render/PostProcess/CameraOverlayRenderer.h"
+#include "Render/PostProcess/DiaphragmDOF.h"
 #include "Text/TextRenderer.h"
 
 namespace
@@ -213,6 +214,8 @@ void FRenderer::InitScenePasses(const FString& SkyPanoramaPath)
 	FXAA->Init(this);
 	CameraOverlay = MakeUnique<FCameraOverlayRenderer>();   // FXAA->Init(this); 아래
 	CameraOverlay->Init(this);
+	DiaphragmDOF = MakeUnique<FDiaphragmDOFRenderer>();
+	DiaphragmDOF->Init(this);
 	ToneMapConstants = RenderCommand::CreateConstantBuffer(sizeof(FToneMapData));
 	DecalConstants = RenderCommand::CreateConstantBuffer(sizeof(FDecalData));
 	SceneText = MakeUnique<FTextRenderer>();

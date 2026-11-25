@@ -12,6 +12,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SkinnedMeshComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Components/ParticleSubUVComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Editor/EditorUI/ImGuiRenderer.h"
@@ -1639,6 +1640,43 @@ void FDetailsPanel::OnRender()
 			if (UMeshComponent* MeshComponent = Cast<UMeshComponent>(TargetComponent))
 			{
 				DrawMaterialSlots(MeshComponent);
+			}
+			if (UCameraComponent* CameraComponent = Cast<UCameraComponent>(TargetComponent))
+			{
+				if (CategoryHeader("Post Process"))
+				{
+					FPostProcessSettings& PP = CameraComponent->PostProcessSettings;
+					ImGui::SliderFloat("Post Process Blend Weight", &CameraComponent->PostProcessBlendWeight, 0.0f, 1.0f, "%.2f");
+
+					auto DrawOverrideFloat = [](const char* Label, const char* CheckId, bool& bOverride, float& Value, float Speed, float MinVal, float MaxVal, const char* Format = "%.3f")
+					{
+						ImGui::Checkbox(CheckId, &bOverride);
+						ImGui::SameLine();
+						ImGui::BeginDisabled(!bOverride);
+						ImGui::DragFloat(Label, &Value, Speed, MinVal, MaxVal, Format);
+						ImGui::EndDisabled();
+					};
+
+					auto DrawOverrideInt = [](const char* Label, const char* CheckId, bool& bOverride, int32& Value, int32 MinVal, int32 MaxVal)
+					{
+						ImGui::Checkbox(CheckId, &bOverride);
+						ImGui::SameLine();
+						ImGui::BeginDisabled(!bOverride);
+						ImGui::SliderInt(Label, &Value, MinVal, MaxVal);
+						ImGui::EndDisabled();
+					};
+
+					ImGui::SeparatorText("Lens / Camera");
+					DrawOverrideFloat("Aperture (F-stop)", "##OverrideFstop", PP.bOverride_DepthOfFieldFstop, PP.DepthOfFieldFstop, 0.05f, 0.7f, 32.0f, "%.2f");
+					DrawOverrideFloat("Min F-stop", "##OverrideMinFstop", PP.bOverride_DepthOfFieldMinFstop, PP.DepthOfFieldMinFstop, 0.05f, 0.7f, 32.0f, "%.2f");
+					DrawOverrideInt("Diaphragm Blade Count", "##OverrideBladeCount", PP.bOverride_DepthOfFieldBladeCount, PP.DepthOfFieldBladeCount, 4, 16);
+					DrawOverrideFloat("Sensor Width (mm)", "##OverrideSensorWidth", PP.bOverride_DepthOfFieldSensorWidth, PP.DepthOfFieldSensorWidth, 0.1f, 1.0f, 100.0f, "%.3f");
+
+					ImGui::SeparatorText("Depth of Field");
+					DrawOverrideFloat("Focal Distance (m)", "##OverrideFocalDistance", PP.bOverride_DepthOfFieldFocalDistance, PP.DepthOfFieldFocalDistance, 0.1f, 0.0f, 10000.0f, "%.2f");
+					DrawOverrideFloat("Depth Blur km for 50%", "##OverrideDepthBlurAmount", PP.bOverride_DepthOfFieldDepthBlurAmount, PP.DepthOfFieldDepthBlurAmount, 0.05f, 0.001f, 100.0f, "%.3f");
+					DrawOverrideFloat("Depth Blur Radius (px)", "##OverrideDepthBlurRadius", PP.bOverride_DepthOfFieldDepthBlurRadius, PP.DepthOfFieldDepthBlurRadius, 0.1f, 0.0f, 32.0f, "%.2f");
+				}
 			}
 			ImGui::PopID();
 

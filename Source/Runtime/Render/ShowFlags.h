@@ -15,6 +15,8 @@ struct FEngineShowFlags
 	bool Decals = true;
 	// 화면 가장자리를 어둡게 하는 비네트
 	bool Vignette = true;
+	// 피사계 심도(Depth of Field). UE의 DepthOfField 쇼 플래그
+	bool DepthOfField = true;
 	// 카메라 페이드와 레터박스. UE에는 없는 이 엔진 고유의 플래그다.
 	bool CameraOverlay = true;
 	// 스켈레탈 메시

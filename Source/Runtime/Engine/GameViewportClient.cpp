@@ -206,6 +206,21 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 				OutView.VignetteIntensity = D.VignetteIntensity;
 			}
 
+			// 포스트 프로세스 설정: 기본값 → (추후 PostProcessVolume) → PCM 블렌드 캐시 순서로 덮어쓰기
+			OutView.FinalPostProcessSettings = FPostProcessSettings{};
+			const TArray<FPostProcessSettings>* PPSettings = nullptr;
+			const TArray<float>* PPWeights = nullptr;
+			PCM->GetCachedPostProcessBlends(PPSettings, PPWeights);
+			if (PPSettings && PPWeights)
+			{
+				const int32 Count = std::min(PPSettings->Num(), PPWeights->Num());
+				for (int32 i = 0; i < Count; ++i)
+				{
+					OutView.OverridePostProcessSettings((*PPSettings)[i], (*PPWeights)[i]);
+				}
+			}
+			OutView.EndFinalPostprocessSettings();
+
 			return OutView;
 		}
 	}
@@ -227,6 +242,10 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 		OutView.OrthoWidth = CameraComponent->GetOrthoWidth();
 		OutView.bIsPerspective = !CameraComponent->GetIsOrthogonal();
 		OutView.bIsWireframe = false;
+
+		OutView.FinalPostProcessSettings = FPostProcessSettings{};
+		OutView.OverridePostProcessSettings(CameraComponent->PostProcessSettings, CameraComponent->PostProcessBlendWeight);
+		OutView.EndFinalPostprocessSettings();
 	}
 	else
 	{
@@ -239,6 +258,7 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 		OutView.FarClip = 1000.0f;
 		OutView.bIsPerspective = true;
 		OutView.bIsWireframe = false;
+		OutView.FinalPostProcessSettings = FPostProcessSettings{};
 	}
 
 	OutView.Frustum = ExtractFrustumPlanes(OutView.ViewProjectionMatrix);

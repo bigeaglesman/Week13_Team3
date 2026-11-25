@@ -198,4 +198,38 @@ void UCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& OutPOV) 
     OutPOV.NearClip = NearClipPlane;
     OutPOV.FarClip = FarClipPlane;
     OutPOV.bIsOrthogonal = bIsOrthogonal;
+    // 3. 포스트 프로세스 설정
+    OutPOV.PostProcessSettings = PostProcessSettings;
+    OutPOV.PostProcessBlendWeight = PostProcessBlendWeight;
 }
+
+void UCameraComponent::Serialize(FStructuredArchive::FRecord Record)
+{
+    Super::Serialize(Record);
+
+    if (TOptional<FStructuredArchive::FSlot> BlendWeightSlot = Record.TryEnterField("PostProcessBlendWeight", true); BlendWeightSlot.IsSet())
+    {
+        BlendWeightSlot.GetValue() << PostProcessBlendWeight;
+    }
+
+    if (TOptional<FStructuredArchive::FSlot> PostProcessSlot = Record.TryEnterField("PostProcessSettings", true); PostProcessSlot.IsSet())
+    {
+        FStructuredArchive::FRecord PPRecord = PostProcessSlot.GetValue().EnterRecord();
+        PPRecord
+            << SA_VALUE("bOverride_DepthOfFieldFstop", PostProcessSettings.bOverride_DepthOfFieldFstop)
+            << SA_VALUE("bOverride_DepthOfFieldMinFstop", PostProcessSettings.bOverride_DepthOfFieldMinFstop)
+            << SA_VALUE("bOverride_DepthOfFieldBladeCount", PostProcessSettings.bOverride_DepthOfFieldBladeCount)
+            << SA_VALUE("bOverride_DepthOfFieldSensorWidth", PostProcessSettings.bOverride_DepthOfFieldSensorWidth)
+            << SA_VALUE("bOverride_DepthOfFieldFocalDistance", PostProcessSettings.bOverride_DepthOfFieldFocalDistance)
+            << SA_VALUE("bOverride_DepthOfFieldDepthBlurAmount", PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount)
+            << SA_VALUE("bOverride_DepthOfFieldDepthBlurRadius", PostProcessSettings.bOverride_DepthOfFieldDepthBlurRadius)
+            << SA_VALUE("DepthOfFieldFstop", PostProcessSettings.DepthOfFieldFstop)
+            << SA_VALUE("DepthOfFieldMinFstop", PostProcessSettings.DepthOfFieldMinFstop)
+            << SA_VALUE("DepthOfFieldBladeCount", PostProcessSettings.DepthOfFieldBladeCount)
+            << SA_VALUE("DepthOfFieldSensorWidth", PostProcessSettings.DepthOfFieldSensorWidth)
+            << SA_VALUE("DepthOfFieldFocalDistance", PostProcessSettings.DepthOfFieldFocalDistance)
+            << SA_VALUE("DepthOfFieldDepthBlurAmount", PostProcessSettings.DepthOfFieldDepthBlurAmount)
+            << SA_VALUE("DepthOfFieldDepthBlurRadius", PostProcessSettings.DepthOfFieldDepthBlurRadius);
+    }
+}
+

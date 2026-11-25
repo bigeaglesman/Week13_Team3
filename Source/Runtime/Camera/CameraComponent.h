@@ -4,6 +4,7 @@
 #include "../Components/SceneComponent.h"
 #include "../Math/EngineMath.h"
 #include "../Math/Rotator.h"
+#include "Engine/PostProcessSettings.h"
 #include "CameraComponent.generated.h"
 
 struct FMinimalViewInfo;
@@ -89,5 +90,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool bUsePawnControlRotation = false;
 
+	// 이 카메라가 적용할 포스트 프로세스 설정 및 블렌드 가중치 (언리얼 UCameraComponent와 동일)
+	FPostProcessSettings PostProcessSettings;
+	float PostProcessBlendWeight = 1.0f;
+
+	virtual void Serialize(FStructuredArchive::FRecord Record) override;
 };
 

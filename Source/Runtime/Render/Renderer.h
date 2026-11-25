@@ -15,6 +15,7 @@ class FSkyboxRenderer;
 class FHeightFogRenderer;
 class FFXAARenderer;
 class FCameraOverlayRenderer;
+class FDiaphragmDOFRenderer;
 
 class FTextRenderer;
 
@@ -47,6 +48,7 @@ public:
 	FHeightFogRenderer* GetHeightFog() const { return HeightFog.get(); }
 	FFXAARenderer* GetFXAA() const { return FXAA.get(); }
 	FCameraOverlayRenderer* GetCameraOverlay() const { return CameraOverlay.get(); }
+	FDiaphragmDOFRenderer* GetDiaphragmDOF() const { return DiaphragmDOF.get(); }
 	FTextRenderer* GetSceneText() const { return SceneText.get(); }
 
 	FConstantBuffer* GetToneMapConstants() const { return ToneMapConstants.get(); }
@@ -75,5 +77,6 @@ private:
 	TUniquePtr<FHeightFogRenderer> HeightFog;
 	TUniquePtr<FFXAARenderer> FXAA;
 	TUniquePtr<FCameraOverlayRenderer> CameraOverlay;
+	TUniquePtr<FDiaphragmDOFRenderer> DiaphragmDOF;
 	TUniquePtr<FTextRenderer> SceneText;
 };

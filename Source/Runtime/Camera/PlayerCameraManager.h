@@ -1,5 +1,6 @@
 #pragma once
 #include "GameFramework/Actor.h"
+#include "Engine/PostProcessSettings.h"
 
 #include "CameraModifier_CameraShake.h"
 
@@ -15,6 +16,9 @@ struct FMinimalViewInfo
 	float NearClip = 0.1f;
 	float FarClip = 10000.0f;
 	bool bIsOrthogonal = false;
+
+	FPostProcessSettings PostProcessSettings;
+	float PostProcessBlendWeight = 0.0f;
 
 	void BlendViewInfo(const FMinimalViewInfo& Other, float Alpha);
 	FMatrix CalculateViewMatrix() const;
@@ -97,6 +101,13 @@ public:
 	void SetLetterbox(float TargetAspect, float BlendTime);
 	void UpdateLetterbox(float DeltaTime);
 
+	// 언리얼 APlayerCameraManager의 포스트 프로세스 블렌드 캐시 API
+	void ClearCachedPPBlends();
+	void AddCachedPPBlend(const FPostProcessSettings& PPSettings, float InWeight);
+	void GetCachedPostProcessBlends(
+		const TArray<FPostProcessSettings>*& OutPPSettings,
+		const TArray<float>*& OutPPBlendWeights) const;
+
 public:
 	FLinearColor FadeColor{ 0, 0, 0, 1 };   // 지금은 초기값이 없음
 	float FadeAmount = 0.0f;
@@ -122,6 +133,9 @@ protected:
 	APlayerController* PlayerControllerOwner = nullptr;
 	FMinimalViewInfo CameraCachePOV;
 	bool bCameraCacheValid = false;
+
+	TArray<FPostProcessSettings> PostProcessBlendCache;
+	TArray<float> PostProcessBlendCacheWeights;
 
 	FViewTarget PendingViewTarget;
 	FViewTargetTransitionParams BlendParams;

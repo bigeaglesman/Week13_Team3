@@ -10,6 +10,7 @@
 #include "Containers/Array.h"
 #include "Render/ShowFlags.h"
 #include "Render/SceneRenderOptions.h"
+#include "Engine/PostProcessSettings.h"
 #include <algorithm>
 
 // Immutable description of one camera view for the duration of a render.
@@ -38,6 +39,49 @@ struct FSceneView
 	float LetterboxAmount = 0.0f;                        // 0~1 진행도
 	float LetterboxAspect = 2.39f;                       // 목표 화면비
 	float VignetteIntensity = 0.0f;
+
+	FPostProcessSettings FinalPostProcessSettings;
+
+	// 언리얼 FSceneView::OverridePostProcessSettings와 같은 구조.
+	// Src의 bOverride_*가 true인 항목만 Weight만큼 선형 보간해 덮어쓴다.
+	// 정수(BladeCount)는 보간하지 않고 Weight >= 0.5일 때 대입한다.
+	void OverridePostProcessSettings(const FPostProcessSettings& Src, float Weight)
+	{
+		const float W = std::clamp(Weight, 0.0f, 1.0f);
+		if (W <= 0.0f)
+		{
+			return;
+		}
+
+		auto LerpFloat = [W](float& Dst, float Target)
+		{
+			Dst = Dst + (Target - Dst) * W;
+		};
+
+		if (Src.bOverride_DepthOfFieldFstop)           LerpFloat(FinalPostProcessSettings.DepthOfFieldFstop, Src.DepthOfFieldFstop);
+		if (Src.bOverride_DepthOfFieldMinFstop)        LerpFloat(FinalPostProcessSettings.DepthOfFieldMinFstop, Src.DepthOfFieldMinFstop);
+		if (Src.bOverride_DepthOfFieldBladeCount && W >= 0.5f)
+		{
+			FinalPostProcessSettings.DepthOfFieldBladeCount = Src.DepthOfFieldBladeCount;
+		}
+		if (Src.bOverride_DepthOfFieldSensorWidth)     LerpFloat(FinalPostProcessSettings.DepthOfFieldSensorWidth, Src.DepthOfFieldSensorWidth);
+		if (Src.bOverride_DepthOfFieldFocalDistance)   LerpFloat(FinalPostProcessSettings.DepthOfFieldFocalDistance, Src.DepthOfFieldFocalDistance);
+		if (Src.bOverride_DepthOfFieldDepthBlurAmount) LerpFloat(FinalPostProcessSettings.DepthOfFieldDepthBlurAmount, Src.DepthOfFieldDepthBlurAmount);
+		if (Src.bOverride_DepthOfFieldDepthBlurRadius) LerpFloat(FinalPostProcessSettings.DepthOfFieldDepthBlurRadius, Src.DepthOfFieldDepthBlurRadius);
+	}
+
+	// 언리얼 FSceneView::EndFinalPostprocessSettings 자리.
+	// 블렌딩이 끝난 최종 후처리 값의 유효 범위를 정리한다.
+	void EndFinalPostprocessSettings()
+	{
+		FinalPostProcessSettings.DepthOfFieldMinFstop = std::clamp(FinalPostProcessSettings.DepthOfFieldMinFstop, 0.7f, 32.0f);
+		FinalPostProcessSettings.DepthOfFieldFstop = std::max(FinalPostProcessSettings.DepthOfFieldFstop, FinalPostProcessSettings.DepthOfFieldMinFstop);
+		FinalPostProcessSettings.DepthOfFieldBladeCount = std::clamp(FinalPostProcessSettings.DepthOfFieldBladeCount, 4, 16);
+		FinalPostProcessSettings.DepthOfFieldSensorWidth = std::max(FinalPostProcessSettings.DepthOfFieldSensorWidth, 1.0f);
+		FinalPostProcessSettings.DepthOfFieldFocalDistance = std::max(FinalPostProcessSettings.DepthOfFieldFocalDistance, 0.0f);
+		FinalPostProcessSettings.DepthOfFieldDepthBlurAmount = std::max(FinalPostProcessSettings.DepthOfFieldDepthBlurAmount, 0.0001f);
+		FinalPostProcessSettings.DepthOfFieldDepthBlurRadius = std::max(FinalPostProcessSettings.DepthOfFieldDepthBlurRadius, 0.0f);
+	}
 
 	bool NeedsCameraOverlay(bool bVignette, bool bOverlay) const
 	{
@@ -80,6 +124,20 @@ struct FCameraOverlayDebug
 	float VignetteIntensity = 0.0f;
 };
 inline FCameraOverlayDebug GCameraOverlayDebug;
+
+struct FDOFDebug
+{
+	bool  bOverride = false;
+	bool  bVisualizeCoC = false;
+	float FocalDistance = 5.0f;
+	float Fstop = 1.6f;
+	float MinFstop = 1.2f;
+	int32 BladeCount = 5;
+	float SensorWidth = 70.0f;
+	float DepthBlurAmount = 1.0f;
+	float DepthBlurRadius = 0.0f;
+};
+inline FDOFDebug GDOFDebug;
 
 class UWorld;
 struct FSceneViewTargets;

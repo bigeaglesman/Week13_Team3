@@ -9,6 +9,9 @@
 class UBodySetup;
 class UBoxComponent;
 struct FConstraintSetup;
+struct FKAggregateGeom;
+
+enum class EColliderShape { None, Sphere, Box, Capsule };
 
 class FSkeletalMeshEditor : public FSkeletalPreviewEditor
 {
@@ -38,7 +41,10 @@ public:
 	int32 GetGraphFocusBone() const { return GraphFocusBone; }
 	FConstraintSetup* GetSelectedConstraint() const;
 	UBodySetup* GetSelectedBodySetup() const;
-	void SetSelectedCapsuleRadius(int32 CapsuleIndex, float Radius);
+	void SelectShape(EColliderShape Type, int32 Index);
+	EColliderShape GetSelectedShapeType() const { return SelectedShapeType; }
+	int32 GetSelectedShapeIndex() const { return SelectedShapeIndex; }
+	unsigned GetGizmoModeMask() const;
 	void MarkPhysicsAssetDirty();
 	void SavePhysicsAsset();
 	const FString& GetPhysicsAssetStatus() const { return PhysicsAssetStatus; }
@@ -69,8 +75,11 @@ protected:
 
 private:
 	bool bPhysicsAssetMode = false;
+	UE::Widget::EWidgetMode MeshGizmoMode = UE::Widget::WM_Translate;
 	bool bShowConstraints = true;
 	int32 SelectedConstraintIndex = -1;
+	EColliderShape SelectedShapeType = EColliderShape::None;
+	int32 SelectedShapeIndex = -1;
 	int32 GraphFocusBone = -1;
 	bool bPhysicsPickPending = false;
 	FVector2 PhysicsPickPosition;
@@ -82,6 +91,8 @@ private:
 	void SyncBoneGizmo();
 	bool UpdateBoneGizmo();
 	void ApplyBoneGizmoTransform();
+	bool ApplyShapeGizmoDrag(FKAggregateGeom& Geom, const FTransform& Body, float GeometryScale) const;
+	FTransform DragStartGizmoWorld;
 	FQuat GetBoneWorldRotation(int32 BoneIndex) const;
 
 	USceneComponent* BoneGizmoTarget = nullptr;

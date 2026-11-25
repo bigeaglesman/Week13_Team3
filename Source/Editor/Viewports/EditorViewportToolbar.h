@@ -31,7 +31,7 @@ namespace EditorViewportUI
 
 	// 이동/회전/크기(그리고 bIncludeSelect면 선택) 도구 버튼. 누른 도구를 SetMode로 알린다.
 	void DrawTransformToolButtons(UE::Widget::EWidgetMode Current, const std::function<void(UE::Widget::EWidgetMode)>& SetMode,
-		bool bIncludeSelect);
+		bool bIncludeSelect, unsigned ModeMask = UE::Widget::AllTransformModes);
 
 	// 왼쪽 아래 월드 축 표시 (카메라 회전을 따라 돈다)
 	void DrawAxisIndicator(ImDrawList* DrawList, const FEditorViewportClient* Client, const ImVec2& ViewMin, const ImVec2& ViewMax);
@@ -43,5 +43,5 @@ namespace EditorViewportUI
 	// 마우스가 툴바 위에 있거나 툴바 메뉴가 열려 있으면 true (그동안 뷰포트 입력을 막는다).
 	bool DrawAssetViewportToolbar(FEditorViewportClient* Client, const ImVec2& ViewMin, const ImVec2& ViewMax,
 		UE::Widget::EWidgetMode GizmoMode = UE::Widget::WM_None,
-		const std::function<void(UE::Widget::EWidgetMode)>& SetGizmoMode = {});
+		const std::function<void(UE::Widget::EWidgetMode)>& SetGizmoMode = {}, unsigned ModeMask = UE::Widget::AllTransformModes);
 }

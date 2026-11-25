@@ -15,5 +15,5 @@ protected:
 
 private:
 	void DrawPhysicsAssetDetails();
-	void DrawBodyCapsules(const UBodySetup& Setup, int32 BoneIndex);
+	void DrawBodyShapes(UBodySetup& Setup, int32 BoneIndex);
 };

@@ -13,6 +13,12 @@ namespace UE::Widget
 		WM_Scale,
 		WM_Max,
 	};
+
+	constexpr unsigned ModeBit(EWidgetMode Mode)
+	{
+		return Mode >= WM_Translate && Mode < WM_Max ? 1u << Mode : 0u;
+	}
+	constexpr unsigned AllTransformModes = ModeBit(WM_Translate) | ModeBit(WM_Rotate) | ModeBit(WM_Scale);
 }
 
 // 기즈모 축을 어느 좌표계에 맞출지. UE의 ECoordSystem과 같은 이름이고 순서(World가 0)도 같다.

@@ -18,6 +18,23 @@
 
 namespace
 {
+	struct FShapePoseRef
+	{
+		FVector* Center = nullptr;
+		FQuat* Rotation = nullptr;
+	};
+
+	FShapePoseRef FindShapePose(FKAggregateGeom& Geom, EColliderShape Type, int32 Index)
+	{
+		if (Type == EColliderShape::Sphere && Geom.SphereElems.IsValidIndex(Index))
+			return { &Geom.SphereElems[Index].Center, nullptr };
+		if (Type == EColliderShape::Box && Geom.BoxElems.IsValidIndex(Index))
+			return { &Geom.BoxElems[Index].Center, &Geom.BoxElems[Index].Rotation };
+		if (Type == EColliderShape::Capsule && Geom.SphylElems.IsValidIndex(Index))
+			return { &Geom.SphylElems[Index].Center, &Geom.SphylElems[Index].Rotation };
+		return {};
+	}
+
 	void DrawLimitArc(FLineBatcher& Lines, const FVector& Pivot, const FVector& Zero, const FVector& Tangent,
 		float Radius, float ExtentDeg, const FVector4& Color)
 	{
@@ -149,16 +166,15 @@ void FSkeletalMeshEditor::TickAfterWorld(float DeltaTime)
 		MeshComponent->RefreshBoneTransformsNow();
 		return;
 	}
+	const bool bGizmoConsumed = UpdateBoneGizmo();
 	if (bPhysicsAssetMode)
 	{
-		bPhysicsPickPending = CanProcessViewportInput() && PointerInput.bHovered && PointerInput.bMousePressed
+		bPhysicsPickPending = !bGizmoConsumed && CanProcessViewportInput() && PointerInput.bHovered && PointerInput.bMousePressed
 			&& !PointerInput.bCancel && !CameraInput.bCaptured;
 		if (bPhysicsPickPending)
 			PhysicsPickPosition = FVector2(PointerInput.MouseUV.X * ViewportWidth, PointerInput.MouseUV.Y * ViewportHeight);
-		return;
 	}
-	// 기즈모가 입력을 쓰지 않았을 때만 본을 피킹하고, 마지막에 기즈모를 선택한 본 위치로 맞춘다
-	if (!UpdateBoneGizmo())
+	else if (!bGizmoConsumed)
 		UpdateBonePicking();
 	SyncBoneGizmo();
 }
@@ -173,11 +189,10 @@ void FSkeletalMeshEditor::SetPhysicsAssetMode(bool bEnabled)
 	if (bPhysicsAssetMode == bEnabled) return;
 	StopPhysicsPreview();
 	BoneGizmo.EndDrag();
+	if (bEnabled) MeshGizmoMode = GetGizmoMode();
+	ModeTools.SetWidgetMode(bEnabled ? UE::Widget::WM_Translate : MeshGizmoMode);
 	bPhysicsAssetMode = bEnabled;
-	GraphFocusBone = bEnabled ? SelectedBoneIndex : -1;
-	SelectedConstraintIndex = -1;
 	bPhysicsPickPending = false;
-	SyncBoneGizmo();
 	if (bEnabled && !MeshComponent->GetOrCreatePhysicsAsset())
 	{
 		PhysicsAssetStatus = "No physics asset could be loaded or generated for this mesh.";
@@ -188,8 +203,10 @@ void FSkeletalMeshEditor::SetPhysicsAssetMode(bool bEnabled)
 		if (!Setup || Setup->AggGeom.IsEmpty())
 		{
 			SelectBone(-1);
+			return;
 		}
 	}
+	OnBoneSelected();
 }
 
 void FSkeletalMeshEditor::StartPhysicsPreview()
@@ -222,6 +239,8 @@ void FSkeletalMeshEditor::StartPhysicsPreview()
 	}
 
 	bPhysicsPickPending = false;
+	BoneGizmo.EndDrag();
+	BoneGizmo.SetTarget(nullptr);
 	PreviewStartPose = MeshComponent->GetBoneSpaceTransforms();
 	bPreviousSimulatePhysics = MeshComponent->BodyInstance.bSimulatePhysics;
 	MeshComponent->BodyInstance.bSimulatePhysics = true;
@@ -263,14 +282,25 @@ void FSkeletalMeshEditor::StopPhysicsPreview()
 		MeshComponent->SetBoneLocalTransform(i, PreviewStartPose[i]);
 	PreviewStartPose.Empty();
 	MeshComponent->RefreshBoneTransformsNow();
+	SyncBoneGizmo();
 }
 
 void FSkeletalMeshEditor::OnBoneSelected()
 {
 	SelectedConstraintIndex = -1;
 	GraphFocusBone = bPhysicsAssetMode ? SelectedBoneIndex : -1;
-	BoneGizmo.EndDrag();
-	SyncBoneGizmo();
+	if (const UBodySetup* Setup = bPhysicsAssetMode ? GetSelectedBodySetup() : nullptr)
+	{
+		const auto& Geom = Setup->AggGeom;
+		if (Geom.SphereElems.Num() + Geom.BoxElems.Num() + Geom.SphylElems.Num()
+			+ Geom.ConvexElems.Num() + Geom.TriMeshElems.Num() == 1)
+		{
+			if (!Geom.SphereElems.IsEmpty()) return SelectShape(EColliderShape::Sphere, 0);
+			if (!Geom.BoxElems.IsEmpty()) return SelectShape(EColliderShape::Box, 0);
+			if (!Geom.SphylElems.IsEmpty()) return SelectShape(EColliderShape::Capsule, 0);
+		}
+	}
+	SelectShape(EColliderShape::None, -1);
 }
 
 void FSkeletalMeshEditor::SelectBodyFromGraph(int32 BoneIndex)
@@ -313,16 +343,20 @@ UBodySetup* FSkeletalMeshEditor::GetSelectedBodySetup() const
 	return BodyIndex >= 0 ? Asset->BodySetups[BodyIndex] : nullptr;
 }
 
-void FSkeletalMeshEditor::SetSelectedCapsuleRadius(int32 CapsuleIndex, float Radius)
+void FSkeletalMeshEditor::SelectShape(EColliderShape Type, int32 Index)
 {
-	UBodySetup* Setup = GetSelectedBodySetup();
-	if (!Setup || !Setup->AggGeom.SphylElems.IsValidIndex(CapsuleIndex) || !std::isfinite(Radius) || Radius <= 0.0f)
-	{
-		return;
-	}
+	BoneGizmo.EndDrag();
+	SelectedShapeType = Type;
+	SelectedShapeIndex = Index;
+	SyncBoneGizmo();
+}
 
-	Setup->AggGeom.SphylElems[CapsuleIndex].Radius = Radius;
-	MarkPhysicsAssetDirty();
+unsigned FSkeletalMeshEditor::GetGizmoModeMask() const
+{
+	using namespace UE::Widget;
+	if (!bPhysicsAssetMode) return AllTransformModes;
+	if (IsPhysicsPreviewRunning() || SelectedShapeType == EColliderShape::None) return 0;
+	return SelectedShapeType == EColliderShape::Sphere ? ModeBit(WM_Translate) | ModeBit(WM_Scale) : AllTransformModes;
 }
 
 void FSkeletalMeshEditor::MarkPhysicsAssetDirty()
@@ -375,11 +409,14 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 		const bool bPick = bPhysicsPickPending;
 		bPhysicsPickPending = false;
 		int32 HitBody = -1, HitConstraint = -1;
+		EColliderShape HitShape = EColliderShape::None;
+		int32 HitShapeIndex = -1;
 		float BodyDepth = FLT_MAX, JointDepth = FLT_MAX;
 		FRay Ray;
 		if (bPick)
 			Ray = ViewportClient->DeprojectScreenToWorld(PhysicsPickPosition);
 		TMap<FString, FTransform> BodyPoses;
+		FKAggregateGeom SingleShape;
 		for (const UBodySetup* Setup : Asset->BodySetups)
 		{
 			const int32 BoneIndex = Setup ? MeshComponent->FindBoneIndex(Setup->BoneName) : -1;
@@ -392,20 +429,35 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 			{
 				BodyPoses.Add(Setup->BoneName, Bone);
 			}
-			const FVector4& Color = BoneIndex == SelectedBoneIndex ? SelectedColor : BodyColor;
-			const FKAggregateGeom Geom = Setup->AggGeom.GetScaled(FVector(Scale, Scale, Scale));
-			const uint32 First = LineBatcher.GetVertexCount();
+			FKAggregateGeom Geom = Setup->AggGeom.GetScaled(FVector(Scale, Scale, Scale));
 			const FVector ViewDirection = ViewportClient->IsPerspective()
 				? (Bone.Location - ViewportClient->GetViewLocation()).GetSafeNormal(SMALL_NUMBER, ViewForward)
 				: ViewForward;
-			Geom.DrawDebug(LineBatcher, Bone.Location, Bone.Rotation, Color, &ViewDirection);
+			const bool bSelectedBody = BoneIndex == SelectedBoneIndex;
+			if (!bPick && (!bSelectedBody || SelectedShapeType == EColliderShape::None))
+			{
+				Geom.DrawDebug(LineBatcher, Bone.Location, Bone.Rotation, bSelectedBody ? SelectedColor : BodyColor, &ViewDirection);
+				continue;
+			}
+			// 드래그 중에는 렌더용 사본만 바꾸고, 버튼을 놓을 때 에셋에 기록한다.
+			if (bSelectedBody && BoneGizmo.IsUsing())
+				ApplyShapeGizmoDrag(Geom, Bone, Scale);
+			FRay LocalRay;
 			if (bPick)
 			{
-				float Depth = PickWireDepth(LineBatcher, First, PhysicsPickPosition);
 				const FQuat Inverse = Bone.Rotation.UnitInverse();
-				const FRay LocalRay{ Inverse.RotateVector(Ray.Origin - Bone.Location), Inverse.RotateVector(Ray.Direction) };
+				LocalRay = { Inverse.RotateVector(Ray.Origin - Bone.Location), Inverse.RotateVector(Ray.Direction) };
+			}
+			auto DrawAndPick = [&](const FKAggregateGeom& Shape, EColliderShape Type, int32 Index)
+			{
+				const bool bSelected = bSelectedBody && (SelectedShapeType == EColliderShape::None
+					|| (SelectedShapeType == Type && SelectedShapeIndex == Index));
+				const uint32 First = LineBatcher.GetVertexCount();
+				Shape.DrawDebug(LineBatcher, Bone.Location, Bone.Rotation, bSelected ? SelectedColor : BodyColor, &ViewDirection);
+				if (!bPick) return;
+				float Depth = PickWireDepth(LineBatcher, First, PhysicsPickPosition);
 				float Distance;
-				if (Geom.RaycastPrimitives(LocalRay, Distance))
+				if (Shape.RaycastPrimitives(LocalRay, Distance))
 				{
 					const FVector4 Clip = FVector4(Ray.PointAt(Distance), 1) * ViewportClient->GetViewProjectionMatrix();
 					if (Clip.W > 0.0001f && Clip.Z >= 0 && Clip.Z <= Clip.W)
@@ -415,8 +467,26 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 				{
 					BodyDepth = Depth;
 					HitBody = BoneIndex;
+					HitShape = Type;
+					HitShapeIndex = Index;
 				}
-			}
+			};
+			auto DrawPrimitives = [&](auto& Elements, auto& Scratch, EColliderShape Type)
+			{
+				if (Elements.IsEmpty()) return;
+				Scratch.SetNum(1);
+				for (int32 i = 0; i < Elements.Num(); ++i)
+				{
+					Scratch[0] = Elements[i];
+					DrawAndPick(SingleShape, Type, i);
+				}
+				Scratch.Reset();
+				Elements.Reset();
+			};
+			DrawPrimitives(Geom.SphereElems, SingleShape.SphereElems, EColliderShape::Sphere);
+			DrawPrimitives(Geom.BoxElems, SingleShape.BoxElems, EColliderShape::Box);
+			DrawPrimitives(Geom.SphylElems, SingleShape.SphylElems, EColliderShape::Capsule);
+			if (!Geom.IsEmpty()) DrawAndPick(Geom, EColliderShape::None, -1);
 		}
 		if (bShowConstraints)
 		{
@@ -451,13 +521,18 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 				GraphFocusBone = Mesh->FindBoneIndex(Asset->ConstraintSetups[HitConstraint].ChildBoneName);
 			}
 			else
+			{
 				SelectBone(HitBody);
+				if (HitShape != EColliderShape::None)
+					SelectShape(HitShape, HitShapeIndex);
+			}
 		}
 	}
 }
 
 void FSkeletalMeshEditor::SetGizmoMode(UE::Widget::EWidgetMode Mode)
 {
+	if (bPhysicsAssetMode && !(GetGizmoModeMask() & UE::Widget::ModeBit(Mode))) return;
 	BoneGizmo.EndDrag();
 	ModeTools.SetWidgetMode(Mode);
 	SyncBoneGizmo();
@@ -472,7 +547,7 @@ void FSkeletalMeshEditor::SetGizmoSpace(ECoordSystem Space)
 
 void FSkeletalMeshEditor::SyncBoneGizmo()
 {
-	if (bPhysicsAssetMode || !MeshComponent || !BoneGizmoTarget || SelectedBoneIndex < 0 || SelectedBoneIndex >= BoneItems.Num())
+	if (IsPhysicsPreviewRunning() || !MeshComponent || !BoneGizmoTarget || SelectedBoneIndex < 0 || SelectedBoneIndex >= BoneItems.Num())
 	{
 		BoneGizmo.SetTarget(nullptr);
 		return;
@@ -484,6 +559,24 @@ void FSkeletalMeshEditor::SyncBoneGizmo()
 	}
 
 	const FMatrix BoneWorld = MeshComponent->GetBoneWorldMatrix(SelectedBoneIndex);
+	if (bPhysicsAssetMode)
+	{
+		UBodySetup* Setup = GetSelectedBodySetup();
+		const FShapePoseRef Pose = Setup ? FindShapePose(Setup->AggGeom, SelectedShapeType, SelectedShapeIndex) : FShapePoseRef{};
+		if (!Pose.Center)
+		{
+			BoneGizmo.SetTarget(nullptr);
+			return;
+		}
+		const FTransform Body = MatrixToBodyTransform(BoneWorld);
+		if (!(GetGizmoModeMask() & UE::Widget::ModeBit(GetGizmoMode())))
+			ModeTools.SetWidgetMode(UE::Widget::WM_Translate);
+		const FVector Center = Body.Location + Body.Rotation.RotateVector(*Pose.Center * MeshComponent->GetPhysicsAssetScale());
+		const FQuat Rotation = Pose.Rotation ? Body.Rotation * *Pose.Rotation : Body.Rotation;
+		BoneGizmoTarget->SetTransform(FTransform(Rotation, Center));
+		BoneGizmo.SetTarget(BoneGizmoTarget);
+		return;
+	}
 	const FVector Location = BoneWorld.TransformPosition(FVector::ZeroVector);
 	const FRotator Rotation = GetBoneWorldRotation(SelectedBoneIndex).ToFRotator();
 
@@ -522,7 +615,7 @@ bool FSkeletalMeshEditor::UpdateBoneGizmo()
 
 	if (PointerInput.bCancel)
 	{
-		if (BoneGizmo.IsUsing())
+		if (BoneGizmo.IsUsing() && !bPhysicsAssetMode)
 		{
 			MeshComponent->SetBoneLocalTransform(SelectedBoneIndex, DragStartBoneTransform);
 			MeshComponent->RefreshBoneTransformsNow();
@@ -549,6 +642,20 @@ bool FSkeletalMeshEditor::UpdateBoneGizmo()
 	BoneGizmo.Update(MouseRay, MousePosition, ViewportClient->GetViewProjectionMatrix(),
 		Width, Height, bUpdateDrag, ViewportClient->GetViewLocation(), !ViewportClient->IsPerspective());
 
+	if (bPhysicsAssetMode && BoneGizmo.IsUsing())
+	{
+		if (!bWasUsing)
+			DragStartGizmoWorld = BoneGizmoTarget->GetTransform();
+		if (!PointerInput.bMouseDown)
+		{
+			const FTransform Body = MatrixToBodyTransform(MeshComponent->GetBoneWorldMatrix(SelectedBoneIndex));
+			UBodySetup* Setup = GetSelectedBodySetup();
+			if (Setup && ApplyShapeGizmoDrag(Setup->AggGeom, Body, 1.0f))
+				MarkPhysicsAssetDirty();
+			BoneGizmo.EndDrag();
+		}
+		return true;
+	}
 	if (!bWasUsing && BoneGizmo.IsUsing())
 	{
 		const int32 ParentIndex = Mesh->GetRefSkeleton()[SelectedBoneIndex].ParentIndex;
@@ -580,6 +687,70 @@ bool FSkeletalMeshEditor::UpdateBoneGizmo()
 	}
 
 	return bWasUsing || BoneGizmo.IsUsing() || BoneGizmo.GetHoveredAxis() >= 0;
+}
+
+bool FSkeletalMeshEditor::ApplyShapeGizmoDrag(FKAggregateGeom& Geom, const FTransform& Body, float GeometryScale) const
+{
+	const FShapePoseRef Pose = FindShapePose(Geom, SelectedShapeType, SelectedShapeIndex);
+	if (!Pose.Center) return false;
+	const FTransform& World = BoneGizmoTarget->GetTransform();
+	if (GetGizmoMode() == UE::Widget::WM_Translate)
+	{
+		const float Scale = MeshComponent->GetPhysicsAssetScale();
+		if (Scale <= 0.0f || World.Location == DragStartGizmoWorld.Location) return false;
+		*Pose.Center = Body.Rotation.UnitInverse().RotateVector(World.Location - Body.Location) * (GeometryScale / Scale);
+		return true;
+	}
+	if (GetGizmoMode() == UE::Widget::WM_Rotate && Pose.Rotation)
+	{
+		const FQuat Delta = World.Rotation * DragStartGizmoWorld.Rotation.UnitInverse();
+		if (FVector(Delta.X, Delta.Y, Delta.Z).SizeSquared() < 1e-12f) return false;
+		*Pose.Rotation = (Body.Rotation.UnitInverse() * World.Rotation).Normalized();
+		return true;
+	}
+	if (GetGizmoMode() != UE::Widget::WM_Scale) return false;
+
+	// 기즈모 타깃은 매 드래그를 단위 스케일에서 시작한다. 축 손잡이는 한 성분, 중앙은 세 성분을 같은 비율로 바꾼다.
+	const FVector Factor = World.Scale;
+	if (Factor == FVector::OneVector) return false;
+	switch (SelectedShapeType)
+	{
+	case EColliderShape::Sphere:
+	{
+		auto& Sphere = Geom.SphereElems[SelectedShapeIndex];
+		const float AxisFactor = Factor.X != 1.0f ? Factor.X : (Factor.Y != 1.0f ? Factor.Y : Factor.Z);
+		const float Radius = Sphere.Radius * AxisFactor;
+		if (!std::isfinite(Radius) || Radius <= 0.0f || Radius == Sphere.Radius) return false;
+		Sphere.Radius = Radius;
+		return true;
+	}
+	case EColliderShape::Box:
+	{
+		auto& Box = Geom.BoxElems[SelectedShapeIndex];
+		const FVector HalfExtent = Box.HalfExtent * Factor;
+		if (!std::isfinite(HalfExtent.X) || !std::isfinite(HalfExtent.Y) || !std::isfinite(HalfExtent.Z)
+			|| HalfExtent.X <= 0 || HalfExtent.Y <= 0 || HalfExtent.Z <= 0 || HalfExtent == Box.HalfExtent) return false;
+		Box.HalfExtent = HalfExtent;
+		return true;
+	}
+	case EColliderShape::Capsule:
+	{
+		auto& Capsule = Geom.SphylElems[SelectedShapeIndex];
+		const float RadialFactor = Factor.X != 1.0f ? Factor.X : Factor.Y;
+		const float Radius = Capsule.Radius * RadialFactor;
+		float Length = Capsule.Length * Factor.Z;
+		// Z만 잡으면 끝에서 끝까지의 높이를 조절한다. 원통 길이가 0인 캡슐도 늘릴 수 있다.
+		if (Factor.Z != 1.0f && RadialFactor == 1.0f)
+			Length = std::max(0.0f, Length + Capsule.Radius * (Factor.Z - 1.0f) * 2.0f);
+		if (!std::isfinite(Radius) || !std::isfinite(Length) || Radius <= 0.0f
+			|| (Radius == Capsule.Radius && Length == Capsule.Length)) return false;
+		Capsule.Radius = Radius;
+		Capsule.Length = Length;
+		return true;
+	}
+	default: break;
+	}
+	return false;
 }
 
 void FSkeletalMeshEditor::ApplyBoneGizmoTransform()

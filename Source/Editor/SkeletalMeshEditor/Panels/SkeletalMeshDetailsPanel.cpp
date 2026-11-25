@@ -5,6 +5,7 @@
 #include "Physics/BodySetup.h"
 #include "Physics/ConstraintSetup.h"
 #include <cmath>
+#include <cstdio>
 
 namespace
 {
@@ -125,35 +126,86 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 		return;
 	}
 
-	if (const UBodySetup* Setup = Editor.GetSelectedBodySetup())
-		DrawBodyCapsules(*Setup, Editor.GetSelectedBoneIndex());
+	if (UBodySetup* Setup = Editor.GetSelectedBodySetup())
+		DrawBodyShapes(*Setup, Editor.GetSelectedBoneIndex());
 	else
 		ImGui::TextWrapped("Select a body or joint to edit its properties.");
 }
 
-void FSkeletalMeshDetailsPanel::DrawBodyCapsules(const UBodySetup& Setup, int32 BoneIndex)
+void FSkeletalMeshDetailsPanel::DrawBodyShapes(UBodySetup& Setup, int32 BoneIndex)
 {
 	ImGui::SeparatorText(Editor.GetBoneItems()[BoneIndex].Name.c_str());
-	if (Setup.AggGeom.SphylElems.IsEmpty())
+	auto& Geom = Setup.AggGeom;
+	struct FShapeGroup { EColliderShape Type; const char* Label; int32 Count; };
+	const FShapeGroup Groups[] = {
+		{ EColliderShape::Sphere, "Sphere", Geom.SphereElems.Num() },
+		{ EColliderShape::Box, "Box", Geom.BoxElems.Num() },
+		{ EColliderShape::Capsule, "Capsule", Geom.SphylElems.Num() }
+	};
+	if (Geom.SphereElems.IsEmpty() && Geom.BoxElems.IsEmpty() && Geom.SphylElems.IsEmpty())
 	{
-		ImGui::TextDisabled("No capsule on this body.");
+		ImGui::TextDisabled("No editable primitive on this body.");
+		return;
 	}
-
 	ImGui::PushID(BoneIndex);
-	for (int32 Index = 0; Index < Setup.AggGeom.SphylElems.Num(); ++Index)
+	if (Geom.SphereElems.Num() + Geom.BoxElems.Num() + Geom.SphylElems.Num() + Geom.ConvexElems.Num() + Geom.TriMeshElems.Num() > 1)
 	{
-		ImGui::PushID(Index);
-		if (Setup.AggGeom.SphylElems.Num() > 1)
+		char Preview[48] = "Select shape";
+		for (const auto& Group : Groups)
+			if (Group.Type == Editor.GetSelectedShapeType())
+				std::snprintf(Preview, sizeof(Preview), "%s %d", Group.Label, Editor.GetSelectedShapeIndex() + 1);
+		if (ImGui::BeginCombo("Shape", Preview))
 		{
-			ImGui::Text("Capsule %d", Index + 1);
+			for (const auto& Group : Groups)
+			{
+				for (int32 i = 0; i < Group.Count; ++i)
+				{
+					char Label[48];
+					std::snprintf(Label, sizeof(Label), "%s %d", Group.Label, i + 1);
+					if (ImGui::Selectable(Label, Group.Type == Editor.GetSelectedShapeType() && i == Editor.GetSelectedShapeIndex()))
+						Editor.SelectShape(Group.Type, i);
+				}
+			}
+			ImGui::EndCombo();
 		}
-		float Radius = Setup.AggGeom.SphylElems[Index].Radius;
-		if (ImGui::DragFloat("Capsule Radius", &Radius, 0.01f, 0.0f, 0.0f, "%.5g"))
+	}
+	const int32 Index = Editor.GetSelectedShapeIndex();
+	ImGui::PushID(Index);
+	auto DrawDimension = [&](const char* Label, float& Value, bool bAllowZero)
+	{
+		float Edited = Value;
+		if (ImGui::DragFloat(Label, &Edited, 0.01f, 0.0f, 0.0f, "%.5g")
+			&& std::isfinite(Edited) && (bAllowZero ? Edited >= 0.0f : Edited > 0.0f) && Edited != Value)
 		{
-			Editor.SetSelectedCapsuleRadius(Index, Radius);
+			Value = Edited;
+			Editor.MarkPhysicsAssetDirty();
 		}
-		ImGui::PopID();
+	};
+	switch (Editor.GetSelectedShapeType())
+	{
+	case EColliderShape::Capsule:
+		if (!Geom.SphylElems.IsValidIndex(Index)) break;
+		DrawDimension("Capsule Radius", Geom.SphylElems[Index].Radius, false);
+		DrawDimension("Cylinder Length", Geom.SphylElems[Index].Length, true);
+		break;
+	case EColliderShape::Sphere:
+		if (!Geom.SphereElems.IsValidIndex(Index)) break;
+		DrawDimension("Sphere Radius", Geom.SphereElems[Index].Radius, false);
+		break;
+	case EColliderShape::Box:
+	{
+		if (!Geom.BoxElems.IsValidIndex(Index)) break;
+		FVector Size = Geom.BoxElems[Index].HalfExtent * 2.0f;
+		if (ImGui::DragFloat3("Box Size", Size.V, 0.01f) && Size.X > 0 && Size.Y > 0 && Size.Z > 0
+			&& std::isfinite(Size.X) && std::isfinite(Size.Y) && std::isfinite(Size.Z))
+		{
+			Geom.BoxElems[Index].HalfExtent = Size * 0.5f;
+			Editor.MarkPhysicsAssetDirty();
+		}
+		break;
+	}
+	default: break;
 	}
 	ImGui::PopID();
-
+	ImGui::PopID();
 }

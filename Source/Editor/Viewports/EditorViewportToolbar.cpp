@@ -236,7 +236,7 @@ namespace EditorViewportUI
 	}
 
 	void DrawTransformToolButtons(UE::Widget::EWidgetMode Current, const std::function<void(UE::Widget::EWidgetMode)>& SetMode,
-		bool bIncludeSelect)
+		bool bIncludeSelect, unsigned ModeMask)
 	{
 		struct FToolEntry { const char* Id; const char* Label; EEditorIcon Icon; UE::Widget::EWidgetMode Mode; const char* Key; };
 		const FToolEntry Tools[] = {
@@ -250,7 +250,7 @@ namespace EditorViewportUI
 		bool bFirst = true;
 		for (const FToolEntry& Tool : Tools)
 		{
-			if (!bIncludeSelect && Tool.Mode == UE::Widget::WM_None)
+			if (Tool.Mode == UE::Widget::WM_None ? !bIncludeSelect : !(ModeMask & UE::Widget::ModeBit(Tool.Mode)))
 				continue;
 			if (!bFirst) ImGui::SameLine();
 			bFirst = false;
@@ -326,7 +326,7 @@ namespace EditorViewportUI
 	}
 
 	bool DrawAssetViewportToolbar(FEditorViewportClient* Client, const ImVec2& ViewMin, const ImVec2& ViewMax,
-		UE::Widget::EWidgetMode GizmoMode, const std::function<void(UE::Widget::EWidgetMode)>& SetGizmoMode)
+		UE::Widget::EWidgetMode GizmoMode, const std::function<void(UE::Widget::EWidgetMode)>& SetGizmoMode, unsigned ModeMask)
 	{
 		if (!Client)
 			return false;
@@ -344,10 +344,10 @@ namespace EditorViewportUI
 		// 왼쪽: 기즈모 도구 (기즈모가 있는 에디터만)
 		float LeftEndX = ViewMin.x + Pad;
 		ImGui::SetCursorScreenPos(ImVec2(LeftEndX, ButtonY));
-		if (SetGizmoMode)
+		if (SetGizmoMode && ModeMask)
 		{
 			BeginPill();
-			DrawTransformToolButtons(GizmoMode, SetGizmoMode, false);
+			DrawTransformToolButtons(GizmoMode, SetGizmoMode, false, ModeMask);
 			EndPill();
 			LeftEndX = ImGui::GetItemRectMax().x;
 		}

@@ -287,12 +287,12 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     {
         int32 GearToShift = DriveState.TargetGear;
 
-        if (GearToShift < physx::PxVehicleGearsData::eFIRST || GearToShift > physx::PxVehicleGearsData::eFIFTH)
+        if (GearToShift < physx::PxVehicleGearsData::eFIRST || GearToShift > physx::PxVehicleGearsData::eSIXTH)
         {
             GearToShift = DriveState.CurrentGear;
         }
 
-        if (bGearUpPressed && GearToShift < physx::PxVehicleGearsData::eFIFTH)
+        if (bGearUpPressed && GearToShift < physx::PxVehicleGearsData::eSIXTH)
         {
             PhysicsScene->SetVehicleGear(Vehicle, GearToShift + 1, false, false);
         }

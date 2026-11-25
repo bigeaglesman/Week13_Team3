@@ -841,7 +841,7 @@ bool FPhysicsScene::GetVehicleDriveState(PxVehicleWheels* Vehicle, FVehicleDrive
 
 bool FPhysicsScene::SetVehicleGear(PxVehicleWheels* Vehicle, int32 Gear, bool bUseAutoGears, bool bForce)
 {
-	if (!Scene || !Vehicle || !VehicleSceneQueryData || Gear < PxVehicleGearsData::eREVERSE || Gear > PxVehicleGearsData::eFIFTH)
+	if (!Scene || !Vehicle || !VehicleSceneQueryData || Gear < PxVehicleGearsData::eREVERSE || Gear > PxVehicleGearsData::eSIXTH)
 	{
 		return false;
 	}

@@ -115,13 +115,19 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
 
         PxVehicleSuspensionData SuspensionData = WheelsSimData->getSuspensionData(i);
 
+        const PxReal RideFrequency = (i < 2) ? 1.7f : 1.9f;
+        const PxReal DampingRatio = 0.90f;
+        const PxReal NaturalAngularFrequency = 6.28318530718f * RideFrequency;
+
         SuspensionData.mSprungMass = SprungMasses[i];
         SuspensionData.mMaxCompression = 0.25f;
-        SuspensionData.mMaxDroop = 0.12f;
-        SuspensionData.mSpringStrength = (9.81f * SuspensionData.mSprungMass) / SuspensionData.mMaxDroop;
-        SuspensionData.mSpringDamperRate = 2.0f * 1.0f * PxSqrt(SuspensionData.mSpringStrength * SuspensionData.mSprungMass);
+        SuspensionData.mMaxDroop = 9.81f / (NaturalAngularFrequency * NaturalAngularFrequency);
+        SuspensionData.mSpringStrength = SuspensionData.mSprungMass * NaturalAngularFrequency * NaturalAngularFrequency;
+        SuspensionData.mSpringDamperRate = 2.0f * DampingRatio * PxSqrt(SuspensionData.mSpringStrength * SuspensionData.mSprungMass);
 
         WheelsSimData->setSuspensionData(i, SuspensionData);
+
+        HTR_LOG(Info, "[VehicleSuspension] Wheel={} Mass={}kg Frequency={}Hz Damping={} Spring={} Damper={} Droop={}", i, SuspensionData.mSprungMass, RideFrequency, DampingRatio, SuspensionData.mSpringStrength, SuspensionData.mSpringDamperRate, SuspensionData.mMaxDroop);
 
         PxVehicleTireData TireData;
 
@@ -169,32 +175,47 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
     EngineData.mDampingRateZeroThrottleClutchEngaged = 2.0f;
     EngineData.mDampingRateZeroThrottleClutchDisengaged = 0.35f;
 
+    // 엔진 회전 속도에 따른 정규화 토크 커브
+    EngineData.mTorqueCurve.clear();
+    EngineData.mTorqueCurve.addPair(0.00f, 0.55f);
+    EngineData.mTorqueCurve.addPair(0.15f, 0.68f);
+    EngineData.mTorqueCurve.addPair(0.35f, 0.84f);
+    EngineData.mTorqueCurve.addPair(0.55f, 0.95f);
+    EngineData.mTorqueCurve.addPair(0.72f, 1.00f);
+    EngineData.mTorqueCurve.addPair(0.88f, 0.96f);
+    EngineData.mTorqueCurve.addPair(1.00f, 0.88f);
+
+    HTR_LOG(Info, "[VehicleEngine] PeakTorque={}Nm | MaxRPM={} | CurveEntries={}", EngineData.mPeakTorque, EngineData.mMaxOmega * 60.0f / (2.0f * 3.1415926535f), EngineData.mTorqueCurve.getNbDataPairs());
+
     PxVehicleGearsData GearsData;
     GearsData.mFinalRatio = 3.7f;
-    GearsData.mNbRatios = 7;
+    GearsData.mNbRatios = 8;
     GearsData.mSwitchTime = 0.2f;
     GearsData.setGearRatio(PxVehicleGearsData::eREVERSE, -3.2f);
     GearsData.setGearRatio(PxVehicleGearsData::eNEUTRAL, 0.0f);
     GearsData.setGearRatio(PxVehicleGearsData::eFIRST, 3.6f);
-    GearsData.setGearRatio(PxVehicleGearsData::eSECOND, 2.2f);
-    GearsData.setGearRatio(PxVehicleGearsData::eTHIRD, 1.5f);
-    GearsData.setGearRatio(PxVehicleGearsData::eFOURTH, 1.15f);
-    GearsData.setGearRatio(PxVehicleGearsData::eFIFTH, 0.9f);
+    GearsData.setGearRatio(PxVehicleGearsData::eSECOND, 2.65f);
+    GearsData.setGearRatio(PxVehicleGearsData::eTHIRD, 1.95f);
+    GearsData.setGearRatio(PxVehicleGearsData::eFOURTH, 1.43f);
+    GearsData.setGearRatio(PxVehicleGearsData::eFIFTH, 1.05f);
+    GearsData.setGearRatio(PxVehicleGearsData::eSIXTH, 0.82f);
 
     PxVehicleClutchData ClutchData;
     ClutchData.mStrength = 10.0f;
     ClutchData.mAccuracyMode = PxVehicleClutchAccuracyMode::eBEST_POSSIBLE;
 
     PxVehicleAutoBoxData AutoBoxData;
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIRST, 0.92f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eSECOND, 0.92f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eTHIRD, 0.92f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eFOURTH, 0.92f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eSECOND, 0.60f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eTHIRD, 0.60f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eFOURTH, 0.60f); 
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eFIFTH, 0.60f);
-    AutoBoxData.setLatency(0.2f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIRST, 0.94f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eSECOND, 0.94f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eTHIRD, 0.94f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFOURTH, 0.94f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIFTH, 0.94f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eSECOND, 0.58f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eTHIRD, 0.58f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFOURTH, 0.58f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFIFTH, 0.58f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eSIXTH, 0.58f);
+    AutoBoxData.setLatency(0.35f);
 
     DriveData.setEngineData(EngineData);
     DriveData.setGearsData(GearsData);

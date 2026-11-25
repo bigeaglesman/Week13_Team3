@@ -142,13 +142,13 @@ void FSkeletalMeshDetailsPanel::DrawBodyShapes(UBodySetup& Setup, int32 BoneInde
 		{ EColliderShape::Box, "Box", Geom.BoxElems.Num() },
 		{ EColliderShape::Capsule, "Capsule", Geom.SphylElems.Num() }
 	};
-	if (Geom.SphereElems.IsEmpty() && Geom.BoxElems.IsEmpty() && Geom.SphylElems.IsEmpty())
+	const int32 PrimitiveCount = Geom.SphereElems.Num() + Geom.BoxElems.Num() + Geom.SphylElems.Num();
+	ImGui::PushID(BoneIndex);
+	if (PrimitiveCount == 0)
 	{
 		ImGui::TextDisabled("No editable primitive on this body.");
-		return;
 	}
-	ImGui::PushID(BoneIndex);
-	if (Geom.SphereElems.Num() + Geom.BoxElems.Num() + Geom.SphylElems.Num() + Geom.ConvexElems.Num() + Geom.TriMeshElems.Num() > 1)
+	else if (PrimitiveCount + Geom.ConvexElems.Num() + Geom.TriMeshElems.Num() > 1)
 	{
 		char Preview[48] = "Select shape";
 		for (const auto& Group : Groups)
@@ -207,5 +207,26 @@ void FSkeletalMeshDetailsPanel::DrawBodyShapes(UBodySetup& Setup, int32 BoneInde
 	default: break;
 	}
 	ImGui::PopID();
+
+	if (ImGui::Button("Add Shape"))
+		ImGui::OpenPopup("AddShapeMenu");
+	if (ImGui::BeginPopup("AddShapeMenu"))
+	{
+		for (const auto& Group : Groups)
+		{
+			if (ImGui::MenuItem(Group.Label))
+				Editor.AddShapeToSelectedBody(Group.Type);
+		}
+		ImGui::EndPopup();
+	}
+	ImGui::SameLine();
+	const bool bCanRemove = Editor.CanRemoveSelectedShape();
+	ImGui::BeginDisabled(!bCanRemove);
+	if (ImGui::Button("Remove Shape"))
+		Editor.RemoveSelectedShape();
+	ImGui::EndDisabled();
+	if (!bCanRemove && !Editor.IsPhysicsPreviewRunning() && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+		ImGui::SetTooltip("%s", Editor.GetSelectedShapeType() == EColliderShape::None
+			? "Select a shape to remove." : "Keep at least one saved collision shape on this body.");
 	ImGui::PopID();
 }

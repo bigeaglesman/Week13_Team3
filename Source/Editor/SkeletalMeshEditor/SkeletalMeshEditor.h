@@ -42,6 +42,9 @@ public:
 	FConstraintSetup* GetSelectedConstraint() const;
 	UBodySetup* GetSelectedBodySetup() const;
 	void SelectShape(EColliderShape Type, int32 Index);
+	void AddShapeToSelectedBody(EColliderShape Type);
+	bool CanRemoveSelectedShape() const;
+	void RemoveSelectedShape();
 	EColliderShape GetSelectedShapeType() const { return SelectedShapeType; }
 	int32 GetSelectedShapeIndex() const { return SelectedShapeIndex; }
 	unsigned GetGizmoModeMask() const;

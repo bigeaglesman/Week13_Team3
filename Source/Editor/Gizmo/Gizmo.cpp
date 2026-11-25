@@ -103,16 +103,16 @@ int FGizmo::PickLinearAxis(const FVector2& MousePos, const FMatrix& ViewProj, in
 
 	FVector2 Center = WorldToScreen(Origin, ViewProj, ScreenW, ScreenH);
 	FVector2 d = MousePos - Center;
-	if (sqrtf(d.X * d.X + d.Y * d.Y) < 15.0f)
+	if (sqrtf(d.X * d.X + d.Y * d.Y) < FMath::Max(5.0f, 15.0f * DisplayScale))
 		return AXIS_SCREEN;
 
 	int Best = -1;
-	float BestDist = HitPixels;
+	float BestDist = FMath::Max(4.0f, HitPixels * DisplayScale);
 
 	for (int i = 0; i < 3; ++i)
 	{
 		FVector2 Start = WorldToScreen(Origin, ViewProj, ScreenW, ScreenH);
-		FVector2 End = WorldToScreen(Origin + GetAxisDirection(i) * AxisLength, ViewProj, ScreenW, ScreenH);
+		FVector2 End = WorldToScreen(Origin + GetAxisDirection(i) * (AxisLength * DisplayScale), ViewProj, ScreenW, ScreenH);
 
 		float Dist = DistanceToSegment(MousePos, Start, End);
 		if (Dist < BestDist)
@@ -129,9 +129,10 @@ int FGizmo::PickRotationAxis(const FVector2& MousePos, const FMatrix& ViewProj, 
 {
 	const FVector Origin = GetRenderLocation();
 	const int Segments = 32;
+	const float Radius = RingRadius * DisplayScale;
 
 	int Best = -1;
-	float BestDist = HitPixels;
+	float BestDist = FMath::Max(4.0f, HitPixels * DisplayScale);
 
 	for (int Axis = 0; Axis < 3; ++Axis)
 	{
@@ -145,8 +146,8 @@ int FGizmo::PickRotationAxis(const FVector2& MousePos, const FMatrix& ViewProj, 
 		{
 			float theta = (float)s / Segments * 2.0f * PI;
 			FVector worldPos = Origin
-				+ u * (RingRadius * cosf(theta))
-				+ v * (RingRadius * sinf(theta));
+				+ u * (Radius * cosf(theta))
+				+ v * (Radius * sinf(theta));
 
 			FVector2 screenPos = WorldToScreen(worldPos, ViewProj, ScreenW, ScreenH);
 
@@ -170,7 +171,7 @@ int FGizmo::PickRotationAxis(const FVector2& MousePos, const FMatrix& ViewProj, 
 	FVector u = FVector(0, 0, 1).Cross(Forward).Normalized();
 	FVector v = Forward.Cross(u);
 
-	const float ScreenRingRadius = RingRadius * 1.3f;  
+	const float ScreenRingRadius = Radius * 1.3f;
 
 	FVector2 prev;
 	bool bHasPrev = false;

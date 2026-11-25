@@ -30,6 +30,8 @@ public:
 		bUseActorBounds = InbUseActorBounds; 
 	}
 	USceneComponent* GetTarget() const { return Target; }
+	void SetDisplayScale(float Scale) { DisplayScale = Scale; }
+	float GetDisplayScale() const { return DisplayScale; }
 
 	// 지금의 편집 모드(이동, 회전, 크기)와 좌표계. 기즈모가 갖지 않고 모드 툴에서 읽는다. 바꾸려면 모드 툴에 설정한다.
 	// UE에서는 FWidget이 뷰포트 클라이언트의 GetWidgetMode, GetWidgetCoordSystemSpace로 읽고,
@@ -73,6 +75,7 @@ private:
 	FTransform Transform = FTransform();
 	USceneComponent* Target = nullptr;
 	bool bUseActorBounds = false;
+	float DisplayScale = 1.0f;
 
 	int HoveredAxis = -1;
 	int DraggingAxis = -1;

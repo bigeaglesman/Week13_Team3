@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Buffer.h"
+#include "Containers/Array.h"
 #include "StaticMeshData.h"
 #include "PipelineState.h"
 
@@ -18,9 +19,11 @@ public:
 	void BeginFrame();
 	uint32 GetVertexCount() const { return VertexCount; }
 	const FLineBatchVertex* GetVertices() const { return VertexBufferBase; }
+	const TArray<FLineBatchVertex>& GetFillVertices() const { return FillVertices; }
 
 
 	void AddLine(const FVector& A, const FVector& B, const FVector4& Color);
+	void AddFilledTriangle(const FVector& A, const FVector& B, const FVector& C, const FVector4& Color);
 	void AddBox(FBox BoundingBox, FVector4 Color);
 
 	// 로컬 AABB의 모서리를 각각 월드로 옮겨 그린다. 회전이 살아있는 OBB가 된다.
@@ -50,5 +53,6 @@ private:
 	uint32 VertexCount;
 
 	uint32 MaxVertices = 0;
+	TArray<FLineBatchVertex> FillVertices;
 	TUniquePtr<FVertexBuffer> VertexBuffer;
 };

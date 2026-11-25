@@ -52,6 +52,7 @@ void FLineBatcher::BeginFrame()
 {
 	VertexBufferPtr = VertexBufferBase;
 	VertexCount = 0;
+	FillVertices.Reset();
 }
 
 void FLineBatcher::AddLine(const FVector& A, const FVector& B, const FVector4& Color)
@@ -63,6 +64,14 @@ void FLineBatcher::AddLine(const FVector& A, const FVector& B, const FVector4& C
 	*VertexBufferPtr++ = { B, FVector2(), Color };
 
 	VertexCount += 2;
+}
+
+void FLineBatcher::AddFilledTriangle(const FVector& A, const FVector& B, const FVector& C, const FVector4& Color)
+{
+	if (static_cast<uint32>(FillVertices.Num()) + 3 > MaxVertices) return;
+	FillVertices.Add({ A, FVector2(), Color });
+	FillVertices.Add({ B, FVector2(), Color });
+	FillVertices.Add({ C, FVector2(), Color });
 }
 
 namespace
@@ -187,15 +196,33 @@ void FLineBatcher::Flush()
 
 void FLineBatcher::OnRender(const FMatrix& ViewProjection)
 {
-	if (VertexCount == 0)
+	if (VertexCount == 0 && FillVertices.IsEmpty())
 	{
 		return;
 	}
 
 	FMatrix VP = ViewProjection;
-	RenderCommand::UpdateBufferData(VertexBuffer.get(), VertexBufferBase, sizeof(FLineBatchVertex) * VertexCount);
 	RenderCommand::UpdateBufferData(CB.get(), &VP, sizeof(FMatrix));
 
-	Flush();
+	// 면은 깊이를 쓰지 않고 먼저 그린다. 선 버텍스와 분리해 와이어 피킹에도 포함되지 않는다.
+	if (!FillVertices.IsEmpty())
+	{
+		FPipelineState FillState = PipelineState;
+		FillState.Topology = EPrimitiveTopology::TriangleList;
+		FillState.RasterizerState = ERasterizerState::SolidNone;
+		FillState.BlendState = EBlendState::AlphaBlend;
+		if (FillState.DepthStencilState == EDepthStencilState::Default)
+			FillState.DepthStencilState = EDepthStencilState::ReadOnly;
+		RenderCommand::BindPipelineState(FillState);
+		RenderCommand::UpdateBufferData(VertexBuffer.get(), FillVertices.GetData(), sizeof(FLineBatchVertex) * FillVertices.Num());
+		RenderCommand::BindVertexBuffer(VertexBuffer.get());
+		RenderCommand::BindConstantBuffer(0, CB.get(), EShaderBindFlagBits::Vertex);
+		RenderCommand::Draw(FillVertices.Num(), 0);
+	}
+	if (VertexCount > 0)
+	{
+		RenderCommand::UpdateBufferData(VertexBuffer.get(), VertexBufferBase, sizeof(FLineBatchVertex) * VertexCount);
+		Flush();
+	}
 }
 

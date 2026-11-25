@@ -42,11 +42,13 @@ namespace
 			return;
 		const float HalfAngle = FMath::DegreesToRadians(ExtentDeg);
 		constexpr int32 Segments = 32;
+		const FVector4 FillColor(Color.X, Color.Y, Color.Z, 0.26f);
 		FVector Previous = Pivot;
 		for (int32 i = 0; i <= Segments; ++i)
 		{
 			const float Angle = HalfAngle * (2.0f * i / Segments - 1.0f);
 			const FVector Point = Pivot + (Zero * std::cos(Angle) + Tangent * std::sin(Angle)) * Radius;
+			if (i > 0) Lines.AddFilledTriangle(Pivot, Previous, Point, FillColor);
 			Lines.AddLine(Previous, Point, Color);
 			Previous = Point;
 		}
@@ -59,33 +61,37 @@ namespace
 			Body.Location + Body.Rotation.RotateVector(Frame.Location * Scale));
 	}
 
-	void DrawConstraintFrames(FLineBatcher& Lines, const FConstraintSetup& Joint, const FTransform& ParentWorld,
-		const FTransform& ChildWorld, float Radius, bool bHighlighted)
+	void DrawConstraintLimits(FLineBatcher& Lines, const FConstraintSetup& Joint, const FTransform& ParentWorld,
+		const FQuat& ViewRotation, float Radius, bool bHighlighted)
 	{
 		const FVector& ParentPivot = ParentWorld.Location;
-		const FVector& ChildPivot = ChildWorld.Location;
 		const FQuat& Axes = ParentWorld.Rotation;
 		const FVector X = Axes.GetForwardVector(), Y = Axes.GetRightVector(), Z = Axes.GetUpVector();
-		const FVector4 SwingColor = bHighlighted ? FVector4(0.2f, 1.0f, 0.35f, 1) : FVector4(0.26f, 0.64f, 0.33f, 1);
-		const FVector4 TwistColor = bHighlighted ? FVector4(1.0f, 0.35f, 0.17f, 1) : FVector4(0.73f, 0.34f, 0.22f, 1);
-		const FVector4 DirectionColor(1.0f, 0.85f, 0.12f, 1);
-		const FQuat& ChildAxes = ChildWorld.Rotation;
-		Lines.AddLine(ChildPivot, ChildPivot + ChildAxes.GetForwardVector() * Radius, DirectionColor);
-		Lines.AddLine(ParentPivot, ParentPivot + Y * (Radius * 0.28f), TwistColor);
-		Lines.AddLine(ParentPivot, ParentPivot + Z * (Radius * 0.28f), SwingColor);
-		if ((ChildPivot - ParentPivot).SizeSquared() > Radius * Radius * 0.0001f)
-			Lines.AddLine(ParentPivot, ChildPivot, DirectionColor);
-		if (!bHighlighted)
-			return;
-
+		const FVector4 SwingColor = bHighlighted ? FVector4(1.0f, 0.35f, 0.17f, 1) : FVector4(0.73f, 0.34f, 0.22f, 1);
+		const FVector4 TwistColor = bHighlighted ? FVector4(0.2f, 1.0f, 0.35f, 1) : FVector4(0.26f, 0.64f, 0.33f, 1);
 		const float SwingY = Joint.AngularExtentDeg(Joint.Swing1Motion, Joint.Swing1LimitDeg);
 		const float SwingZ = Joint.AngularExtentDeg(Joint.Swing2Motion, Joint.Swing2LimitDeg);
-		if (SwingY > 0 && SwingY < 180 && SwingZ > 0 && SwingZ < 180)
+		const float Twist = Joint.AngularExtentDeg(Joint.TwistMotion, Joint.TwistLimitDeg);
+		auto HasLimit = [](float Angle) { return Angle > 0 && Angle < 180; };
+		if (!HasLimit(SwingY) && !HasLimit(SwingZ) && !HasLimit(Twist))
+		{
+			// 제한면이 없는 관절도 어느 시점에서나 클릭할 수 있게 피벗에 작은 마름모를 둔다.
+			const FVector Right = ViewRotation.GetRightVector() * (Radius * 0.2f);
+			const FVector Up = ViewRotation.GetUpVector() * (Radius * 0.2f);
+			const FVector Points[] = { ParentPivot + Up, ParentPivot + Right, ParentPivot - Up, ParentPivot - Right };
+			const FVector4 Color(0.8f, 0.85f, 0.9f, 0.85f);
+			Lines.AddFilledTriangle(Points[0], Points[1], Points[2], Color);
+			Lines.AddFilledTriangle(Points[0], Points[2], Points[3], Color);
+			for (int32 i = 0; i < 4; ++i) Lines.AddLine(Points[i], Points[(i + 1) % 4], Color);
+			return;
+		}
+		if (HasLimit(SwingY) && HasLimit(SwingZ))
 		{
 			// D6의 타원은 tan(회전각 / 4) 공간에 있다. 경계 회전으로 로컬 X축을 돌린다.
 			const float TanY = std::tan(FMath::DegreesToRadians(SwingY) * 0.25f);
 			const float TanZ = std::tan(FMath::DegreesToRadians(SwingZ) * 0.25f);
 			constexpr int32 Segments = 32;
+			const FVector4 FillColor(SwingColor.X, SwingColor.Y, SwingColor.Z, 0.18f);
 			FVector Previous;
 			for (int32 i = 0; i <= Segments; ++i)
 			{
@@ -95,8 +101,12 @@ namespace
 				const float Inv = 1.0f / (1.0f + Sq);
 				const FQuat Swing(0, 2.0f * U * Inv, 2.0f * V * Inv, (1.0f - Sq) * Inv);
 				const FVector Point = ParentPivot + Axes.RotateVector(Swing.GetForwardVector()) * Radius;
-				if (i > 0) Lines.AddLine(Previous, Point, SwingColor);
-				if (i < Segments && i % (Segments / 4) == 0) Lines.AddLine(ParentPivot, Point, SwingColor);
+				if (i > 0)
+				{
+					Lines.AddFilledTriangle(ParentPivot, Previous, Point, FillColor);
+					Lines.AddLine(Previous, Point, SwingColor);
+				}
+				if (i == 0 || i == Segments / 2) Lines.AddLine(ParentPivot, Point, SwingColor);
 				Previous = Point;
 			}
 		}
@@ -105,20 +115,8 @@ namespace
 			DrawLimitArc(Lines, ParentPivot, X, Z, Radius, SwingY, SwingColor);
 			DrawLimitArc(Lines, ParentPivot, X, Y, Radius, SwingZ, SwingColor);
 		}
-		const float Twist = Joint.AngularExtentDeg(Joint.TwistMotion, Joint.TwistLimitDeg);
 		const float TwistRadius = Radius * 0.65f;
 		DrawLimitArc(Lines, ParentPivot, Y, Z, TwistRadius, Twist, TwistColor);
-		if (Twist > 0 && Twist < 180)
-		{
-			// Twist만 변하면 자식 X축은 그대로다. 부모 YZ 평면에 현재 비틀림도 표시한다.
-			const FQuat Relative = Axes.UnitInverse() * ChildAxes;
-			if (Relative.X * Relative.X + Relative.W * Relative.W > 1e-8f)
-			{
-				const FQuat TwistOnly = FQuat(Relative.X, 0, 0, Relative.W).Normalized();
-				const FVector Direction = Axes.RotateVector(TwistOnly.GetRightVector());
-				Lines.AddLine(ParentPivot, ParentPivot + Direction * TwistRadius, DirectionColor);
-			}
-		}
 	}
 }
 
@@ -362,6 +360,76 @@ void FSkeletalMeshEditor::SelectShape(EColliderShape Type, int32 Index)
 	SyncBoneGizmo();
 }
 
+void FSkeletalMeshEditor::AddShapeToSelectedBody(EColliderShape Type)
+{
+	UBodySetup* Setup = GetSelectedBodySetup();
+	if (!bPhysicsAssetMode || IsPhysicsPreviewRunning() || !Setup) return;
+	FKAggregateGeom& Geom = Setup->AggGeom;
+	// 다른 단위로 임포트한 메시에서도 새 도형이 보이도록 기존 바디의 두께를 쓴다.
+	float Radius = FKSphereElem{}.Radius;
+	if (!Geom.SphylElems.IsEmpty()) Radius = Geom.SphylElems[0].Radius;
+	else if (!Geom.SphereElems.IsEmpty()) Radius = Geom.SphereElems[0].Radius;
+	else if (!Geom.BoxElems.IsEmpty())
+	{
+		const FVector& Extent = Geom.BoxElems[0].HalfExtent;
+		Radius = std::min({ Extent.X, Extent.Y, Extent.Z });
+	}
+	int32 Index;
+	switch (Type)
+	{
+	case EColliderShape::Sphere:
+		Index = Geom.SphereElems.Emplace();
+		Geom.SphereElems[Index].Radius = Radius;
+		break;
+	case EColliderShape::Box:
+		Index = Geom.BoxElems.Emplace();
+		Geom.BoxElems[Index].HalfExtent = FVector(Radius);
+		break;
+	case EColliderShape::Capsule:
+		Index = Geom.SphylElems.Emplace();
+		Geom.SphylElems[Index].Radius = Radius;
+		Geom.SphylElems[Index].Length = 2.0f * Radius;
+		break;
+	default: return;
+	}
+	SelectShape(Type, Index);
+	MarkPhysicsAssetDirty();
+}
+
+bool FSkeletalMeshEditor::CanRemoveSelectedShape() const
+{
+	UBodySetup* Setup = GetSelectedBodySetup();
+	if (!bPhysicsAssetMode || IsPhysicsPreviewRunning() || !Setup) return false;
+	auto& Geom = Setup->AggGeom;
+	// 삼각형 메시는 .physicsasset에 저장되지 않으므로 남는 도형으로 세지 않는다.
+	const int32 SavedCount = Geom.SphylElems.Num() + Geom.SphereElems.Num() + Geom.BoxElems.Num() + Geom.ConvexElems.Num();
+	return SavedCount > 1 && FindShapePose(Geom, SelectedShapeType, SelectedShapeIndex).Center != nullptr;
+}
+
+void FSkeletalMeshEditor::RemoveSelectedShape()
+{
+	if (!CanRemoveSelectedShape()) return;
+	auto& Geom = GetSelectedBodySetup()->AggGeom;
+	auto RemoveFrom = [&](auto& Elements)
+	{
+		Elements.RemoveAt(SelectedShapeIndex);
+		if (!Elements.IsEmpty())
+			SelectShape(SelectedShapeType, std::min(SelectedShapeIndex, Elements.Num() - 1));
+		else if (!Geom.SphylElems.IsEmpty()) SelectShape(EColliderShape::Capsule, 0);
+		else if (!Geom.SphereElems.IsEmpty()) SelectShape(EColliderShape::Sphere, 0);
+		else if (!Geom.BoxElems.IsEmpty()) SelectShape(EColliderShape::Box, 0);
+		else SelectShape(EColliderShape::None, -1);
+	};
+	switch (SelectedShapeType)
+	{
+	case EColliderShape::Sphere:  RemoveFrom(Geom.SphereElems); break;
+	case EColliderShape::Box:     RemoveFrom(Geom.BoxElems); break;
+	case EColliderShape::Capsule: RemoveFrom(Geom.SphylElems); break;
+	default: return;
+	}
+	MarkPhysicsAssetDirty();
+}
+
 unsigned FSkeletalMeshEditor::GetGizmoModeMask() const
 {
 	using namespace UE::Widget;
@@ -430,8 +498,17 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 		int32 HitShapeIndex = -1;
 		float BodyDepth = FLT_MAX, JointDepth = FLT_MAX;
 		FRay Ray;
+		FMatrix PickViewProjection;
 		if (bPick)
+		{
 			Ray = ViewportClient->DeprojectScreenToWorld(PhysicsPickPosition);
+			PickViewProjection = ViewportClient->GetViewProjectionMatrix();
+		}
+		auto HitDepth = [&](float Distance)
+		{
+			const FVector4 Clip = FVector4(Ray.PointAt(Distance), 1) * PickViewProjection;
+			return Clip.W > 0.0001f && Clip.Z >= 0 && Clip.Z <= Clip.W ? Clip.Z / Clip.W : FLT_MAX;
+		};
 		TMap<FString, FTransform> BodyPoses;
 		FKAggregateGeom SingleShape;
 		for (const UBodySetup* Setup : Asset->BodySetups)
@@ -475,11 +552,7 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 				float Depth = PickWireDepth(LineBatcher, First, PhysicsPickPosition);
 				float Distance;
 				if (Shape.RaycastPrimitives(LocalRay, Distance))
-				{
-					const FVector4 Clip = FVector4(Ray.PointAt(Distance), 1) * ViewportClient->GetViewProjectionMatrix();
-					if (Clip.W > 0.0001f && Clip.Z >= 0 && Clip.Z <= Clip.W)
-						Depth = std::min(Depth, Clip.Z / Clip.W);
-				}
+					Depth = std::min(Depth, HitDepth(Distance));
 				if (Depth < BodyDepth)
 				{
 					BodyDepth = Depth;
@@ -507,7 +580,8 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 		}
 		if (bShowConstraints)
 		{
-			const float Radius = BoneSphereSize * 7.0f;
+			const float Radius = BoneSphereSize * 14.0f;
+			const FQuat ViewRotation = ViewportClient->GetViewRotation().Quaternion();
 			for (int32 i = 0; i < Asset->ConstraintSetups.Num(); ++i)
 			{
 				const FConstraintSetup& Joint = Asset->ConstraintSetups[i];
@@ -517,14 +591,22 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 				{
 					const bool bHighlighted = i == SelectedConstraintIndex;
 					const uint32 First = LineBatcher.GetVertexCount();
+					const auto& Fill = LineBatcher.GetFillVertices();
+					const int32 FirstFill = Fill.Num();
 					FTransform ParentFrame = Joint.ParentFrame, ChildFrame = Joint.ChildFrame;
 					if (bHighlighted && BoneGizmo.IsUsing())
 						ApplyConstraintGizmoDrag(Joint, ParentFrame, ChildFrame);
-					DrawConstraintFrames(LineBatcher, Joint, WorldJointFrame(*Parent, ParentFrame, Scale),
-						WorldJointFrame(*Child, ChildFrame, Scale), bHighlighted ? Radius * 1.5f : Radius, bHighlighted);
+					DrawConstraintLimits(LineBatcher, Joint, WorldJointFrame(*Parent, ParentFrame, Scale),
+						ViewRotation, bHighlighted ? Radius * 2.0f : Radius, bHighlighted);
 					if (bPick)
 					{
-						const float Depth = PickWireDepth(LineBatcher, First, PhysicsPickPosition);
+						float Depth = PickWireDepth(LineBatcher, First, PhysicsPickPosition);
+						for (int32 v = FirstFill; v + 2 < Fill.Num(); v += 3)
+						{
+							float Distance;
+							if (RayIntersectsTriangle(Ray, Fill[v].Position, Fill[v + 1].Position, Fill[v + 2].Position, Distance))
+								Depth = std::min(Depth, HitDepth(Distance));
+						}
 						if (Depth < JointDepth)
 						{
 							JointDepth = Depth;
@@ -579,7 +661,9 @@ void FSkeletalMeshEditor::SyncBoneGizmo()
 		return;
 	}
 
-	if (const FConstraintSetup* Joint = bPhysicsAssetMode ? GetSelectedConstraint() : nullptr)
+	const FConstraintSetup* Joint = bPhysicsAssetMode ? GetSelectedConstraint() : nullptr;
+	BoneGizmo.SetDisplayScale(Joint ? 0.55f : 1.0f);
+	if (Joint)
 	{
 		int32 Parent, Child;
 		if (!ResolveConstraintBones(*Joint, Parent, Child))

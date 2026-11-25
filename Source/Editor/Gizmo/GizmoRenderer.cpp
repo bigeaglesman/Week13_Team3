@@ -67,6 +67,8 @@ void FGizmoRenderer::OnRender(
 	const int HoveredAxis = Gizmo.GetHoveredAxis();
 
 	const FVector GizmoLocation = Gizmo.GetRenderLocationForView(CameraLocation, bCameraOrthographic);
+	FMatrix MeshScale = FMatrix::Identity;
+	MeshScale.M[0][0] = MeshScale.M[1][1] = MeshScale.M[2][2] = Gizmo.GetDisplayScale();
 	// 축 3개
 	RenderCommand::BindMesh(AxisMesh);
 	Transform.Location = GizmoLocation;
@@ -90,7 +92,7 @@ void FGizmoRenderer::OnRender(
 		}
 
 		FGizmoData Data{};
-		Data.World = World;
+		Data.World = MeshScale * World;
 		Data.ViewProj = ViewProj;
 		Data.Color = (i == HoveredAxis)
 			? FVector4(1.0f, 1.0f, 0.0f, 1.0f)     // hover 시 노랑
@@ -105,7 +107,7 @@ void FGizmoRenderer::OnRender(
 		Transform.Rotation = FQuat::Identity();
 
 		FGizmoData SphereData{};
-		SphereData.World = Transform.GetLocalMatrix();
+		SphereData.World = MeshScale * Transform.GetLocalMatrix();
 		SphereData.ViewProj = ViewProj;
 		SphereData.Color = (6 == HoveredAxis)
 			? FVector4(1.0f, 1.0f, 0.0f, 1.0f)     // hover 시 노랑
@@ -130,7 +132,7 @@ void FGizmoRenderer::OnRender(
 		FMatrix Trans = FMatrix::MakeTranslation(GizmoLocation);
 
 		FGizmoData Data{};
-		Data.World = (Scale * Rot * Trans);
+		Data.World = MeshScale * Scale * Rot * Trans;
 		Data.ViewProj = ViewProj;
 		Data.Color = (6 == HoveredAxis)
 			? FVector4(1.0f, 1.0f, 0.0f, 1.0f)     // hover 시 노랑

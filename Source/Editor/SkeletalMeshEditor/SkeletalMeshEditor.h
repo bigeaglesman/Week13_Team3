@@ -6,6 +6,8 @@
 #include "Editor/Viewports/EditorViewportClient.h"
 
 
+class UBodySetup;
+
 class FSkeletalMeshEditor : public FSkeletalPreviewEditor
 {
 public:
@@ -18,6 +20,15 @@ public:
 
 	const char* GetEditorTypeName() const override { return "SkeletalMesh"; }
 	const FGizmo* GetPreviewGizmo() const override { return BoneGizmo.GetTarget() ? &BoneGizmo : nullptr; }
+	void OnRenderLine(FLineBatcher& LineBatcher) override;
+
+	bool IsPhysicsAssetMode() const { return bPhysicsAssetMode; }
+	void SetPhysicsAssetMode(bool bEnabled);
+	UBodySetup* GetSelectedBodySetup() const;
+	void SetSelectedCapsuleRadius(int32 CapsuleIndex, float Radius);
+	void SavePhysicsAsset();
+	const FString& GetPhysicsAssetStatus() const { return PhysicsAssetStatus; }
+	bool IsDirty() const override;
 
 	// 선택한 본의 프리뷰 포즈를 부모 기준 로컬 변환으로 조회·수정합니다.
 	bool GetSelectedBoneLocalTransform(FTransform& OutTransform) const;
@@ -43,6 +54,9 @@ protected:
 	void CancelViewportInteraction() override { BoneGizmo.EndDrag(); }
 
 private:
+	bool bPhysicsAssetMode = false;
+	FString PhysicsAssetStatus;
+
 	void SyncBoneGizmo();
 	bool UpdateBoneGizmo();
 	void ApplyBoneGizmoTransform();

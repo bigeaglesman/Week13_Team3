@@ -10,4 +10,7 @@ public:
 
 protected:
 	void DrawContent() override;
+
+private:
+	void DrawPhysicsAssetDetails();
 };

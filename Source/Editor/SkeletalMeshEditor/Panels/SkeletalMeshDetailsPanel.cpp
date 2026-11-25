@@ -2,6 +2,8 @@
 #include "SkeletalMeshDetailsPanel.h"
 #include "Editor/SkeletalMeshEditor/SkeletalMeshEditor.h"
 #include "Math/Transform.h"
+#include "Physics/BodySetup.h"
+#include "Render/SkeletalMesh.h"
 
 FSkeletalMeshDetailsPanel::FSkeletalMeshDetailsPanel(FSkeletalMeshEditor& InEditor)
 	: FSkeletalMeshEditorPanel(InEditor, "Details")
@@ -10,6 +12,12 @@ FSkeletalMeshDetailsPanel::FSkeletalMeshDetailsPanel(FSkeletalMeshEditor& InEdit
 
 void FSkeletalMeshDetailsPanel::DrawContent()
 {
+	if (Editor.IsPhysicsAssetMode())
+	{
+		DrawPhysicsAssetDetails();
+		return;
+	}
+
 	const int32 BoneIndex = Editor.GetSelectedBoneIndex();
 
 	if (ImGui::Button("Reset Transform"))
@@ -47,4 +55,51 @@ void FSkeletalMeshDetailsPanel::DrawContent()
 	{
 		Editor.SetSelectedBoneLocalTransform(Transform);
 	}
+}
+
+void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
+{
+	ImGui::SeparatorText("Physics Asset");
+	ImGui::BeginDisabled(!Editor.GetMesh()->GetPhysicsAsset());
+	if (ImGui::Button("Save Physics Asset"))
+	{
+		Editor.SavePhysicsAsset();
+	}
+	ImGui::EndDisabled();
+	if (!Editor.GetPhysicsAssetStatus().empty())
+	{
+		ImGui::TextWrapped("%s", Editor.GetPhysicsAssetStatus().c_str());
+	}
+
+	const int32 BoneIndex = Editor.GetSelectedBoneIndex();
+	const UBodySetup* Setup = Editor.GetSelectedBodySetup();
+	if (!Setup || Setup->AggGeom.IsEmpty())
+	{
+		ImGui::TextDisabled("Select a body in Collider Hierarchy.");
+		return;
+	}
+
+	ImGui::SeparatorText(Editor.GetBoneItems()[BoneIndex].Name.c_str());
+	if (Setup->AggGeom.SphylElems.IsEmpty())
+	{
+		ImGui::TextDisabled("No capsule on this body.");
+		return;
+	}
+
+	ImGui::PushID(BoneIndex);
+	for (int32 Index = 0; Index < Setup->AggGeom.SphylElems.Num(); ++Index)
+	{
+		ImGui::PushID(Index);
+		if (Setup->AggGeom.SphylElems.Num() > 1)
+		{
+			ImGui::Text("Capsule %d", Index + 1);
+		}
+		float Radius = Setup->AggGeom.SphylElems[Index].Radius;
+		if (ImGui::DragFloat("Capsule Radius", &Radius, 0.01f, 0.0f, 0.0f, "%.5g"))
+		{
+			Editor.SetSelectedCapsuleRadius(Index, Radius);
+		}
+		ImGui::PopID();
+	}
+	ImGui::PopID();
 }

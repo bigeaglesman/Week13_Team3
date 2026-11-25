@@ -2,7 +2,11 @@
 #include "Editor/SkeletalMeshEditor/SkeletalMeshEditor.h"
 #include "SkeletalMeshEditorTab.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Physics/BodySetup.h"
+#include "Physics/PhysicsAsset.h"
+#include "Physics/PhysicsAssetFile.h"
 #include "Render/SkeletalMesh.h"
+#include <cmath>
 
 bool FSkeletalMeshEditor::InitializeResources()
 {
@@ -23,6 +27,10 @@ void FSkeletalMeshEditor::ShutdownResources()
 
 void FSkeletalMeshEditor::TickAfterWorld(float DeltaTime)
 {
+	if (bPhysicsAssetMode)
+	{
+		return;
+	}
 	// 기즈모가 입력을 쓰지 않았을 때만 본을 피킹하고, 마지막에 기즈모를 선택한 본 위치로 맞춘다
 	if (!UpdateBoneGizmo())
 		UpdateBonePicking();
@@ -32,6 +40,106 @@ void FSkeletalMeshEditor::TickAfterWorld(float DeltaTime)
 TUniquePtr<IEditorTab> FSkeletalMeshEditor::CreateTab()
 {
 	return MakeUnique<FSkeletalMeshEditorTab>(*this);
+}
+
+void FSkeletalMeshEditor::SetPhysicsAssetMode(bool bEnabled)
+{
+	BoneGizmo.EndDrag();
+	bPhysicsAssetMode = bEnabled;
+	SyncBoneGizmo();
+	if (bEnabled && !MeshComponent->GetOrCreatePhysicsAsset())
+	{
+		PhysicsAssetStatus = "No physics asset could be loaded or generated for this mesh.";
+	}
+	if (bEnabled)
+	{
+		const UBodySetup* Setup = GetSelectedBodySetup();
+		if (!Setup || Setup->AggGeom.IsEmpty())
+		{
+			SelectBone(-1);
+		}
+	}
+}
+
+UBodySetup* FSkeletalMeshEditor::GetSelectedBodySetup() const
+{
+	UPhysicsAsset* Asset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
+	if (!Asset || !Mesh->GetRefSkeleton().IsValidIndex(SelectedBoneIndex))
+	{
+		return nullptr;
+	}
+
+	// 트리 표시명은 FBX 네임스페이스가 생략될 수 있으므로 원본 본 이름을 쓴다.
+	const int32 BodyIndex = Asset->FindBodyIndex(Mesh->GetRefSkeleton()[SelectedBoneIndex].Name);
+	return BodyIndex >= 0 ? Asset->BodySetups[BodyIndex] : nullptr;
+}
+
+void FSkeletalMeshEditor::SetSelectedCapsuleRadius(int32 CapsuleIndex, float Radius)
+{
+	UBodySetup* Setup = GetSelectedBodySetup();
+	if (!Setup || !Setup->AggGeom.SphylElems.IsValidIndex(CapsuleIndex) || !std::isfinite(Radius) || Radius <= 0.0f)
+	{
+		return;
+	}
+
+	Setup->AggGeom.SphylElems[CapsuleIndex].Radius = Radius;
+	Mesh->GetPhysicsAsset()->bHasUnsavedChanges = true;
+	PhysicsAssetStatus.clear();
+}
+
+bool FSkeletalMeshEditor::IsDirty() const
+{
+	const UPhysicsAsset* Asset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
+	return Asset && Asset->bHasUnsavedChanges;
+}
+
+void FSkeletalMeshEditor::SavePhysicsAsset()
+{
+	UPhysicsAsset* Asset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
+	if (!Asset)
+	{
+		return;
+	}
+
+	const FString Path = FPhysicsAssetFile::GetDefaultPathForMesh(*Mesh);
+	if (Path.empty())
+	{
+		PhysicsAssetStatus = "Cannot save: this mesh has no source file path.";
+		return;
+	}
+	if (FPhysicsAssetFile::Write(Path, *Asset, PhysicsAssetStatus))
+	{
+		PhysicsAssetStatus = "Saved " + Asset->AssetPath;
+	}
+}
+
+void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
+{
+	if (!bPhysicsAssetMode)
+	{
+		FSkeletalPreviewEditor::OnRenderLine(LineBatcher);
+		return;
+	}
+
+	const UPhysicsAsset* Asset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
+	if (Asset && MeshComponent)
+	{
+		const FVector4 BodyColor(0.35f, 0.58f, 0.68f, 1.0f);
+		const FVector4 SelectedColor(0.1f, 0.9f, 1.0f, 1.0f);
+		const float Scale = MeshComponent->GetPhysicsAssetScale();
+		for (const UBodySetup* Setup : Asset->BodySetups)
+		{
+			const int32 BoneIndex = Setup ? MeshComponent->FindBoneIndex(Setup->BoneName) : -1;
+			if (BoneIndex < 0)
+			{
+				continue;
+			}
+			const FTransform Bone = MatrixToBodyTransform(MeshComponent->GetBoneWorldMatrix(BoneIndex));
+			const FVector4& Color = BoneIndex == SelectedBoneIndex ? SelectedColor : BodyColor;
+			Setup->AggGeom.GetScaled(FVector(Scale, Scale, Scale)).DrawDebug(
+				LineBatcher, Bone.Location, Bone.Rotation, Color);
+		}
+	}
 }
 
 void FSkeletalMeshEditor::SetGizmoMode(UE::Widget::EWidgetMode Mode)
@@ -50,7 +158,7 @@ void FSkeletalMeshEditor::SetGizmoSpace(ECoordSystem Space)
 
 void FSkeletalMeshEditor::SyncBoneGizmo()
 {
-	if (!MeshComponent || !BoneGizmoTarget || SelectedBoneIndex < 0 || SelectedBoneIndex >= BoneItems.Num())
+	if (bPhysicsAssetMode || !MeshComponent || !BoneGizmoTarget || SelectedBoneIndex < 0 || SelectedBoneIndex >= BoneItems.Num())
 	{
 		BoneGizmo.SetTarget(nullptr);
 		return;

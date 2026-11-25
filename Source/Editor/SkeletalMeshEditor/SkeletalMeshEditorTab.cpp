@@ -30,6 +30,16 @@ FSkeletalMeshEditorTab::FSkeletalMeshEditorTab(FSkeletalMeshEditor& InEditor)
 
 void FSkeletalMeshEditorTab::DrawMenuBar()
 {
+	if (ImGui::BeginMenu("Mode"))
+	{
+		const bool bPhysics = MeshEditor.IsPhysicsAssetMode();
+		if (ImGui::MenuItem("Mesh", nullptr, !bPhysics))
+			MeshEditor.SetPhysicsAssetMode(false);
+		if (ImGui::MenuItem("Physics Asset", nullptr, bPhysics))
+			MeshEditor.SetPhysicsAssetMode(true);
+		ImGui::EndMenu();
+	}
+
 	if (ImGui::BeginMenu("Viewer"))
 	{
 		if (ImGui::MenuItem("Close Viewer"))

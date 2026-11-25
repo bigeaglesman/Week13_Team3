@@ -29,7 +29,10 @@ void FSkeletalMeshViewportPanel::DrawContent()
 
 	// UE5식 뷰포트 툴바(기즈모 도구, 뷰 종류, 카메라, 뷰 모드, 쇼 플래그)와 왼쪽 아래 축 표시.
 	// 입력 영역보다 먼저 그려야 툴바 버튼이 마우스를 먼저 받는다. 툴바 위에서는 뷰포트 입력을 막는다.
-	const bool bToolbarBusy = EditorViewportUI::DrawAssetViewportToolbar(Client, Origin, ViewMax, Editor.GetGizmoMode(), [this](UE::Widget::EWidgetMode Mode) { Editor.SetGizmoMode(Mode); });
+	const bool bPhysics = Editor.IsPhysicsAssetMode();
+	const bool bToolbarBusy = bPhysics
+		? EditorViewportUI::DrawAssetViewportToolbar(Client, Origin, ViewMax)
+		: EditorViewportUI::DrawAssetViewportToolbar(Client, Origin, ViewMax, Editor.GetGizmoMode(), [this](UE::Widget::EWidgetMode Mode) { Editor.SetGizmoMode(Mode); });
 
 	// 이미지 영역을 입력 항목으로 등록하여 드래그 중에도 카메라 조작을 유지한다.
 	ImGui::SetCursorScreenPos(Origin);
@@ -89,7 +92,7 @@ void FSkeletalMeshViewportPanel::DrawContent()
 	};
 
 	// 키보드로 Gizmo 키 변경
-	if (!bCameraDragging)
+	if (!bPhysics && !bCameraDragging)
 	{
 		if (ImGui::IsKeyDown(ImGuiKey_W))
 		{

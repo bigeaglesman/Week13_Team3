@@ -64,6 +64,7 @@ bool FPhysicsAssetFile::Read(const FString& Path, UPhysicsAsset& Asset, FString&
 	}
 
 	Asset.AssetPath = FAssetUtils::GetAssetKey(FilePath.generic_string());
+	Asset.bHasUnsavedChanges = false;
 	return true;
 }
 
@@ -101,6 +102,7 @@ bool FPhysicsAssetFile::Write(const FString& Path, UPhysicsAsset& Asset, FString
 	}
 
 	Asset.AssetPath = FAssetUtils::GetAssetKey(FilePath.generic_string());
+	Asset.bHasUnsavedChanges = false;
 	return true;
 }
 

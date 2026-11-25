@@ -5,8 +5,13 @@
 FSkeletalMeshEditorPanel::FSkeletalMeshEditorPanel(FSkeletalMeshEditor& InEditor, const char* InName)
 	: Editor(InEditor)
 	, PanelName(InName)
-	, WindowName(PanelName + "###SkeletalMeshPanel:" + InName + ":" + InEditor.GetAssetPath())
+	, WindowName(MakeWindowName(InName))
 {
+}
+
+FString FSkeletalMeshEditorPanel::MakeWindowName(const char* DisplayName) const
+{
+	return FString(DisplayName) + "###SkeletalMeshPanel:" + PanelName + ":" + Editor.GetAssetPath();
 }
 
 bool FSkeletalMeshEditorPanel::Init()

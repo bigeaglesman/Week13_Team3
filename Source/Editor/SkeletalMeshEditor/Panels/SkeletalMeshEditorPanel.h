@@ -24,13 +24,14 @@ public:
 	////////////////////////////////////////////////////////////
 
 	const char* GetPanelName() const override { return PanelName.c_str(); }
-	const char* GetWindowName() const { return WindowName.c_str(); }
+	virtual const char* GetWindowName() const { return WindowName.c_str(); }
 	void SetDockClass(ImGuiID InClassId) { DockClassId = InClassId; }
 
 	// 현재 패널이 소속 탭의 도킹 영역 밖에 있는지 확인합니다.
 	bool IsDetached(ImGuiID DockSpaceId) const;
 
 protected:
+	FString MakeWindowName(const char* DisplayName) const;
 	// 파생 패널은 Begin/End 없이 창 내부 내용만 그립니다.
 	virtual void DrawContent() = 0;
 

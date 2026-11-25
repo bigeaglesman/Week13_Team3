@@ -10,6 +10,8 @@ class FBoneHierarchyPanel : public FSkeletalMeshEditorPanel
 {
 public:
 	explicit FBoneHierarchyPanel(FSkeletalMeshEditor& InEditor);
+	const char* GetPanelName() const override;
+	const char* GetWindowName() const override;
 
 	// 본 계층 트리를 그린다. 애니메이션 뷰어의 Skeleton Tree도 같은 함수를 쓴다.
 	static void DrawTree(FSkeletalPreviewEditor& InEditor);
@@ -18,5 +20,8 @@ protected:
 	void DrawContent() override;
 
 private:
-	static void DrawBoneHierarchy(FSkeletalPreviewEditor& InEditor, int32 BoneIndex);
+	void DrawColliderTree();
+	static void DrawBoneHierarchy(FSkeletalPreviewEditor& InEditor, int32 BoneIndex,
+		const TArray<TArray<int32>>* ColliderChildren = nullptr);
+	FString ColliderWindowName;
 };

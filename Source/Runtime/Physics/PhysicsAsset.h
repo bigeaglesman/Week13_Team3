@@ -44,4 +44,7 @@ public:
 
 	// 이 에셋을 읽어 온 파일 (.physicsasset). 자동 생성했거나 아직 저장 전이면 비어 있다.
 	FString AssetPath;
+
+	// 파일에 쓰지 않는 편집 상태. 메시 에디터 탭을 다시 열어도 공유 에셋에 남는다.
+	bool bHasUnsavedChanges = false;
 };

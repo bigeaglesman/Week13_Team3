@@ -17,23 +17,26 @@ void FSkeletalMeshSettingsPanel::DrawContent()
 		Editor.SetCameraSpeed(CameraSpeed);
 	}
 
-	if (ImGui::Button("Reset All Transform"))
+	if (!Editor.IsPhysicsAssetMode())
 	{
-		Editor.ResetPose();
-	}
+		if (ImGui::Button("Reset All Transform"))
+		{
+			Editor.ResetPose();
+		}
 
-	FVector4 BoneVisualizerColor = Editor.GetBoneVisualizerColor();
-	ImGui::TextUnformatted("Bone Visualizer Color");
-	ImGui::SetNextItemWidth(-FLT_MIN);
-	if (ImGui::ColorEdit3("##BoneVisualizerColor", &BoneVisualizerColor.X))
-	{
-		Editor.SetBoneVisualizerColor(BoneVisualizerColor);
-	}
+		FVector4 BoneVisualizerColor = Editor.GetBoneVisualizerColor();
+		ImGui::TextUnformatted("Bone Visualizer Color");
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		if (ImGui::ColorEdit3("##BoneVisualizerColor", &BoneVisualizerColor.X))
+		{
+			Editor.SetBoneVisualizerColor(BoneVisualizerColor);
+		}
 
-	bool bShowBoneVisualizer = Editor.IsBoneVisualizerVisible();
-	if (ImGui::Checkbox("Show Bone Visualizer", &bShowBoneVisualizer))
-	{
-		Editor.SetBoneVisualizerVisible(bShowBoneVisualizer);
+		bool bShowBoneVisualizer = Editor.IsBoneVisualizerVisible();
+		if (ImGui::Checkbox("Show Bone Visualizer", &bShowBoneVisualizer))
+		{
+			Editor.SetBoneVisualizerVisible(bShowBoneVisualizer);
+		}
 	}
 
 	if (FEditorViewportClient* Client = Editor.GetViewportClient())

@@ -370,6 +370,27 @@ void FClothingSimulationNv::Simulate(const FClothingSimulationContextNv& Context
 	bFirstFrame = false;
 }
 
+void FClothingSimulationNv::GetSimulationData(TArray<FClothSimulData>& OutData, const USkeletalMesh* Mesh) const
+{
+	OutData.Reset();
+	if (!Mesh)
+	{
+		return;
+	}
+
+	const TArray<UClothingAssetCommon*>& Assets = Mesh->GetMeshClothingAssets();
+	OutData.SetNum(Assets.Num());
+	for (const FClothingActorNv& Actor : Actors)
+	{
+		const int32 AssetIndex = Assets.Find(const_cast<UClothingAssetCommon*>(Actor.AssetCreatedFrom));
+		if (AssetIndex >= 0 && !Actor.SimPositions.IsEmpty())
+		{
+			OutData[AssetIndex].Positions = Actor.SimPositions;
+			OutData[AssetIndex].Normals = Actor.SimNormals;
+		}
+	}
+}
+
 void FClothingSimulationNv::ReadSimulationResults(FClothingActorNv& Actor, const FClothingSimulationContextNv& Context) const
 {
 	const FClothPhysicalMeshData& Mesh = Actor.AssetCreatedFrom->PhysicalMeshData;

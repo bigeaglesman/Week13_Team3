@@ -29,6 +29,7 @@
 #include "ClothingSystem/ClothingSimulationNv.h"
 #include "ClothingSystem/ClothingAssetCommon.h"
 #include "ClothingSystem/ClothingAssetFactory.h"
+#include "Render/SkeletalMeshObject.h"
 
 UClothingAssetCommon* USkeletalMeshComponent::GetOrCreateClothingAsset() const
 {
@@ -104,6 +105,7 @@ void USkeletalMeshComponent::TickClothing(float DeltaTime)
 		if (!ClothingSimulation->GetActors().IsEmpty())
 		{
 			ClothingSimulation->DestroyActors();
+			SendClothSimulDataToMeshObject();   // 천 정점이 스키닝 결과로 돌아가게 비운다
 		}
 		return;
 	}
@@ -120,6 +122,25 @@ void USkeletalMeshComponent::TickClothing(float DeltaTime)
 
 	ClothingSimulation->SetConfig(ClothConfig);
 	ClothingSimulation->Simulate(*ClothingSimulationContext);
+
+	// 결과를 메시 오브젝트에 넘긴다. 바로 뒤의 SendRenderDynamicData → Update에서 천 정점에 덮어써 올린다.
+	SendClothSimulDataToMeshObject();
+}
+
+void USkeletalMeshComponent::SendClothSimulDataToMeshObject()
+{
+	FSkeletalMeshObject* MeshObject = GetMeshObject();
+	if (!MeshObject)
+	{
+		return;
+	}
+
+	TArray<FClothSimulData> Data;
+	if (ClothingSimulation)
+	{
+		ClothingSimulation->GetSimulationData(Data, GetSkeletalMesh());
+	}
+	MeshObject->SetClothSimulData(std::move(Data));
 }
 
 UPhysicsAsset* USkeletalMeshComponent::GetOrCreatePhysicsAsset() const
@@ -424,6 +445,16 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
 		}
         bUpdatingAnimation = false;
 	}
+
+	// 천: 이번 틱의 뼈 갱신(RefreshBoneTransforms) 안에서 한 번 돌게 시간을 넘겨 둔다.
+	// 포즈가 그대로여도 천은 계속 움직이므로 뼈 갱신을 매 틱 하게 한다.
+	if (IsClothingActive())
+	{
+		EnsureCPUSkinningForCloth();
+		PendingClothDeltaTime = DeltaTime;
+		MarkBoneTransformsDirty();
+	}
+
 	Super::TickComponent(DeltaTime);
 
 	// 뼈 행렬이 갱신된 뒤에 바디를 옮긴다. PrePhysics 틱이라 이번 프레임 simulate에 반영된다.
@@ -431,9 +462,26 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
 	{
 		UpdateKinematicBonesToAnim();
 	}
+}
 
-	// 천은 이번 프레임 뼈 행렬(Super::TickComponent에서 갱신)을 보고 돈다.
-	TickClothing(DeltaTime);
+bool USkeletalMeshComponent::IsClothingActive() const
+{
+	return ClothingSimulation && ClothSectionIndex >= 0 && GetSkeletalMesh();
+}
+
+bool USkeletalMeshComponent::RequiresCPUSkinning() const
+{
+	return IsClothingActive();
+}
+
+void USkeletalMeshComponent::EnsureCPUSkinningForCloth()
+{
+	// GPU 스킨 오브젝트(본 행렬 버퍼가 있음)면 CPU 스킨으로 바꾼다. 천 정점을 CPU에서 덮어써야 하기 때문이다.
+	FSkeletalMeshObject* MeshObject = GetMeshObject();
+	if (MeshObject && MeshObject->GetBoneMatrixBuffer())
+	{
+		RefreshSkinningMode();
+	}
 }
 
 const TArray<FBoneInfo>& USkeletalMeshComponent::GetBones() const
@@ -519,6 +567,15 @@ void USkeletalMeshComponent::RefreshBoneTransforms()
 	if (bRagdollSimulating)
 	{
 		BlendPhysicsBones();
+	}
+
+	// 천: 이번 포즈가 정해진 직후, 정점을 올리기(SendRenderDynamicData) 직전에 돈다.
+	// 그래서 고정 입자(어깨)가 같은 프레임의 몸과 어긋나지 않는다. 틱 한 번에 한 번만 돈다.
+	if (PendingClothDeltaTime > 0.0f)
+	{
+		const float ClothDeltaTime = PendingClothDeltaTime;
+		PendingClothDeltaTime = 0.0f;
+		TickClothing(ClothDeltaTime);
 	}
 }
 

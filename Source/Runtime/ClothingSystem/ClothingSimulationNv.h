@@ -3,8 +3,10 @@
 #include "ClothingSystem/ClothingSimulationContextNv.h"
 #include "ClothingSystem/ClothingActorNv.h"
 #include "ClothingSystem/ClothConfigNv.h"
+#include "ClothingSystem/ClothSimulData.h"
 
 class USkeletalMeshComponent;
+class USkeletalMesh;
 class UClothingAssetCommon;
 
 namespace nv
@@ -54,6 +56,10 @@ public:
 	void Simulate(const FClothingSimulationContextNv& Context);
 
 	const TArray<FClothingActorNv>& GetActors() const { return Actors; }
+
+	// 시뮬레이션 결과를 메시의 천 에셋 순서(GetMeshClothingAssets)대로 담는다. 천이 없는 에셋 칸은 비워 둔다.
+	// 스켈레탈 메시 오브젝트가 이걸 받아 렌더 정점에 덮어쓴다. UE의 GetSimulationData
+	void GetSimulationData(TArray<FClothSimulData>& OutData, const USkeletalMesh* Mesh) const;
 
 	// 프레임이 크게 튀어도(디버거 정지, 로딩) 천이 폭발하지 않게 한 번에 시뮬레이션하는 최대 시간
 	static constexpr float MaxDeltaSeconds = 1.0f / 30.0f;

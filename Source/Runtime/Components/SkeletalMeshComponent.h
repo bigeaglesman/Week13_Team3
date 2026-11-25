@@ -134,7 +134,18 @@ protected:
 	virtual void OnUnregister() override;
 
 	// 애니메이션으로 뼈가 갱신된 뒤 천을 한 스텝 돌린다. UE의 TickClothing
+	// RefreshBoneTransforms 끝에서 불려, 결과가 같은 프레임 정점 업로드에 들어간다.
 	void TickClothing(float DeltaTime);
+
+	// 천 섹션이 정해져 있고 시뮬레이션이 살아 있으면 true
+	bool IsClothingActive() const;
+
+	// 천 정점은 CPU에서 덮어쓰므로 천이 있으면 CPU 스킨을 쓴다 (USkinnedMeshComponent가 메시 오브젝트를 고를 때 본다)
+	virtual bool RequiresCPUSkinning() const override;
+	void EnsureCPUSkinningForCloth();
+
+	// 시뮬레이션 결과를 메시 오브젝트로 보낸다. UE의 천 결과를 렌더 쪽으로 넘기는 자리 (GetUpdateClothSimulationData)
+	void SendClothSimulDataToMeshObject();
 
 	// BodyInstance의 bEnablePhysicsCollision 또는 bSimulatePhysics가 켜져 있으면 바디 하나 대신 Physics Asset대로 뼈마다 바디를 만든다.
 	// 메시에 Physics Asset이 없으면 뼈 모양으로 자동 생성해 붙인다.
@@ -187,4 +198,7 @@ private:
 
 	// 천 에셋 만들기에 실패한 섹션 번호. 같은 번호로 매 프레임 다시 시도하지 않게 한다.
 	mutable int32 FailedClothSectionIndex = -1;
+
+	// TickComponent가 넘겨 두는 이번 틱 천 시간. RefreshBoneTransforms가 쓰고 0으로 비운다 (0이면 천을 안 돌린다)
+	float PendingClothDeltaTime = 0.0f;
 };

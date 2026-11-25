@@ -1,0 +1,40 @@
+newmtl Ebony
+Kd 0.035 0.031 0.042
+
+newmtl PickupRing
+Kd 0.058 0.044 0.048
+
+newmtl Gold
+Kd 0.83 0.5 0.16
+
+newmtl Binding
+Kd 0.92 0.76 0.45
+
+newmtl Rosewood
+Kd 0.1 0.044 0.029
+
+newmtl Chrome
+Kd 0.68 0.66 0.62
+
+newmtl Inlay
+Kd 0.92 0.9 0.84
+
+newmtl Amber
+Kd 0.61 0.3 0.075
+
+newmtl Logo
+Kd 1 1 1
+map_Kd LeadLogo.png
+d 0.999
+
+newmtl Dial
+Kd 1 1 1
+map_Kd LeadDial.png
+
+newmtl KnobGlass
+Kd 0.9 0.64 0.27
+d 0.16
+
+newmtl Strap
+Kd 0.029 0.025 0.04
+

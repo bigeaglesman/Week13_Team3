@@ -39,6 +39,16 @@ struct FVehicleWheelQuerySnapshot
 	bool bValid = false;
 };
 
+// 렌더용 차체 포즈. 물리는 60Hz 고정 스텝이라 렌더 프레임마다 스텝 수(0/1/2)가 달라진다.
+// 마지막 스텝 직전/직후 포즈를 들고 있다가 남은 누적 시간 비율로 보간해서 컴포넌트에 쓴다.
+// (보간 없이 쓰면 고속에서 프레임마다 이동량이 들쭉날쭉해져 카메라 랙과 어긋나 차가 떨려 보인다.)
+struct FVehicleRenderPose
+{
+	PxTransform Prev = PxTransform(PxIdentity);
+	PxTransform Curr = PxTransform(PxIdentity);
+	bool bValid = false;
+};
+
 struct FVehicleSceneQueryData
 {
 	PxBatchQuery* BatchQuery = nullptr;
@@ -53,6 +63,7 @@ struct FVehicleSceneQueryData
 	std::vector<std::vector<PxWheelQueryResult>> WheelQueryResults;
 	std::vector<FVehicleWheelQuerySnapshot> WheelQuerySnapshots;
 	std::vector<PxVehicleWheelQueryResult> VehicleWheelQueryResults;
+	std::vector<FVehicleRenderPose> RenderPoses;
 
 	PxU32 TotalWheelCount = 0;
 	PxU32 MaxWheelCount = 0;
@@ -424,9 +435,11 @@ void FPhysicsScene::Tick(float DeltaTime)
 	if (Steps > 0)
 	{
 		SyncActiveBodiesToComponents();
-		SyncVehiclesToComponents();
 		DispatchPhysNotifications();
 	}
+
+	// 스텝이 없던 프레임에도 보간 위치는 계속 앞으로 가야 하므로 매 프레임 쓴다.
+	SyncVehiclesToComponents(FMath::Clamp(Accumulator / FixedStep, 0.0f, 1.0f));
 }
 
 void FPhysicsScene::SyncActiveBodiesToComponents()
@@ -458,7 +471,7 @@ void FPhysicsScene::SyncActiveBodiesToComponents()
 	}
 }
 
-void FPhysicsScene::SyncVehiclesToComponents()
+void FPhysicsScene::SyncVehiclesToComponents(float Alpha)
 {
 	if (!Scene || !VehicleSceneQueryData)
 	{
@@ -468,10 +481,11 @@ void FPhysicsScene::SyncVehiclesToComponents()
 	struct FVehiclePoseSync
 	{
 		USceneComponent* Component = nullptr;
-		PxTransform Pose;
+		FVector Location;
+		FQuat Rotation;
 	};
 
-	const FVehicleSceneQueryData& QueryData = *VehicleSceneQueryData;
+	FVehicleSceneQueryData& QueryData = *VehicleSceneQueryData;
 	std::vector<FVehiclePoseSync> SyncData;
 
 	{
@@ -496,13 +510,36 @@ void FPhysicsScene::SyncVehiclesToComponents()
 				continue;
 			}
 
-			SyncData.push_back({ Component, ChassisActor->getGlobalPose() });
+			FVehicleRenderPose& RenderPose = QueryData.RenderPoses[i];
+			if (!RenderPose.bValid)
+			{
+				RenderPose.Prev = RenderPose.Curr = ChassisActor->getGlobalPose();
+				RenderPose.bValid = true;
+			}
+
+			const FVector PrevLoc = ToFVector(RenderPose.Prev.p);
+			const FVector CurrLoc = ToFVector(RenderPose.Curr.p);
+			const FVector Location = PrevLoc + (CurrLoc - PrevLoc) * Alpha;
+			const FQuat Rotation = FMath::Slerp(ToFQuat(RenderPose.Prev.q), ToFQuat(RenderPose.Curr.q), Alpha);
+
+			SyncData.push_back({ Component, Location, Rotation });
 		}
 	}
 
 	for (const FVehiclePoseSync& Data : SyncData)
 	{
-		Data.Component->SetWorldLocationAndRotation(ToFVector(Data.Pose.p), ToFQuat(Data.Pose.q).ToFRotator(), false);
+		// 부모가 없으면 쿼터니언 그대로 넣는다. FRotator를 거치면 Pitch ±90도 근처에서 값이 튄다.
+		if (!Data.Component->GetAttachParent())
+		{
+			FTransform Transform = Data.Component->GetTransform();
+			Transform.Location = Data.Location;
+			Transform.Rotation = Data.Rotation;
+			Data.Component->SetTransform(Transform);
+		}
+		else
+		{
+			Data.Component->SetWorldLocationAndRotation(Data.Location, Data.Rotation.ToFRotator(), false);
+		}
 	}
 }
 
@@ -517,19 +554,21 @@ void FPhysicsScene::StepOnce(float Step)
 
 		static const PxVehicleKeySmoothingData KeySmoothingData =
 		{
-			{ 7.0f, 8.0f, 2.5f, 5.0f, 5.0f },
-			{ 9.0f, 10.0f, 8.0f, 7.0f, 7.0f }
+			{ 7.0f, 8.0f, 2.5f, 8.0f, 8.0f },
+			{ 9.0f, 10.0f, 8.0f, 10.0f, 10.0f }
 		};
 
 		static const PxFixedSizeLookupTable<8> SteerVsForwardSpeedTable = []()
 			{
 				PxFixedSizeLookupTable<8> Table;
-				Table.addPair(0.0f, 0.75f);
-				Table.addPair(5.0f, 0.75f);
-				Table.addPair(15.0f, 0.45f);
-				Table.addPair(30.0f, 0.18f);
-				Table.addPair(60.0f, 0.12f);
-				Table.addPair(120.0f, 0.1f);
+				Table.addPair(0.0f, 0.90f);
+				Table.addPair(5.0f, 0.90f);
+				Table.addPair(15.0f, 0.72f);
+				Table.addPair(30.0f, 0.40f);
+				Table.addPair(45.0f, 0.25f);
+				Table.addPair(60.0f, 0.16f);
+				Table.addPair(90.0f, 0.10f);
+				Table.addPair(120.0f, 0.08f);
 				return Table;
 			}();
 
@@ -557,6 +596,7 @@ void FPhysicsScene::StepOnce(float Step)
 			}
 
 			Snapshot.ChassisPose = ChassisActor->getGlobalPose();
+			QueryData.RenderPoses[VehicleIndex].Prev = Snapshot.ChassisPose;
 			Snapshot.ChassisCMOffset = ChassisActor->getCMassLocalPose().p;
 			Snapshot.Gravity = Gravity;
 			Snapshot.bValid = true;
@@ -575,6 +615,28 @@ void FPhysicsScene::StepOnce(float Step)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_PhysicsFetchResults);
 		Scene->fetchResults(true);
+	}
+
+	if (VehicleSceneQueryData)
+	{
+		FVehicleSceneQueryData& QueryData = *VehicleSceneQueryData;
+		for (size_t i = 0; i < QueryData.Vehicles.size(); ++i)
+		{
+			PxRigidDynamic* ChassisActor = QueryData.Vehicles[i] ? QueryData.Vehicles[i]->getRigidDynamicActor() : nullptr;
+			FVehicleRenderPose& RenderPose = QueryData.RenderPoses[i];
+			if (!ChassisActor)
+			{
+				RenderPose.bValid = false;
+				continue;
+			}
+
+			RenderPose.Curr = ChassisActor->getGlobalPose();
+			if (!RenderPose.bValid)
+			{
+				RenderPose.Prev = RenderPose.Curr;
+				RenderPose.bValid = true;
+			}
+		}
 	}
 }
 
@@ -683,6 +745,7 @@ bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle, USceneComponent* SyncCo
 
 	QueryData.WheelQueryResults.emplace_back(WheelCount);
 	QueryData.WheelQuerySnapshots.emplace_back();
+	QueryData.RenderPoses.emplace_back();
 
 	PxVehicleWheelQueryResult& WheelQuery = QueryData.VehicleWheelQueryResults.emplace_back();
 	WheelQuery.wheelQueryResults = QueryData.WheelQueryResults.back().data();
@@ -733,6 +796,7 @@ void FPhysicsScene::RemoveVehicle(PxVehicleWheels* Vehicle)
 	QueryData.SyncComponents.erase(QueryData.SyncComponents.begin() + VehicleIndex);
 	QueryData.WheelQueryResults.erase(QueryData.WheelQueryResults.begin() + VehicleIndex);
 	QueryData.WheelQuerySnapshots.erase(QueryData.WheelQuerySnapshots.begin() + VehicleIndex);
+	QueryData.RenderPoses.erase(QueryData.RenderPoses.begin() + VehicleIndex);
 	QueryData.VehicleWheelQueryResults.erase(QueryData.VehicleWheelQueryResults.begin() + VehicleIndex);
 
 	for (size_t i = 0; i < QueryData.VehicleWheelQueryResults.size(); ++i)

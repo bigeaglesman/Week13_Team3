@@ -1,0 +1,1257 @@
+{
+    "Version": 4,
+    "World": {
+        "PersistentLevel": {
+            "Actors": [
+                {
+                    "Class": "AStaticMeshActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 6.009319305419922,
+                                        "Y": 4.881015777587891,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "UStaticMeshComponent",
+                            "OverrideMaterials": [],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Cube",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "JumpArena_GroundMesh",
+                            "OverrideMaterials": [
+                                {
+                                    "Base": "DefaultMaterial",
+                                    "Instance": {
+                                        "BaseColor": {
+                                            "W": 1.0,
+                                            "X": 0.12999999523162842,
+                                            "Y": 0.15000000596046448,
+                                            "Z": 0.17000000178813934
+                                        },
+                                        "BlendState": "Opaque",
+                                        "FlipNormalY": false,
+                                        "PSOType": 0,
+                                        "Properties": {},
+                                        "SamplerState": "LinearClamp",
+                                        "Shininess": 24.0,
+                                        "SpecularColor": {
+                                            "X": 0.20000000298023224,
+                                            "Y": 0.20000000298023224,
+                                            "Z": 0.20000000298023224
+                                        },
+                                        "Textures": [
+                                            "WhiteTexture",
+                                            "FlatNormalTexture"
+                                        ],
+                                        "UVScrollSpeed": [
+                                            0.0,
+                                            0.0
+                                        ]
+                                    }
+                                }
+                            ],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": true,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Cube",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": -0.75
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 220.0,
+                                        "Y": 150.0,
+                                        "Z": 1.5
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": true,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "JumpArena_Ground",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "AStaticMeshActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "UStaticMeshComponent",
+                            "OverrideMaterials": [],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Cube",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "JumpRamp_MainMesh",
+                            "OverrideMaterials": [
+                                {
+                                    "Base": "DefaultMaterial",
+                                    "Instance": {
+                                        "BaseColor": {
+                                            "W": 1.0,
+                                            "X": 0.9200000166893005,
+                                            "Y": 0.3799999952316284,
+                                            "Z": 0.07999999821186066
+                                        },
+                                        "BlendState": "Opaque",
+                                        "FlipNormalY": false,
+                                        "PSOType": 0,
+                                        "Properties": {},
+                                        "SamplerState": "LinearClamp",
+                                        "Shininess": 24.0,
+                                        "SpecularColor": {
+                                            "X": 0.20000000298023224,
+                                            "Y": 0.20000000298023224,
+                                            "Z": 0.20000000298023224
+                                        },
+                                        "Textures": [
+                                            "WhiteTexture",
+                                            "FlatNormalTexture"
+                                        ],
+                                        "UVScrollSpeed": [
+                                            0.0,
+                                            0.0
+                                        ]
+                                    }
+                                }
+                            ],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": true,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Cube",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 20.0,
+                                        "Y": 0.0,
+                                        "Z": 2.508622646331787
+                                    },
+                                    "Rotation": {
+                                        "Pitch": -11.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 28.0,
+                                        "Y": 24.0,
+                                        "Z": 0.25
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": true,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "JumpRamp_Main",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "AStaticMeshActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "UStaticMeshComponent",
+                            "OverrideMaterials": [],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Cube",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "JumpRamp_SideMesh",
+                            "OverrideMaterials": [
+                                {
+                                    "Base": "DefaultMaterial",
+                                    "Instance": {
+                                        "BaseColor": {
+                                            "W": 1.0,
+                                            "X": 0.8999999761581421,
+                                            "Y": 0.5799999833106995,
+                                            "Z": 0.11999999731779099
+                                        },
+                                        "BlendState": "Opaque",
+                                        "FlipNormalY": false,
+                                        "PSOType": 0,
+                                        "Properties": {},
+                                        "SamplerState": "LinearClamp",
+                                        "Shininess": 24.0,
+                                        "SpecularColor": {
+                                            "X": 0.20000000298023224,
+                                            "Y": 0.20000000298023224,
+                                            "Z": 0.20000000298023224
+                                        },
+                                        "Textures": [
+                                            "WhiteTexture",
+                                            "FlatNormalTexture"
+                                        ],
+                                        "UVScrollSpeed": [
+                                            0.0,
+                                            0.0
+                                        ]
+                                    }
+                                }
+                            ],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": true,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Cube",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 58.0,
+                                        "Y": -34.0,
+                                        "Z": 2.4998538494110107
+                                    },
+                                    "Rotation": {
+                                        "Pitch": -14.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 22.0,
+                                        "Y": 18.0,
+                                        "Z": 0.25
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": true,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "JumpRamp_Side",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "APawn",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UBoxComponent",
+                            "Name": "VehicleRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": true,
+                                    "bSimulatePhysics": false
+                                },
+                                "BoxExtent": {
+                                    "X": 1.7999999523162842,
+                                    "Y": 0.800000011920929,
+                                    "Z": 0.3499999940395355
+                                },
+                                "ShapeColor": 4286105710,
+                                "Transform": {
+                                    "Location": {
+                                        "X": -75.0,
+                                        "Y": 0.0,
+                                        "Z": 0.9100000262260437
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": false,
+                                "bDrawOnlyIfSelected": false,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": false,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "VehicleBody",
+                            "OverrideMaterials": [],
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/VehicleCircuit/APEX_GT3_Body.obj",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "Wheel_FL",
+                            "OverrideMaterials": [],
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/VehicleCircuit/APEX_GT3_Wheel.obj",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 1.25,
+                                        "Y": -0.949999988079071,
+                                        "Z": -0.47999998927116394
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 90.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 0.36000001430511475,
+                                        "Y": 0.36000001430511475,
+                                        "Z": 0.23999999463558197
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "Wheel_FR",
+                            "OverrideMaterials": [],
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/VehicleCircuit/APEX_GT3_Wheel.obj",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 1.25,
+                                        "Y": 0.949999988079071,
+                                        "Z": -0.47999998927116394
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 90.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 0.36000001430511475,
+                                        "Y": 0.36000001430511475,
+                                        "Z": 0.23999999463558197
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "Wheel_RL",
+                            "OverrideMaterials": [],
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/VehicleCircuit/APEX_GT3_Wheel.obj",
+                                "Transform": {
+                                    "Location": {
+                                        "X": -1.25,
+                                        "Y": -0.949999988079071,
+                                        "Z": -0.47999998927116394
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 90.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 0.36000001430511475,
+                                        "Y": 0.36000001430511475,
+                                        "Z": 0.23999999463558197
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "Wheel_RR",
+                            "OverrideMaterials": [],
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/VehicleCircuit/APEX_GT3_Wheel.obj",
+                                "Transform": {
+                                    "Location": {
+                                        "X": -1.25,
+                                        "Y": 0.949999988079071,
+                                        "Z": -0.47999998927116394
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 90.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 0.36000001430511475,
+                                        "Y": 0.36000001430511475,
+                                        "Z": 0.23999999463558197
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "USpringArmComponent",
+                            "Name": "VehicleSpringArm",
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "CameraLagMaxDistance": 0.0,
+                                "CameraLagSpeed": 12.0,
+                                "CameraRotationLagSpeed": 10.0,
+                                "MaxArmLength": 12.0,
+                                "MinArmLength": 2.5,
+                                "ProbeSize": 0.25,
+                                "SocketOffset": {
+                                    "X": 0.0,
+                                    "Y": 0.0,
+                                    "Z": 0.0
+                                },
+                                "TargetArmLength": 18.5,
+                                "TargetOffset": {
+                                    "X": 0.0,
+                                    "Y": 0.0,
+                                    "Z": 2.5
+                                },
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 11.999999046325684,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "ZoomSpeed": 0.5,
+                                "bAutoActivate": true,
+                                "bDoCollisionTest": true,
+                                "bDrawDebug": false,
+                                "bDrawOnlyIfSelected": false,
+                                "bEnableCameraLag": true,
+                                "bEnableCameraRotationLag": true,
+                                "bEnableMouseWheelZoom": false,
+                                "bHiddenInGame": false,
+                                "bInheritPitch": false,
+                                "bInheritRoll": false,
+                                "bInheritYaw": true,
+                                "bUsePawnControlRotation": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UCameraComponent",
+                            "Name": "VehicleTestCamera",
+                            "Parent": "VehicleSpringArm",
+                            "PostProcessBlendWeight": 1.0,
+                            "PostProcessSettings": {
+                                "DepthOfFieldBladeCount": 5,
+                                "DepthOfFieldDepthBlurAmount": 1.0,
+                                "DepthOfFieldDepthBlurRadius": 0.0,
+                                "DepthOfFieldFocalDistance": 0.0,
+                                "DepthOfFieldFstop": 4.0,
+                                "DepthOfFieldMinFstop": 1.2000000476837158,
+                                "DepthOfFieldSensorWidth": 24.576000213623047,
+                                "bOverride_DepthOfFieldBladeCount": false,
+                                "bOverride_DepthOfFieldDepthBlurAmount": false,
+                                "bOverride_DepthOfFieldDepthBlurRadius": false,
+                                "bOverride_DepthOfFieldFocalDistance": false,
+                                "bOverride_DepthOfFieldFstop": false,
+                                "bOverride_DepthOfFieldMinFstop": false,
+                                "bOverride_DepthOfFieldSensorWidth": false
+                            },
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": -19.01978302001953,
+                                        "Y": 0.0,
+                                        "Z": 2.4453678131103516
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bExternalInputManaged": true,
+                                "bHiddenInGame": false,
+                                "bUsePawnControlRotation": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UVehicleMovementComponent",
+                            "Name": "VehicleMovementComponent",
+                            "Parent": "",
+                            "Properties": {
+                                "Gravity": 9.8100004196167,
+                                "Velocity": {
+                                    "X": 0.0,
+                                    "Y": 0.0,
+                                    "Z": 0.0
+                                },
+                                "bAutoActivate": true,
+                                "bConstrainToPlane": false,
+                                "bHiddenInGame": false,
+                                "bMonsterTruckSetup": false,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "VehiclePawn",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "ADirectionalLightActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UDirectionalLightComponent",
+                            "Name": "UDirectionalLightComponent",
+                            "Parent": "",
+                            "Properties": {
+                                "AngularRadiusDegrees": 0.8500000238418579,
+                                "CascadeDistributionExponent": 3.0,
+                                "CascadeTransitionFraction": 0.10000000149011612,
+                                "DynamicShadowCascades": 4,
+                                "DynamicShadowDistanceMovableLight": 1000.0,
+                                "Intensity": 1.149999976158142,
+                                "LightColor": 4294967295,
+                                "ShadowBias": 0.5,
+                                "ShadowDistanceFadeoutFraction": 0.10000000149011612,
+                                "ShadowResolutionScale": 1.0,
+                                "ShadowSharpen": 0.0,
+                                "ShadowSlopeBias": 0.5,
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 10.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 47.999996185302734,
+                                        "Roll": 0.0,
+                                        "Yaw": 27.999996185302734
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bCastShadows": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UBillboardComponent",
+                            "Material": {
+                                "Base": "BillboardMaterial",
+                                "Instance": {
+                                    "BaseColor": {
+                                        "W": 1.0,
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    },
+                                    "BlendState": "AlphaBlend",
+                                    "FlipNormalY": false,
+                                    "PSOType": 14,
+                                    "Properties": {},
+                                    "SamplerState": "LinearClamp",
+                                    "Shininess": 32.0,
+                                    "SpecularColor": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    },
+                                    "Textures": [
+                                        "Engine/Icons/Directional.png"
+                                    ],
+                                    "UVScrollSpeed": [
+                                        0.0,
+                                        0.0
+                                    ]
+                                }
+                            },
+                            "Name": "UBillboardComponent",
+                            "Parent": "UDirectionalLightComponent",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": false,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": true,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": false,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "UArrowComponent",
+                            "OverrideMaterials": [
+                                {
+                                    "Asset": "EditorArrowMaterial"
+                                }
+                            ],
+                            "Parent": "UDirectionalLightComponent",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Arrow",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 90.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 0.30000001192092896,
+                                        "Y": 0.30000001192092896,
+                                        "Z": 0.5
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": false,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": false,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "Circuit_DirectionalLight",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "ASkyLightActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "USkyLightComponent",
+                            "Name": "USkyLightComponent",
+                            "Parent": "",
+                            "Properties": {
+                                "Intensity": 0.41999998688697815,
+                                "LightColor": 4294967295,
+                                "ShadowBias": 0.009999999776482582,
+                                "ShadowResolutionScale": 1.0,
+                                "ShadowSharpen": 0.0,
+                                "ShadowSlopeBias": 0.009999999776482582,
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bCastShadows": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UBillboardComponent",
+                            "Material": {
+                                "Base": "BillboardMaterial",
+                                "Instance": {
+                                    "BaseColor": {
+                                        "W": 1.0,
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    },
+                                    "BlendState": "AlphaBlend",
+                                    "FlipNormalY": false,
+                                    "PSOType": 14,
+                                    "Properties": {},
+                                    "SamplerState": "LinearClamp",
+                                    "Shininess": 32.0,
+                                    "SpecularColor": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    },
+                                    "Textures": [
+                                        "Engine/Icons/Sky.png"
+                                    ],
+                                    "UVScrollSpeed": [
+                                        0.0,
+                                        0.0
+                                    ]
+                                }
+                            },
+                            "Name": "UBillboardComponent",
+                            "Parent": "USkyLightComponent",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "PhysMaterialOverride": null,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "VehicleSurfaceType": "Asphalt",
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": false,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": true,
+                                "bIsVehicleDrivableSurface": false,
+                                "bReceiveShadow": false,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "Circuit_SkyLight",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                }
+            ],
+            "Properties": {}
+        },
+        "Properties": {}
+    }
+}

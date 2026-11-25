@@ -82,6 +82,8 @@ private:
 
     // 사용자가 선택한 변속 모드. 중립/후진 중 PhysX가 자동 변속을 잠시 끄더라도 선택값은 유지한다.
     bool bAutomaticTransmissionRequested = true;
+    bool bAirborneAutoShiftSuspended = false;
+    float AirborneAutoShiftRecoveryTimer = 0.0f;
 
     float VehicleSpeed = 0.0f;
     float EngineRPM = 0.0f;

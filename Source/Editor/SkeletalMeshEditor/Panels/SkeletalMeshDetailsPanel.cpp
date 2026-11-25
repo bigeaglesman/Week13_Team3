@@ -142,33 +142,33 @@ void FSkeletalMeshDetailsPanel::DrawBodyShapes(UBodySetup& Setup, int32 BoneInde
 		{ EColliderShape::Box, "Box", Geom.BoxElems.Num() },
 		{ EColliderShape::Capsule, "Capsule", Geom.SphylElems.Num() }
 	};
-	const int32 PrimitiveCount = Geom.SphereElems.Num() + Geom.BoxElems.Num() + Geom.SphylElems.Num();
 	ImGui::PushID(BoneIndex);
-	if (PrimitiveCount == 0)
+	if (Geom.IsEmpty())
 	{
-		ImGui::TextDisabled("No editable primitive on this body.");
+		ImGui::TextDisabled("No shapes on this body.");
 	}
-	else if (PrimitiveCount + Geom.ConvexElems.Num() + Geom.TriMeshElems.Num() > 1)
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.5f);
+	ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+	for (const auto& Group : Groups)
 	{
-		char Preview[48] = "Select shape";
-		for (const auto& Group : Groups)
-			if (Group.Type == Editor.GetSelectedShapeType())
-				std::snprintf(Preview, sizeof(Preview), "%s %d", Group.Label, Editor.GetSelectedShapeIndex() + 1);
-		if (ImGui::BeginCombo("Shape", Preview))
+		for (int32 i = 0; i < Group.Count; ++i)
 		{
-			for (const auto& Group : Groups)
+			char Label[48];
+			std::snprintf(Label, sizeof(Label), "%s %d", Group.Label, i + 1);
+			const bool bSelected = Group.Type == Editor.GetSelectedShapeType() && i == Editor.GetSelectedShapeIndex();
+			if (ImGui::RadioButton(Label, bSelected) && !bSelected)
 			{
-				for (int32 i = 0; i < Group.Count; ++i)
-				{
-					char Label[48];
-					std::snprintf(Label, sizeof(Label), "%s %d", Group.Label, i + 1);
-					if (ImGui::Selectable(Label, Group.Type == Editor.GetSelectedShapeType() && i == Editor.GetSelectedShapeIndex()))
-						Editor.SelectShape(Group.Type, i);
-				}
+				Editor.SelectShape(Group.Type, i);
 			}
-			ImGui::EndCombo();
 		}
 	}
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar();
+	for (int32 i = 0; i < Geom.ConvexElems.Num(); ++i)
+		ImGui::TextDisabled("Convex %d (read-only)", i + 1);
+	for (int32 i = 0; i < Geom.TriMeshElems.Num(); ++i)
+		ImGui::TextDisabled("Triangle Mesh %d (read-only)", i + 1);
+	ImGui::Separator();
 	const int32 Index = Editor.GetSelectedShapeIndex();
 	ImGui::PushID(Index);
 	auto DrawDimension = [&](const char* Label, float& Value, bool bAllowZero)

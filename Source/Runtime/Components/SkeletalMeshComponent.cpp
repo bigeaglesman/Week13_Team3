@@ -26,6 +26,122 @@
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetUtils.h"
 #include "Physics/PhysicsAssetFile.h"
+#include "ClothingSystem/ClothingSimulationNv.h"
+#include "ClothingSystem/ClothingAssetCommon.h"
+#include "ClothingSystem/ClothingAssetFactory.h"
+#include "Render/SkeletalMeshObject.h"
+
+UClothingAssetCommon* USkeletalMeshComponent::GetOrCreateClothingAsset() const
+{
+	USkeletalMesh* Mesh = GetSkeletalMesh();
+	if (!Mesh || ClothSectionIndex < 0)
+	{
+		return nullptr;
+	}
+
+	// 메시가 소유하므로 같은 메시를 쓰는 다른 컴포넌트와 공유하고, 다음부터는 재사용된다. (GetOrCreatePhysicsAsset과 같은 방식)
+	if (UClothingAssetCommon* Existing = Mesh->GetSectionClothingAsset(ClothSectionIndex))
+	{
+		return Existing;
+	}
+
+	// 실패한 섹션은 다시 시도하지 않는다 (매 프레임 경고가 쌓이지 않게). 번호를 바꾸면 다시 시도한다.
+	if (ClothSectionIndex == FailedClothSectionIndex)
+	{
+		return nullptr;
+	}
+
+	FSkeletalMeshClothBuildParams Params;
+	Params.SourceSection = ClothSectionIndex;
+	Params.PinHeightRatio = ClothPinHeightRatio;
+	UClothingAssetCommon* Asset = FClothingAssetFactory::CreateFromSkeletalMesh(Mesh, Params);
+	if (!Asset)
+	{
+		FailedClothSectionIndex = ClothSectionIndex;
+	}
+	return Asset;
+}
+
+void USkeletalMeshComponent::OnRegister()
+{
+	Super::OnRegister();
+
+	// 메시에 천이 있든 없든 Solver는 하나 만들어 둔다 (빈 Solver는 Simulate에서 바로 돌아온다). UE도 같다.
+	// NvCloth 초기화가 실패했으면 Initialize가 false라서 천 없이 돈다.
+	ClothingSimulation = new FClothingSimulationNv();
+	if (!ClothingSimulation->Initialize())
+	{
+		delete ClothingSimulation;
+		ClothingSimulation = nullptr;
+		return;
+	}
+	ClothingSimulationContext = new FClothingSimulationContextNv();
+}
+
+void USkeletalMeshComponent::OnUnregister()
+{
+	// 컨텍스트, 시뮬레이션 순으로 지운다. Solver는 시뮬레이션 소멸자(Shutdown)에서 지워진다.
+	delete ClothingSimulationContext;
+	ClothingSimulationContext = nullptr;
+	delete ClothingSimulation;
+	ClothingSimulation = nullptr;
+
+	Super::OnUnregister();
+}
+
+void USkeletalMeshComponent::TickClothing(float DeltaTime)
+{
+	if (!ClothingSimulation || !ClothingSimulationContext || !GetSkeletalMesh())
+	{
+		return;
+	}
+
+	ClothingSimulation->FillContext(this, DeltaTime, *ClothingSimulationContext);
+
+	// 쓸 천 에셋이 바뀌었으면(처음, 섹션 번호 변경) 천을 다시 만든다. UE의 RecreateClothingActors
+	UClothingAssetCommon* Asset = GetOrCreateClothingAsset();
+	if (!Asset)
+	{
+		if (!ClothingSimulation->GetActors().IsEmpty())
+		{
+			ClothingSimulation->DestroyActors();
+			SendClothSimulDataToMeshObject();   // 천 정점이 스키닝 결과로 돌아가게 비운다
+		}
+		return;
+	}
+	if (!ClothingSimulation->HasActorForAsset(Asset))
+	{
+		ClothingSimulation->DestroyActors();
+		if (ClothSectionIndex == FailedClothSectionIndex || !ClothingSimulation->CreateActor(Asset, *ClothingSimulationContext))
+		{
+			FailedClothSectionIndex = ClothSectionIndex;   // 쿠킹 실패도 매 프레임 다시 시도하지 않는다
+			return;
+		}
+		ClothingSimulation->FillContext(this, DeltaTime, *ClothingSimulationContext);   // 새 천은 첫 프레임을 텔레포트로
+	}
+
+	ClothingSimulation->SetConfig(ClothConfig);
+	ClothingSimulation->Simulate(*ClothingSimulationContext);
+
+	// 결과를 메시 오브젝트에 넘긴다. 바로 뒤의 SendRenderDynamicData → Update에서 천 정점에 덮어써 올린다.
+	SendClothSimulDataToMeshObject();
+}
+
+void USkeletalMeshComponent::SendClothSimulDataToMeshObject()
+{
+	FSkeletalMeshObject* MeshObject = GetMeshObject();
+	if (!MeshObject)
+	{
+		return;
+	}
+
+	TArray<FClothSimulData> Data;
+	if (ClothingSimulation)
+	{
+		ClothingSimulation->GetSimulationData(Data, GetSkeletalMesh());
+	}
+	MeshObject->SetClothSimulData(std::move(Data));
+}
 
 UPhysicsAsset* USkeletalMeshComponent::GetOrCreatePhysicsAsset(bool bGenerateIfMissing) const
 {
@@ -344,12 +460,42 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
 		}
         bUpdatingAnimation = false;
 	}
+
+	// 천: 이번 틱의 뼈 갱신(RefreshBoneTransforms) 안에서 한 번 돌게 시간을 넘겨 둔다.
+	// 포즈가 그대로여도 천은 계속 움직이므로 뼈 갱신을 매 틱 하게 한다.
+	if (IsClothingActive())
+	{
+		EnsureCPUSkinningForCloth();
+		PendingClothDeltaTime = DeltaTime;
+		MarkBoneTransformsDirty();
+	}
+
 	Super::TickComponent(DeltaTime);
 
 	// 뼈 행렬이 갱신된 뒤에 바디를 옮긴다. PrePhysics 틱이라 이번 프레임 simulate에 반영된다.
 	if (bHasKinematicBodies)
 	{
 		UpdateKinematicBonesToAnim();
+	}
+}
+
+bool USkeletalMeshComponent::IsClothingActive() const
+{
+	return ClothingSimulation && ClothSectionIndex >= 0 && GetSkeletalMesh();
+}
+
+bool USkeletalMeshComponent::RequiresCPUSkinning() const
+{
+	return IsClothingActive();
+}
+
+void USkeletalMeshComponent::EnsureCPUSkinningForCloth()
+{
+	// GPU 스킨 오브젝트(본 행렬 버퍼가 있음)면 CPU 스킨으로 바꾼다. 천 정점을 CPU에서 덮어써야 하기 때문이다.
+	FSkeletalMeshObject* MeshObject = GetMeshObject();
+	if (MeshObject && MeshObject->GetBoneMatrixBuffer())
+	{
+		RefreshSkinningMode();
 	}
 }
 
@@ -436,6 +582,15 @@ void USkeletalMeshComponent::RefreshBoneTransforms()
 	if (bRagdollSimulating)
 	{
 		BlendPhysicsBones();
+	}
+
+	// 천: 이번 포즈가 정해진 직후, 정점을 올리기(SendRenderDynamicData) 직전에 돈다.
+	// 그래서 고정 입자(어깨)가 같은 프레임의 몸과 어긋나지 않는다. 틱 한 번에 한 번만 돈다.
+	if (PendingClothDeltaTime > 0.0f)
+	{
+		const float ClothDeltaTime = PendingClothDeltaTime;
+		PendingClothDeltaTime = 0.0f;
+		TickClothing(ClothDeltaTime);
 	}
 }
 
@@ -707,6 +862,10 @@ USkeletalMeshComponent::USkeletalMeshComponent()
 
 USkeletalMeshComponent::~USkeletalMeshComponent()
 {
+	// 등록 해제 없이 바로 지워지는 경우 (에셋 미리보기 등)
+	delete ClothingSimulationContext;
+	delete ClothingSimulation;
+
     if (ManagedAnimGraph)
     {
         if (AnimInstance == ManagedAnimGraph.get())

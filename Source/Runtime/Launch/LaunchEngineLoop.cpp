@@ -28,6 +28,7 @@
 
 #include "Render/RealtimeGPUProfiler.h"
 #include "Physics/PhysicsCore.h"
+#include "ClothingSystem/ClothingSystemRuntimeModuleNv.h"
 
 #include "UObject/UObjectGlobals.h"
 
@@ -305,6 +306,9 @@ void FEngineLoop::Exit()
 
 	// 모든 UWorld(= 모든 PxScene)가 사라진 다음에 PhysX 공용 객체를 내린다. (UE의 TermGamePhysCore)
 	FPhysicsCore::Get().Shutdown();
+
+	// 모든 천 시뮬레이션(Solver, Cloth, Fabric)도 월드와 함께 사라졌으니 NvCloth Factory를 내린다.
+	FClothingSystemRuntimeModuleNv::Get().ShutdownModule();
 
 	DepthBuffer.reset();
 	Swapchain.reset();

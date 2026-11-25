@@ -466,3 +466,5 @@ Tools/SnowMountain/build_snow_mountain.py
 # PhysX SDK 빌드 결과물 (lib/debug, lib/release는 위의 [Dd]ebug/, [Rr]elease/ 규칙에 걸린다)
 !Source/ThirdParty/PhysX/lib/debug/
 !Source/ThirdParty/PhysX/lib/release/
+!Source/ThirdParty/NvCloth/lib/debug/
+!Source/ThirdParty/NvCloth/lib/release/

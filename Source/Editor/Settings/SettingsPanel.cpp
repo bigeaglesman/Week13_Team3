@@ -120,6 +120,7 @@ void FSettingsPanel::OnRender()
 	ImGui::SliderFloat("Display Gamma", &Settings.DisplayGamma, 1.0f, 3.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::EndDisabled();
 	ImGui::Checkbox("Vignette", &Settings.bShowVignette);
+	ImGui::Checkbox("Depth of Field", &Settings.bShowDepthOfField);
 	ImGui::Checkbox("Camera Fade / Letterbox", &Settings.bShowCameraOverlay);
 	ImGui::Checkbox("Skeletal Mesh", &Settings.bShowSkeletalMesh);
 
@@ -132,6 +133,23 @@ void FSettingsPanel::OnRender()
 		ImGui::SliderFloat("Letterbox", &D.LetterboxAmount, 0.0f, 1.0f);
 		ImGui::SliderFloat("Letterbox Aspect", &D.LetterboxAspect, 1.0f, 3.0f, "%.2f");
 		ImGui::SliderFloat("Vignette", &D.VignetteIntensity, 0.0f, 2.0f);
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Depth of Field Debug"))
+	{
+		FDOFDebug& D = GDOFDebug;
+		ImGui::Checkbox("Override (All Views)", &D.bOverride);
+		ImGui::Checkbox("Visualize CoC (Green=Near, Black=Focus, Red=Far)", &D.bVisualizeCoC);
+		ImGui::BeginDisabled(!D.bOverride);
+		ImGui::DragFloat("Focal Distance (m)", &D.FocalDistance, 0.1f, 0.0f, 1000.0f, "%.2f");
+		ImGui::DragFloat("Aperture (F-stop)", &D.Fstop, 0.05f, 0.7f, 32.0f, "%.2f");
+		ImGui::DragFloat("Min F-stop", &D.MinFstop, 0.05f, 0.7f, 32.0f, "%.2f");
+		ImGui::SliderInt("Blade Count", &D.BladeCount, 4, 16);
+		ImGui::DragFloat("Sensor Width (mm)", &D.SensorWidth, 0.5f, 1.0f, 200.0f, "%.1f");
+		ImGui::DragFloat("Depth Blur km for 50%", &D.DepthBlurAmount, 0.05f, 0.001f, 100.0f, "%.3f");
+		ImGui::DragFloat("Depth Blur Radius (px)", &D.DepthBlurRadius, 0.1f, 0.0f, 32.0f, "%.2f");
+		ImGui::EndDisabled();
 		ImGui::TreePop();
 	}
 
@@ -231,6 +249,7 @@ bool FSettingsPanel::SaveSettings() const
 	File << "GammaCorrection=" << Settings.bGammaCorrection << "\n";
 	File << "DisplayGamma=" << Settings.DisplayGamma << "\n";
 	File << "ShowVignette=" << Settings.bShowVignette << "\n";
+	File << "ShowDepthOfField=" << Settings.bShowDepthOfField << "\n";
 	File << "ShowCameraOverlay=" << Settings.bShowCameraOverlay << "\n";
 	File << "ShowSkeletalMesh=" << Settings.bShowSkeletalMesh << "\n";
 
@@ -405,6 +424,7 @@ bool FSettingsPanel::LoadSettings()
 				else if (Key == "GammaCorrection")   Settings.bGammaCorrection = std::stoi(ValueStr);
 				else if (Key == "DisplayGamma")      Settings.DisplayGamma = std::stof(ValueStr);
 				else if (Key == "ShowVignette")      Settings.bShowVignette = std::stoi(ValueStr);
+				else if (Key == "ShowDepthOfField")  Settings.bShowDepthOfField = std::stoi(ValueStr);
 				else if (Key == "ShowCameraOverlay") Settings.bShowCameraOverlay = std::stoi(ValueStr);
 				else if (Key == "ShowSkeletalMesh")  Settings.bShowSkeletalMesh = std::stoi(ValueStr);
 

@@ -36,6 +36,9 @@ public:
 
 	void RefreshSkinningMode();
 
+	// true면 bUseGPUSkinning이 켜져 있어도 이 컴포넌트는 CPU 스킨을 쓴다 (천처럼 정점을 CPU에서 고쳐야 할 때)
+	virtual bool RequiresCPUSkinning() const { return false; }
+
 	void MarkBoneTransformsDirty() { bBoneTransformsDirty = true; }
 	void UpdateBoneTransformsNow();
 

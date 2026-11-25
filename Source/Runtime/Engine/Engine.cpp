@@ -6,6 +6,7 @@
 #include "Camera/CameraActor.h"
 #include "Audio/AudioDevice.h"
 #include "Physics/PhysicsCore.h"
+#include "ClothingSystem/ClothingSystemRuntimeModuleNv.h"
 
 #include "Serialization/JsonArchive.h"
 
@@ -20,6 +21,12 @@ bool UEngine::Init()
 	if (!FPhysicsCore::Get().Init())
 	{
 		HTR_LOG(Warning, "[PhysX] Init failed. Physics disabled.");
+	}
+
+	// NvCloth 공용 객체. 실패하면 천만 시뮬레이션되지 않는다. (UE의 FClothingSystemRuntimeModuleNv::StartupModule)
+	if (!FClothingSystemRuntimeModuleNv::Get().StartupModule())
+	{
+		HTR_LOG(Warning, "[NvCloth] Init failed. Cloth disabled.");
 	}
 	return true;
 }

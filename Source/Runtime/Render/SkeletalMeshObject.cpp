@@ -4,6 +4,7 @@
 #include "Tasks/Tasks.h"
 #include "Tasks/TaskScheduler.h"
 #include "Render/SkinningStats.h"
+#include "ClothingSystem/ClothingAssetCommon.h"
 
 // GpuSkinCommon.hlsli가 이 배치를 가정한다
 static_assert(sizeof(FMatrix) == 64);
@@ -146,7 +147,52 @@ void FSkeletalMeshObjectCPUSkin::Update(const TArray<FMatrix>& ComponentSpaceTra
 		SCOPE_CYCLE_COUNTER(SkinningStats::STAT_CpuSkinning);
 		SkinVerticesCPU(SkinnedVertices, SkinnedBounds);
 	}
+	// 천 섹션은 스키닝 결과 위에 시뮬레이션 결과를 덮어쓴 뒤 올린다.
+	ApplyClothSimulData(SkinnedVertices, SkinnedBounds);
 	UploadVertices();
+}
+
+void FSkeletalMeshObject::ApplyClothSimulData(TArray<FVertex>& InOutVertices, FBox& InOutBounds) const
+{
+	const TArray<UClothingAssetCommon*>& Assets = SkeletalMesh->GetMeshClothingAssets();
+	const int32 NumAssets = std::min(Assets.Num(), ClothSimulData.Num());
+	for (int32 AssetIndex = 0; AssetIndex < NumAssets; ++AssetIndex)
+	{
+		const FClothSimulData& Data = ClothSimulData[AssetIndex];
+		const UClothingAssetCommon* Asset = Assets[AssetIndex];
+		if (Data.Positions.IsEmpty() || Data.Positions.Num() != Asset->PhysicalMeshData.GetNumVerts())
+		{
+			continue;   // 아직 시뮬레이션 전이거나 다른 메시의 결과
+		}
+
+		// 렌더 정점마다 따라갈 시뮬레이션 정점 (BindToSkeletalMesh가 만든 표). 천이 아닌 정점은 -1
+		const TArray<int32>& RenderToSim = Asset->RenderToSimVertexMap;
+		const int32 NumRender = std::min(RenderToSim.Num(), InOutVertices.Num());
+		for (int32 RenderIndex = 0; RenderIndex < NumRender; ++RenderIndex)
+		{
+			const int32 SimIndex = RenderToSim[RenderIndex];
+			if (SimIndex < 0)
+			{
+				continue;
+			}
+
+			FVertex& Vertex = InOutVertices[RenderIndex];
+			Vertex.Position = Data.Positions[SimIndex];
+			Vertex.Normal = Data.Normals[SimIndex];
+
+			// 탄젠트는 새 노멀에 수직이 되게 다시 맞춘다 (Gram-Schmidt). w(바이탄젠트 부호)는 그대로
+			const FVector OldTangent(Vertex.Tangent.X, Vertex.Tangent.Y, Vertex.Tangent.Z);
+			const FVector Tangent = (OldTangent - Vertex.Normal * OldTangent.Dot(Vertex.Normal)).GetSafeNormal();
+			Vertex.Tangent = FVector4(Tangent.X, Tangent.Y, Tangent.Z, Vertex.Tangent.W);
+
+			// 천이 몸 바깥으로 날려도 컬링되지 않게 바운드를 넓힌다
+			for (int32 Axis = 0; Axis < 3; ++Axis)
+			{
+				InOutBounds.Min[Axis] = std::min(InOutBounds.Min[Axis], Vertex.Position[Axis]);
+				InOutBounds.Max[Axis] = std::max(InOutBounds.Max[Axis], Vertex.Position[Axis]);
+			}
+		}
+	}
 }
 
 void FSkeletalMeshObjectCPUSkin::UploadVertices()

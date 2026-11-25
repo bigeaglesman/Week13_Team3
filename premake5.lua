@@ -37,6 +37,8 @@ IncludeDir["sol2"]  = "Source/ThirdParty/sol2/include"
 IncludeDir["miniaudio"]  = "Source/ThirdParty/miniaudio"
 IncludeDir["nanosvg"] = "Source/ThirdParty/nanosvg"
 IncludeDir["PhysX"] = "Source/ThirdParty/PhysX/include"
+IncludeDir["NvCloth"] = "Source/ThirdParty/NvCloth/include"
+IncludeDir["NvClothExt"] = "Source/ThirdParty/NvCloth/extensions/include"
 
 -- PhysX 4.1 SDK. vc17win64 프리셋(/MD, v143)으로 빌드한 결과물을 lib/debug, lib/release에 둔다.
 -- 엔진은 정적 라이브러리라 여기서 링크하지 않고, exe 프로젝트(Editor, Game)가 PhysXLinkSettings()로 링크한다.
@@ -207,6 +209,49 @@ project "Lua"
 	includedirs { "%{IncludeDir.lua}" }
 
 
+-- NvCloth 1.1.6 (CPU 솔버만). PhysX처럼 미리 빌드한 정적 lib를 lib/debug, lib/release에 두고 링크만 한다.
+-- 저장소에는 헤더(include/, extensions/include/)와 lib만 있다. 원본 소스는 GitHub NVIDIAGameWorks/NvCloth 1.1.6.
+--
+-- lib를 다시 빌드할 때:
+--  - 소스: src/*.cpp, src/avx/*.cpp(이 파일만 /arch:AVX), extensions/src/*.cpp
+--    (cuda/, dx/, neon/, ps/unix 제외). src/avx는 SwSolverKernel.cpp가 Win64에서 항상 참조하므로 빼면 링크가 깨진다.
+--  - src/ps/windows/PsWindowsAtomic.cpp는 넣지 않는다. PhysXFoundation_64.dll이 같은 physx::shdfnd::atomic* 함수를
+--    내보내서, 넣으면 exe 링크에서 LNK2005(중복 정의)가 난다. 빼면 NvCloth도 PhysX Foundation의 것을 쓴다.
+--  - PxShared 헤더는 PhysX 4.1 include를 쓴다 (NvCloth 동봉본과 주석만 다름).
+--  - x64, /MDd(debug)·/MD(release), /Z7, 아래 NvClothSettings()의 define + _CRT_SECURE_NO_DEPRECATE
+--  - 원본 헤더 수정 2곳 (lib와 저장소 헤더가 같아야 한다):
+--      include/NvCloth/ps/PsAllocator.h : <typeinfo.h> -> <typeinfo> (VS2017+에 typeinfo.h 없음)
+--      include/NvCloth/Callbacks.h      : physx::PxAssertHandler 자체 정의 대신 foundation/PxAssert.h include
+--
+-- NvCloth 헤더를 include하는 프로젝트(엔진, exe)는 NvClothSettings()를 호출해야 한다.
+--  - NV_CLOTH_IMPORT를 비우지 않으면 헤더가 dllimport로 선언돼 링크가 실패한다.
+--  - PX_DEBUG/PX_CHECKED는 PsAllocator.h 등 헤더의 클래스 모양을 바꾸므로 lib와 같아야 한다.
+--    PhysX 디버그 lib도 이 값으로 빌드돼 있어 PhysX 헤더와도 맞는다.
+NvClothLibRoot = "Source/ThirdParty/NvCloth/lib"
+
+function NvClothSettings()
+	includedirs { "%{IncludeDir.NvCloth}", "%{IncludeDir.NvClothExt}" }
+	defines { "NV_CLOTH_IMPORT=", "NV_CLOTH_ENABLE_CUDA=0", "NV_CLOTH_ENABLE_DX11=0", "WIN64" }
+
+	filter "configurations:Debug or Benchmark_Debug or DebugPublishSymbols"
+		defines { "PX_DEBUG=1", "PX_CHECKED=1" }
+	filter {}
+end
+
+-- PhysXLinkSettings()처럼 exe 프로젝트(Editor, Game)에서만 링크한다.
+function NvClothLinkSettings()
+	links { "NvCloth" }
+
+	for _, Config in ipairs({ "Debug", "Release", "Shipping", "ObjViewer", "Benchmark", "Benchmark_Debug", "DebugPublishSymbols", "ReleasePublishSymbols" }) do
+		local NvClothConfig = (Config == "Debug" or Config == "Benchmark_Debug" or Config == "DebugPublishSymbols") and "debug" or "release"
+
+		filter ("configurations:" .. Config)
+			libdirs { path.getabsolute(path.join(NvClothLibRoot, NvClothConfig)) }
+	end
+	filter {}
+end
+
+
 -- 헤더 툴 (UE의 UnrealHeaderTool 역할). 엔진 코드에 의존하지 않고 std만 쓴다.
 -- HitoriEngine / HitoriEditor가 빌드 전에 이 exe로 *.generated.h를 만든다.
 HeaderTool = '"%{wks.location}/Build/Bin/' .. outputdir .. '/HitoriHeaderTool.exe"'
@@ -254,6 +299,8 @@ project "HitoriEngine"
 		"%{IncludeDir.sol2}",
 		"%{IncludeDir.PhysX}",
 	}
+
+	NvClothSettings()
 
 	links { "Lua" }
 
@@ -347,6 +394,8 @@ project "HitoriEditor"
 	}
 
 	PhysXLinkSettings()
+	NvClothSettings()
+	NvClothLinkSettings()
 
 	links
 	{
@@ -404,6 +453,8 @@ project "HitoriGame"
 	}
 
 	PhysXLinkSettings()
+	NvClothSettings()
+	NvClothLinkSettings()
 
 	links
 	{

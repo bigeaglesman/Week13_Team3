@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Math/Transform.h"
+#include "Physics/PhysicalMaterial.h"
 #include "BodyInstance.generated.h"
 
 class UPrimitiveComponent;
-class UPhysicalMaterial;
 class FPhysicsScene;
 struct FKAggregateGeom;
 
@@ -43,6 +43,7 @@ struct FBodyInstance
 
 	// 이 바디의 모든 도형에 쓸 표면 재질. nullptr이면 엔진 기본 재질. InitBody 전에 정한다.
 	// 에셋(UBodySetup 등)이 소유하고, 바디는 빌려 쓴다. UE의 PhysMaterialOverride
+	UPROPERTY(EditAnywhere)
 	UPhysicalMaterial* PhysMaterialOverride = nullptr;
 
 	// WorldTransform의 스케일은 쓰지 않는다. 스케일은 Geom 크기에 이미 들어 있다.

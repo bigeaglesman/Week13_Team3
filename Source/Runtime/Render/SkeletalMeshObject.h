@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Render/SkeletalMesh.h"
+#include "ClothingSystem/ClothSimulData.h"
 
 class FSkeletalMeshObject
 {
@@ -24,9 +25,18 @@ public:
 	bool UpdateBounds();
 	void SetDebugWeightBone(int32 BoneIndex) { DebugWeightBone = BoneIndex; }
 
+	// 천 시뮬레이션 결과. 인덱스는 USkeletalMesh::GetMeshClothingAssets()의 순서이고, 비어 있으면 그 천은 스키닝 결과를 그대로 쓴다.
+	// 다음 Update에서 렌더 정점에 덮어쓴다. CPU 스킨 경로에서만 반영된다. (UE의 SkeletalMeshObject 천 데이터 갱신 자리)
+	void SetClothSimulData(TArray<FClothSimulData>&& InData) { ClothSimulData = std::move(InData); }
+
 protected:
 	void UpdateRefToLocalMatrices(const TArray<FMatrix>& ComponentSpaceTransforms);
 	void SkinVerticesCPU(TArray<FVertex>& OutVertices, FBox& OutBounds) const;
+
+	// 스키닝한 정점 중 천 섹션 정점의 위치·노멀을 시뮬레이션 결과로 바꾸고, 바운드를 넓힌다.
+	void ApplyClothSimulData(TArray<FVertex>& InOutVertices, FBox& InOutBounds) const;
+
+	TArray<FClothSimulData> ClothSimulData;
 
 	int32 DebugWeightBone = -1;
 

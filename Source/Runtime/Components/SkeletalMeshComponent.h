@@ -2,6 +2,7 @@
 
 #include "SkinnedMeshComponent.h"
 #include "Animation/AnimInstance.h"
+#include "ClothingSystem/ClothConfigNv.h"
 #include "SkeletalMeshComponent.generated.h"
 
 class UAnimInstance;
@@ -13,6 +14,9 @@ class FPhysicsScene;
 class UPhysicsAsset;
 class FConstraintInstance;
 class USkeletalMeshComponent;
+class FClothingSimulationNv;
+struct FClothingSimulationContextNv;
+class UClothingAssetCommon;
 
 // 물리 이후에 도는 두 번째 틱. 래그돌이 시뮬레이션 중일 때만 등록해서 물리 결과를 뼈에 반영한다.
 // UE의 FSkeletalMeshComponentEndPhysicsTickFunction 자리다.
@@ -105,7 +109,45 @@ public:
 	// ComponentSpaceTransforms를 덮어쓰므로 RefreshBoneTransforms 안에서 부른다. UE의 BlendPhysicsBones
 	void BlendPhysicsBones();
 
+	// ---- 천 (NvCloth) ----
+	FClothingSimulationNv* GetClothingSimulation() const { return ClothingSimulation; }
+
+	// 천으로 쓸 섹션 번호 (LOD 0). -1이면 천 없음.
+	// UE는 에디터에서 섹션을 골라 천 에셋을 메시에 미리 만들어 두지만, 여기서는 이 값으로 처음 쓸 때 만든다.
+	UPROPERTY(EditAnywhere)
+	int32 ClothSectionIndex = -1;
+
+	// 섹션 위쪽 몇 %를 고정할지 (어깨에 붙는 부분). 천 에셋을 처음 만들 때만 쓴다.
+	UPROPERTY(EditAnywhere)
+	float ClothPinHeightRatio = 0.1f;
+
+	// 천 시뮬레이션 설정 (Phase Constraint 4종, 감쇠, 관성, 중력, 바람). 매 프레임 천에 들어가므로 PIE 중에도 바로 반영된다
+	UPROPERTY(EditAnywhere)
+	FClothConfigNv ClothConfig;
+
+	// ClothSectionIndex 섹션의 천 에셋. 메시에 아직 없으면 FClothingAssetFactory로 만들어 메시에 붙인다.
+	// 섹션이 없거나 만들 수 없으면 nullptr
+	UClothingAssetCommon* GetOrCreateClothingAsset() const;
+
 protected:
+	// 천 시뮬레이션을 만들고 지운다. UE의 OnRegister / OnUnregister 안의 천 처리 + ReleaseAllClothingResources
+	virtual void OnRegister() override;
+	virtual void OnUnregister() override;
+
+	// 애니메이션으로 뼈가 갱신된 뒤 천을 한 스텝 돌린다. UE의 TickClothing
+	// RefreshBoneTransforms 끝에서 불려, 결과가 같은 프레임 정점 업로드에 들어간다.
+	void TickClothing(float DeltaTime);
+
+	// 천 섹션이 정해져 있고 시뮬레이션이 살아 있으면 true
+	bool IsClothingActive() const;
+
+	// 천 정점은 CPU에서 덮어쓰므로 천이 있으면 CPU 스킨을 쓴다 (USkinnedMeshComponent가 메시 오브젝트를 고를 때 본다)
+	virtual bool RequiresCPUSkinning() const override;
+	void EnsureCPUSkinningForCloth();
+
+	// 시뮬레이션 결과를 메시 오브젝트로 보낸다. UE의 천 결과를 렌더 쪽으로 넘기는 자리 (GetUpdateClothSimulationData)
+	void SendClothSimulDataToMeshObject();
+
 	// 컴포넌트가 물리를 요청하거나 에셋에 명시적인 PhysicsType이 있으면 뼈마다 바디를 만든다.
 	// 메시에 Physics Asset이 없으면 뼈 모양으로 자동 생성해 붙인다.
 	virtual bool ShouldCreatePhysicsState() const override;
@@ -151,4 +193,14 @@ private:
 	FSkeletalMeshComponentEndPhysicsTickFunction EndPhysicsTickFunction;
 	bool bRagdollSimulating = false;
 	bool bHasKinematicBodies = false;
+
+	// 컴포넌트마다 하나인 천 시뮬레이션과 매 프레임 입력. UE의 ClothingSimulation / ClothingSimulationContext
+	FClothingSimulationNv*        ClothingSimulation = nullptr;
+	FClothingSimulationContextNv* ClothingSimulationContext = nullptr;
+
+	// 천 에셋 만들기에 실패한 섹션 번호. 같은 번호로 매 프레임 다시 시도하지 않게 한다.
+	mutable int32 FailedClothSectionIndex = -1;
+
+	// TickComponent가 넘겨 두는 이번 틱 천 시간. RefreshBoneTransforms가 쓰고 0으로 비운다 (0이면 천을 안 돌린다)
+	float PendingClothDeltaTime = 0.0f;
 };

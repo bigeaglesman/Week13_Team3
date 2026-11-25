@@ -1,0 +1,316 @@
+#include "EnginePCH.h"
+#include "Physics/VehicleInstance.h"
+
+#include "Physics/PhysicsCore.h"
+#include "Physics/PhysicsScene.h"
+#include "Physics/PhysXConversion.h"
+#include "Physics/PhysXSceneLock.h"
+#include "Physics/PhysicalMaterial.h"
+#include "Physics/BodyInstance.h"
+
+#include <PxPhysicsAPI.h>
+#include <PxScene.h>
+#include <vehicle/PxVehicleDrive4W.h>
+#include <vehicle/PxVehicleUtilSetup.h>
+
+using namespace physx;
+
+namespace
+{
+    constexpr PxU32 VehicleWheelCount = 4;
+}
+
+FVehicleInstance::~FVehicleInstance()
+{
+    TermVehicle();
+}
+
+bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransform& Transform, bool bNotifyRigidBodyCollision, bool bMonsterTruck)
+{
+    if (IsValid() || !InPhysicsScene || !InPhysicsScene->IsValid())
+    {
+        return false;
+    }
+
+    FPhysicsCore& Core = FPhysicsCore::Get();
+    if (!Core.IsInitialized() || !Core.IsVehicleSDKInitialized())
+    {
+        HTR_LOG(Error, "[Vehicle] PhysX Core or Vehicle SDK is not initialized.");
+        return false;
+    }
+
+    PxPhysics* Physics = Core.GetPhysics();
+    PxScene* Scene = InPhysicsScene->GetPxScene();
+    PxMaterial* Material = Core.GetDefaultMaterial();
+
+    if (!Physics || !Scene || !Material)
+    {
+        return false;
+    }
+
+    // 1. 차체 Actor 생성
+    PxRigidDynamic* NewChassis = Physics->createRigidDynamic(ToPx(Transform));
+    if (!NewChassis)
+    {
+        return false;
+    }
+
+    // GT3와 몬스터 트럭은 같은 4륜 PhysX 경로를 사용하되 차체 크기만 분리한다.
+    const PxVec3 ChassisHalfExtents = bMonsterTruck ? PxVec3(1.95f, 0.95f, 0.42f) : PxVec3(1.8f, 0.8f, 0.35f);
+    PxShape* ChassisShape = PxRigidActorExt::createExclusiveShape(*NewChassis, PxBoxGeometry(ChassisHalfExtents.x, ChassisHalfExtents.y, ChassisHalfExtents.z), *Material);
+
+    if (!ChassisShape)
+    {
+        NewChassis->release();
+        return false;
+    }
+
+    ChassisShape->setSimulationFilterData(PxFilterData(0u, bNotifyRigidBodyCollision ? FBodyInstance::FilterFlag_NotifyHit : 0u, 0u, 0u));
+
+    // 차체 질량과 관성 텐서
+    PxVehicleChassisData ChassisData;
+    ChassisData.mMass = bMonsterTruck ? 2800.0f : 1200.0f;
+    ChassisData.mMOI = bMonsterTruck ? PxVec3(920.0f, 3532.0f, 4125.0f) : PxVec3(450.0f, 1345.0f, 1552.0f);
+    ChassisData.mCMOffset = bMonsterTruck ? PxVec3(0.0f, 0.0f, -0.38f) : PxVec3(0.0f, 0.0f, -0.25f);
+
+    NewChassis->setMass(ChassisData.mMass);
+    NewChassis->setMassSpaceInertiaTensor(ChassisData.mMOI);
+    NewChassis->setCMassLocalPose(PxTransform(ChassisData.mCMOffset));
+    NewChassis->setAngularDamping(bMonsterTruck ? 0.22f : 0.7f);
+    NewChassis->userData = nullptr;
+
+    // 2. 4개 바퀴의 기본 위치: X=전방, Y=좌우, Z=상하
+    const PxVec3 WheelCenterActorOffsets[VehicleWheelCount] =
+    {
+        bMonsterTruck ? PxVec3(1.58f, -1.28f, -0.92f) : PxVec3(1.25f, -0.95f, -0.48f), // Front Left
+        bMonsterTruck ? PxVec3(1.58f,  1.28f, -0.92f) : PxVec3(1.25f,  0.95f, -0.48f), // Front Right
+        bMonsterTruck ? PxVec3(-1.58f, -1.28f, -0.92f) : PxVec3(-1.25f, -0.95f, -0.48f), // Rear Left
+        bMonsterTruck ? PxVec3(-1.58f,  1.28f, -0.92f) : PxVec3(-1.25f,  0.95f, -0.48f)  // Rear Right
+    };
+
+    PxVehicleWheelsSimData* WheelsSimData = PxVehicleWheelsSimData::allocate(VehicleWheelCount);
+    if (!WheelsSimData)
+    {
+        NewChassis->release();
+        return false;
+    }
+
+    WheelsSimData->setChassisMass(ChassisData.mMass);
+
+    // PhysX 4.1 기본값을 명시한다. 저속 3회, 고속 1회이며 기존 기본 동작과 동일하다.
+    WheelsSimData->setSubStepCount(5.0f, 3, 1);
+    WheelsSimData->setMinLongSlipDenominator(4.0f);
+
+    PxReal SprungMasses[VehicleWheelCount] = {};
+    PxVehicleComputeSprungMasses(VehicleWheelCount, WheelCenterActorOffsets, ChassisData.mCMOffset, ChassisData.mMass, 2, SprungMasses);
+
+    // 3. Wheel / Suspension / Tire 데이터 설정
+    for (PxU32 i = 0; i < VehicleWheelCount; ++i)
+    {
+        PxVehicleWheelData WheelData;
+        WheelData.mRadius = bMonsterTruck ? 0.82f : 0.36f;
+        WheelData.mWidth = bMonsterTruck ? 0.56f : 0.24f;
+        WheelData.mMass = bMonsterTruck ? 85.0f : 20.0f;
+        WheelData.mMOI = bMonsterTruck ? 28.6f : 1.296f;
+        WheelData.mDampingRate = bMonsterTruck ? 0.45f : 0.25f;
+        WheelData.mMaxSteer = (i < 2) ? (bMonsterTruck ? 0.42f : 0.55f) : 0.0f;
+        WheelData.mMaxBrakeTorque = (i < 2) ? (bMonsterTruck ? 3400.0f : 1800.0f) : (bMonsterTruck ? 2800.0f : 1400.0f);
+        WheelData.mMaxHandBrakeTorque = (i >= 2) ? (bMonsterTruck ? 1700.0f : 900.0f) : 0.0f;
+        WheelsSimData->setWheelData(i, WheelData);
+
+        PxVehicleSuspensionData SuspensionData = WheelsSimData->getSuspensionData(i);
+
+        const PxReal RideFrequency = bMonsterTruck ? ((i < 2) ? 1.05f : 1.15f) : ((i < 2) ? 1.7f : 1.9f);
+        const PxReal DampingRatio = bMonsterTruck ? 0.30f : 0.90f;
+        const PxReal NaturalAngularFrequency = 6.28318530718f * RideFrequency;
+
+        SuspensionData.mSprungMass = SprungMasses[i];
+        SuspensionData.mMaxCompression = bMonsterTruck ? 0.62f : 0.25f;
+        SuspensionData.mMaxDroop = bMonsterTruck ? 0.55f : 9.81f / (NaturalAngularFrequency * NaturalAngularFrequency);
+        SuspensionData.mSpringStrength = SuspensionData.mSprungMass * NaturalAngularFrequency * NaturalAngularFrequency;
+        SuspensionData.mSpringDamperRate = 2.0f * DampingRatio * PxSqrt(SuspensionData.mSpringStrength * SuspensionData.mSprungMass);
+
+        WheelsSimData->setSuspensionData(i, SuspensionData);
+
+        HTR_LOG(Info, "[VehicleSuspension] Wheel={} Mass={}kg Frequency={}Hz Damping={} Spring={} Damper={} Droop={}", i, SuspensionData.mSprungMass, RideFrequency, DampingRatio, SuspensionData.mSpringStrength, SuspensionData.mSpringDamperRate, SuspensionData.mMaxDroop);
+
+        PxVehicleTireData TireData;
+
+        // 현재 PhysX 4.1 기본 타이어 강성값을 명시한다.
+        TireData.mLatStiffX = 2.0f;
+        TireData.mLatStiffY = 0.3125f * (180.0f / 3.1415926535f);
+        TireData.mLongitudinalStiffnessPerUnitGravity = 1000.0f;
+        TireData.mCamberStiffnessPerUnitGravity = 0.1f * (180.0f / 3.1415926535f);
+
+        TireData.mFrictionVsSlipGraph[0][0] = 0.0f;
+        TireData.mFrictionVsSlipGraph[0][1] = 1.0f;
+        TireData.mFrictionVsSlipGraph[1][0] = 0.10f;
+        TireData.mFrictionVsSlipGraph[1][1] = 1.10f;
+        TireData.mFrictionVsSlipGraph[2][0] = 1.00f;
+        TireData.mFrictionVsSlipGraph[2][1] = 0.98f;
+
+        WheelsSimData->setTireData(i, TireData);
+
+        const PxVec3 WheelCenterCOMOffset = WheelCenterActorOffsets[i] - ChassisData.mCMOffset;
+        WheelsSimData->setWheelCentreOffset(i, WheelCenterCOMOffset);
+        WheelsSimData->setSuspTravelDirection(i, PxVec3(0.0f, 0.0f, -1.0f));
+        WheelsSimData->setSuspForceAppPointOffset(i, WheelCenterCOMOffset);
+        WheelsSimData->setTireForceAppPointOffset(i, WheelCenterCOMOffset);
+
+        // 아직 Actor에 바퀴 Shape가 없으므로 명시적으로 연결을 끊는다.
+        WheelsSimData->setWheelShapeMapping(i, -1);
+        WheelsSimData->setSceneQueryFilterData(i, PxFilterData(VehicleDrivableSurfaceQueryFlag, 0, 0, 0));
+    }
+
+    // 좌우 바퀴의 서스펜션 압축량 차이를 억제하는 안티롤 바
+    PxVehicleAntiRollBarData FrontAntiRollBar;
+    FrontAntiRollBar.mWheel0 = 0;
+    FrontAntiRollBar.mWheel1 = 1;
+    FrontAntiRollBar.mStiffness = bMonsterTruck ? 2800.0f : 18000.0f;
+    WheelsSimData->addAntiRollBarData(FrontAntiRollBar);
+
+    PxVehicleAntiRollBarData RearAntiRollBar;
+    RearAntiRollBar.mWheel0 = 2;
+    RearAntiRollBar.mWheel1 = 3;
+    RearAntiRollBar.mStiffness = bMonsterTruck ? 2200.0f : 16000.0f;
+    WheelsSimData->addAntiRollBarData(RearAntiRollBar);
+
+    // 4. 4륜 구동 데이터의 기본 설정
+    PxVehicleDriveSimData4W DriveData;
+
+    PxVehicleEngineData EngineData;
+    EngineData.mMOI = bMonsterTruck ? 2.5f : 1.0f;
+    EngineData.mPeakTorque = bMonsterTruck ? 950.0f : 420.0f;
+    EngineData.mMaxOmega = bMonsterTruck ? 540.0f : 650.0f;
+    EngineData.mDampingRateFullThrottle = 0.15f;
+    EngineData.mDampingRateZeroThrottleClutchEngaged = 2.0f;
+    EngineData.mDampingRateZeroThrottleClutchDisengaged = 0.35f;
+
+    // 엔진 회전 속도에 따른 정규화 토크 커브
+    EngineData.mTorqueCurve.clear();
+    EngineData.mTorqueCurve.addPair(0.00f, 0.55f);
+    EngineData.mTorqueCurve.addPair(0.15f, 0.68f);
+    EngineData.mTorqueCurve.addPair(0.35f, 0.84f);
+    EngineData.mTorqueCurve.addPair(0.55f, 0.95f);
+    EngineData.mTorqueCurve.addPair(0.72f, 1.00f);
+    EngineData.mTorqueCurve.addPair(0.88f, 0.96f);
+    EngineData.mTorqueCurve.addPair(1.00f, 0.88f);
+
+    HTR_LOG(Info, "[VehicleEngine] PeakTorque={}Nm | MaxRPM={} | CurveEntries={}", EngineData.mPeakTorque, EngineData.mMaxOmega * 60.0f / (2.0f * 3.1415926535f), EngineData.mTorqueCurve.getNbDataPairs());
+
+    PxVehicleGearsData GearsData;
+    GearsData.mFinalRatio = bMonsterTruck ? 5.2f : 3.7f;
+    GearsData.mNbRatios = 8;
+    GearsData.mSwitchTime = bMonsterTruck ? 0.35f : 0.2f;
+    GearsData.setGearRatio(PxVehicleGearsData::eREVERSE, -3.2f);
+    GearsData.setGearRatio(PxVehicleGearsData::eNEUTRAL, 0.0f);
+    GearsData.setGearRatio(PxVehicleGearsData::eFIRST, bMonsterTruck ? 4.2f : 3.6f);
+    GearsData.setGearRatio(PxVehicleGearsData::eSECOND, bMonsterTruck ? 2.8f : 2.65f);
+    GearsData.setGearRatio(PxVehicleGearsData::eTHIRD, bMonsterTruck ? 1.9f : 1.95f);
+    GearsData.setGearRatio(PxVehicleGearsData::eFOURTH, bMonsterTruck ? 1.35f : 1.43f);
+    GearsData.setGearRatio(PxVehicleGearsData::eFIFTH, bMonsterTruck ? 1.0f : 1.05f);
+    GearsData.setGearRatio(PxVehicleGearsData::eSIXTH, bMonsterTruck ? 0.78f : 0.82f);
+
+    PxVehicleClutchData ClutchData;
+    ClutchData.mStrength = bMonsterTruck ? 22.0f : 10.0f;
+    ClutchData.mAccuracyMode = PxVehicleClutchAccuracyMode::eBEST_POSSIBLE;
+
+    PxVehicleAutoBoxData AutoBoxData;
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIRST, 0.94f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eSECOND, 0.94f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eTHIRD, 0.94f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFOURTH, 0.94f);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIFTH, 0.94f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eSECOND, 0.58f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eTHIRD, 0.58f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFOURTH, 0.58f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFIFTH, 0.58f);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eSIXTH, 0.58f);
+    AutoBoxData.setLatency(0.35f);
+
+    DriveData.setEngineData(EngineData);
+    DriveData.setGearsData(GearsData);
+    DriveData.setClutchData(ClutchData);
+    DriveData.setAutoBoxData(AutoBoxData);
+
+    PxVehicleDifferential4WData DifferentialData;
+    DifferentialData.mType = PxVehicleDifferential4WData::eDIFF_TYPE_LS_4WD;
+    DifferentialData.mFrontRearSplit = 0.55f;
+    DifferentialData.mFrontLeftRightSplit = 0.5f;
+    DifferentialData.mRearLeftRightSplit = 0.5f;
+    DifferentialData.mCentreBias = 1.3f;
+    DifferentialData.mFrontBias = 1.3f;
+    DifferentialData.mRearBias = 1.3f;
+    DriveData.setDiffData(DifferentialData);
+
+    PxVehicleAckermannGeometryData AckermannData;
+    AckermannData.mFrontWidth = bMonsterTruck ? 2.56f : 1.9f;
+    AckermannData.mRearWidth = bMonsterTruck ? 2.56f : 1.9f;
+    AckermannData.mAxleSeparation = bMonsterTruck ? 3.16f : 2.5f;
+    DriveData.setAckermannGeometryData(AckermannData);
+
+    // 5. Wheel 데이터와 구동 데이터를 차량 인스턴스에 연결
+    PxVehicleDrive4W* NewVehicle = PxVehicleDrive4W::create(Physics, NewChassis, *WheelsSimData, DriveData, 0);
+    WheelsSimData->free();
+
+    if (!NewVehicle)
+    {
+        NewChassis->release();
+        return false;
+    }
+
+    // 6. PhysX Scene에 차체 등록
+    {
+        SCOPED_SCENE_WRITE_LOCK(Scene);
+        Scene->addActor(*NewChassis);
+
+        NewVehicle->setToRestState();
+        NewVehicle->mDriveDynData.forceGearChange(PxVehicleGearsData::eFIRST);
+        NewVehicle->mDriveDynData.setUseAutoGears(true);
+    }
+
+    ChassisActor = NewChassis;
+    Vehicle = NewVehicle;
+
+    HTR_LOG(Info, "[Vehicle] Initialized | Type={} | Wheels={} | ChassisMass={}kg | TireRadius={}m | SuspensionTravel={}m", bMonsterTruck ? "MONSTER_TRUCK_4W" : "GT3_4W", VehicleWheelCount, ChassisData.mMass, bMonsterTruck ? 0.82f : 0.36f, bMonsterTruck ? 1.17f : 0.0f);
+    return true;
+}
+
+void FVehicleInstance::TermVehicle()
+{
+    PxScene* Scene = ChassisActor ? ChassisActor->getScene() : nullptr;
+
+    if (Scene)
+    {
+        SCOPED_SCENE_WRITE_LOCK(Scene);
+
+        if (Vehicle)
+        {
+            Vehicle->free();
+            Vehicle = nullptr;
+        }
+
+        ChassisActor->userData = nullptr;
+        ChassisActor->release();
+        ChassisActor = nullptr;
+        return;
+    }
+
+    if (Vehicle)
+    {
+        Vehicle->free();
+        Vehicle = nullptr;
+    }
+
+    if (ChassisActor)
+    {
+        ChassisActor->userData = nullptr;
+        ChassisActor->release();
+        ChassisActor = nullptr;
+    }
+}
+
+physx::PxVehicleWheels* FVehicleInstance::GetVehicle() const
+{
+    return Vehicle;
+}

@@ -3,6 +3,9 @@
 #include "Physics/PhysicsCore.h"
 #include "Physics/BodySetup.h"
 #include "UObject/Casts.h"
+#include "Engine/World.h"
+#include "Physics/PhysicsScene.h"
+#include "UObject/UObjectIterator.h"
 
 #include <PxPhysicsAPI.h>
 #include <cmath>
@@ -65,4 +68,29 @@ void UPhysicalMaterial::UpdatePxMaterial()
 	PxMaterialHandle->setStaticFriction(StaticFriction);
 	PxMaterialHandle->setDynamicFriction(DynamicFriction);
 	PxMaterialHandle->setRestitution(Restitution);
+}
+
+void UPhysicalMaterial::PostEditChangeProperty(const FProperty& Property)
+{
+	UpdatePxMaterial();
+
+	if (Property.Name != "VehicleSurfaceType")
+	{
+		return;
+	}
+
+	for (TObjectIterator<UWorld> It; It; ++It)
+	{
+		UWorld* World = *It;
+
+		if (!World)
+		{
+			continue;
+		}
+
+		if (FPhysicsScene* PhysicsScene = World->GetPhysicsScene())
+		{
+			PhysicsScene->RefreshVehicleFrictionPairs();
+		}
+	}
 }

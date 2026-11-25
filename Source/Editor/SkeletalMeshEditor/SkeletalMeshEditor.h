@@ -42,6 +42,7 @@ public:
 	FConstraintSetup* GetSelectedConstraint() const;
 	UBodySetup* GetSelectedBodySetup() const;
 	void SelectShape(EColliderShape Type, int32 Index);
+	void AddBody(int32 BoneIndex);
 	void AddShapeToSelectedBody(EColliderShape Type);
 	bool CanRemoveSelectedShape() const;
 	void RemoveSelectedShape();

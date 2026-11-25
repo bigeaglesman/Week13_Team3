@@ -15,7 +15,34 @@ namespace
 		FVector Min = FVector(FLT_MAX, FLT_MAX, FLT_MAX);
 		FVector Max = FVector(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 		int32 NumVertices = 0;
+
+		void Add(const FVector& P)
+		{
+			Min = Min.ComponentMin(P);
+			Max = Max.ComponentMax(P);
+			++NumVertices;
+		}
 	};
+
+	int32 DominantBone(const FSkinWeight& Weight)
+	{
+		int32 Bone = -1;
+		float BestWeight = 0.0f;
+		for (int32 k = 0; k < MaxBoneInfluences; ++k)
+		{
+			if (Weight.Weight[k] > BestWeight)
+			{
+				BestWeight = Weight.Weight[k];
+				Bone = Weight.BoneIndex[k];
+			}
+		}
+		return Bone;
+	}
+
+	FMatrix RigidBindMatrix(const FBoneInfo& Bone)
+	{
+		return ToFTransform(ToPxNoScale(Bone.InverseBindPose.Inverse())).GetLocalMatrix();
+	}
 
 	float GetAxis(const FVector& V, int32 Axis)
 	{
@@ -42,6 +69,27 @@ namespace
 		if (Axis == 1) return FQuat::MakeFromAxisAngle(FVector(0, 0, 1), HalfPi);    // X → Y
 		if (Axis == 2) return FQuat::MakeFromAxisAngle(FVector(0, 1, 0), -HalfPi);   // X → Z
 		return FQuat::Identity();
+	}
+
+	FKSphylElem FitCapsule(const FBoneVertexBounds& Bounds, const FVector& Extent, int32 Long, float MinRadius)
+	{
+		const float Radius = std::max(GetAxis(Extent, (Long + 1) % 3), GetAxis(Extent, (Long + 2) % 3));
+		const float HalfHeight = std::max(GetAxis(Extent, Long), Radius);
+		FKSphylElem Elem;
+		Elem.Center = (Bounds.Max + Bounds.Min) * 0.5f;
+		Elem.Rotation = RotateZToAxis(Long);
+		Elem.Radius = std::max(Radius, MinRadius);
+		Elem.Length = 2.0f * std::max(HalfHeight - Elem.Radius, 0.0f);
+		return Elem;
+	}
+
+	void AppendBody(UPhysicsAsset& Asset, const FString& BoneName, const FKSphylElem& Capsule)
+	{
+		UBodySetup* Setup = NewObject<UBodySetup>(&Asset);
+		Setup->BoneName = BoneName;
+		Setup->AggGeom.SphylElems.Add(Capsule);
+		Setup->DefaultInstance.bSimulatePhysics = true;
+		Asset.BodySetups.Add(Setup);
 	}
 }
 
@@ -70,7 +118,7 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 	InvBindNoScale.SetNum(NumBones);
 	for (int32 i = 0; i < NumBones; ++i)
 	{
-		BindNoScale[i] = ToFTransform(ToPxNoScale(Bones[i].InverseBindPose.Inverse())).GetLocalMatrix();
+		BindNoScale[i] = RigidBindMatrix(Bones[i]);
 		InvBindNoScale[i] = BindNoScale[i].Inverse();
 	}
 
@@ -82,27 +130,14 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 	const int32 NumVertices = std::min(LOD.BindVertices.Num(), LOD.SkinWeights.Num());
 	for (int32 v = 0; v < NumVertices; ++v)
 	{
-		const FSkinWeight& Weight = LOD.SkinWeights[v];
-		int32 Dominant = -1;
-		float BestWeight = 0.0f;
-		for (int32 k = 0; k < MaxBoneInfluences; ++k)
-		{
-			if (Weight.Weight[k] > BestWeight)
-			{
-				BestWeight = Weight.Weight[k];
-				Dominant = Weight.BoneIndex[k];
-			}
-		}
+		const int32 Dominant = DominantBone(LOD.SkinWeights[v]);
 		if (Dominant < 0 || Dominant >= NumBones)
 		{
 			continue;
 		}
 
 		const FVector P = InvBindNoScale[Dominant].TransformPosition(LOD.BindVertices[v].Position);
-		FBoneVertexBounds& B = Bounds[Dominant];
-		B.Min = FVector(std::min(B.Min.X, P.X), std::min(B.Min.Y, P.Y), std::min(B.Min.Z, P.Z));
-		B.Max = FVector(std::max(B.Max.X, P.X), std::max(B.Max.Y, P.Y), std::max(B.Max.Z, P.Z));
-		++B.NumVertices;
+		Bounds[Dominant].Add(P);
 	}
 
 	// ---- 2. 뼈마다 캡슐 바디 ----
@@ -125,30 +160,15 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 		}
 
 		const FVector Extent = (B.Max - B.Min) * 0.5f;
-		const FVector Center = (B.Max + B.Min) * 0.5f;
 		const int32 Long = GetLongestAxis(Extent);
 		if (GetAxis(Extent, Long) * 2.0f < MinBoneSize)
 		{
 			continue;
 		}
 
-		// 반지름 = 나머지 두 축 중 큰 쪽, 반높이 = 긴 축 (반구 포함)
-		const float Radius = std::max(GetAxis(Extent, (Long + 1) % 3), GetAxis(Extent, (Long + 2) % 3));
-		const float HalfHeight = std::max(GetAxis(Extent, Long), Radius);
-
-		FKSphylElem Elem;
-		Elem.Center = Center;
-		Elem.Rotation = RotateZToAxis(Long);
-		Elem.Radius = std::max(Radius, MinBoneSize * 0.25f);
-		Elem.Length = 2.0f * std::max(HalfHeight - Elem.Radius, 0.0f);
-
-		UBodySetup* Setup = NewObject<UBodySetup>(Asset);
-		Setup->BoneName = Bones[i].Name;
-		Setup->AggGeom.SphylElems.Add(Elem);
-		Setup->DefaultInstance.bSimulatePhysics = true;   // 래그돌 바디의 기본값
-
+		const FKSphylElem Elem = FitCapsule(B, Extent, Long, MinBoneSize * 0.25f);
 		BoneToBody[i] = Asset->BodySetups.Num();
-		Asset->BodySetups.Add(Setup);
+		AppendBody(*Asset, Bones[i].Name, Elem);
 		BodyLongAxis.Add(Long);
 		BodyVolume.Add(Pi * Elem.Radius * Elem.Radius * (Elem.Length + 4.0f / 3.0f * Elem.Radius));
 	}
@@ -209,4 +229,64 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 	}
 
 	return Asset;
+}
+
+bool FPhysicsAssetUtils::AddCapsuleBodyForBone(USkeletalMesh& Mesh, int32 BoneIndex)
+{
+	const auto& Bones = Mesh.GetRefSkeleton();
+	const auto& LODs = Mesh.GetRenderData().LODRenderData;
+	if (!Bones.IsValidIndex(BoneIndex) || LODs.IsEmpty()) return false;
+
+	const FBoneInfo& Bone = Bones[BoneIndex];
+	UPhysicsAsset* Asset = Mesh.GetPhysicsAsset();
+	const int32 BodyIndex = Asset ? Asset->FindBodyIndex(Bone.Name) : -1;
+	UBodySetup* Existing = BodyIndex >= 0 ? Asset->BodySetups[BodyIndex] : nullptr;
+	if (Existing && !Existing->AggGeom.IsEmpty()) return false;
+
+	const auto& LOD = LODs[0];
+	const FMatrix ToBone = RigidBindMatrix(Bone).Inverse();
+	FBoneVertexBounds Bounds;
+	const int32 NumVertices = std::min(LOD.BindVertices.Num(), LOD.SkinWeights.Num());
+	for (int32 i = 0; i < NumVertices; ++i)
+	{
+		if (DominantBone(LOD.SkinWeights[i]) == BoneIndex)
+		{
+			Bounds.Add(ToBone.TransformPosition(LOD.BindVertices[i].Position));
+		}
+	}
+
+	// 담당 정점이 없는 끝 본도 편집할 수 있도록 본 원점에 작은 캡슐을 둔다.
+	FKSphylElem Capsule;
+	const FVector MeshSize = LOD.BindAABB.Max - LOD.BindAABB.Min;
+	const float MeshLength = std::max({ MeshSize.X, MeshSize.Y, MeshSize.Z });
+	if (MeshLength > 0.0f)
+	{
+		Capsule.Radius = MeshLength * FPhysAssetCreateParams{}.MinBoneSizeRatio * 0.25f;
+		Capsule.Length = 2.0f * Capsule.Radius;
+	}
+	if (Bounds.NumVertices > 0)
+	{
+		const FVector Extent = (Bounds.Max - Bounds.Min) * 0.5f;
+		const int32 Axis = GetLongestAxis(Extent);
+		const float HalfLength = GetAxis(Extent, Axis);
+		if (HalfLength > 0.0f)
+		{
+			Capsule = FitCapsule(Bounds, Extent, Axis, std::min(Capsule.Radius, HalfLength * 0.25f));
+		}
+	}
+
+	if (Existing)
+	{
+		Existing->AggGeom.SphylElems.Add(Capsule);
+	}
+	else
+	{
+		if (!Asset)
+		{
+			Asset = NewObject<UPhysicsAsset>();
+			Mesh.SetPhysicsAsset(Asset);
+		}
+		AppendBody(*Asset, Bone.Name, Capsule);
+	}
+	return true;
 }

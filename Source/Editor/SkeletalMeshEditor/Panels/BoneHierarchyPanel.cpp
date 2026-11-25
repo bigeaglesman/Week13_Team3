@@ -58,6 +58,7 @@ void FBoneHierarchyPanel::DrawColliderTree()
 	TArray<int32> NearestBody;
 	NearestBody.Reserve(Bones.Num());
 	TArray<int32> Roots;
+	TArray<int32> BonesWithoutColliders;
 	for (int32 BoneIndex = 0; BoneIndex < Bones.Num(); ++BoneIndex)
 	{
 		const FBoneInfo& Bone = Bones[BoneIndex];
@@ -65,6 +66,7 @@ void FBoneHierarchyPanel::DrawColliderTree()
 		const int32 ParentBody = Parent >= 0 ? NearestBody[Parent] : -1;
 		if (!BodyBones.Contains(Bone.Name))
 		{
+			BonesWithoutColliders.Add(BoneIndex);
 			NearestBody.Add(ParentBody);
 			continue;
 		}
@@ -78,6 +80,20 @@ void FBoneHierarchyPanel::DrawColliderTree()
 			Roots.Add(BoneIndex);
 		}
 	}
+
+	ImGui::BeginDisabled(BonesWithoutColliders.IsEmpty());
+	if (ImGui::BeginCombo("##AddBody", "Add Body", ImGuiComboFlags_HeightLarge))
+	{
+		for (int32 BoneIndex : BonesWithoutColliders)
+		{
+			if (ImGui::Selectable(Bones[BoneIndex].Name.c_str()))
+			{
+				Editor.AddBody(BoneIndex);
+			}
+		}
+		ImGui::EndCombo();
+	}
+	ImGui::EndDisabled();
 
 	if (Roots.IsEmpty())
 	{

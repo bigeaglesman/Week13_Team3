@@ -11,6 +11,7 @@
 #include "Physics/BodySetup.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetFile.h"
+#include "Physics/PhysicsAssetUtils.h"
 #include "Physics/PhysicsScene.h"
 #include "Render/LineBatcher.h"
 #include "Render/SkeletalMesh.h"
@@ -358,6 +359,18 @@ void FSkeletalMeshEditor::SelectShape(EColliderShape Type, int32 Index)
 	SelectedShapeType = Type;
 	SelectedShapeIndex = Index;
 	SyncBoneGizmo();
+}
+
+void FSkeletalMeshEditor::AddBody(int32 BoneIndex)
+{
+	if (!bPhysicsAssetMode || IsPhysicsPreviewRunning() || !Mesh) return;
+	if (!FPhysicsAssetUtils::AddCapsuleBodyForBone(*Mesh, BoneIndex))
+	{
+		PhysicsAssetStatus = "Could not add a capsule body for this bone.";
+		return;
+	}
+	SelectBone(BoneIndex);
+	MarkPhysicsAssetDirty();
 }
 
 void FSkeletalMeshEditor::AddShapeToSelectedBody(EColliderShape Type)

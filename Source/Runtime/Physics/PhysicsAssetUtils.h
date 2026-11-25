@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Types.h"
+
 class USkeletalMesh;
 class UPhysicsAsset;
 
@@ -28,4 +30,5 @@ namespace FPhysicsAssetUtils
 	// 3. 바디가 있는 가장 가까운 조상 뼈와 관절로 잇는다. 관절 위치 = 자식 뼈 원점, Twist 축 = 캡슐 축
 	// 반환된 에셋은 호출한 쪽이 소유한다. 실패하면 nullptr
 	UPhysicsAsset* CreateFromSkeletalMesh(const USkeletalMesh* Mesh, const FPhysAssetCreateParams& Params = FPhysAssetCreateParams());
+	bool AddCapsuleBodyForBone(USkeletalMesh& Mesh, int32 BoneIndex);
 }

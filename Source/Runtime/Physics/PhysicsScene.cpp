@@ -563,12 +563,12 @@ void FPhysicsScene::StepOnce(float Step)
 				PxFixedSizeLookupTable<8> Table;
 				Table.addPair(0.0f, 0.90f);
 				Table.addPair(5.0f, 0.90f);
-				Table.addPair(15.0f, 0.72f);
-				Table.addPair(30.0f, 0.40f);
-				Table.addPair(45.0f, 0.25f);
-				Table.addPair(60.0f, 0.16f);
-				Table.addPair(90.0f, 0.10f);
-				Table.addPair(120.0f, 0.08f);
+				Table.addPair(15.0f, 0.24f);
+				Table.addPair(30.0f, 0.06f);
+				Table.addPair(45.0f, 0.027f);
+				Table.addPair(60.0f, 0.015f);
+				Table.addPair(90.0f, 0.007f);
+				Table.addPair(120.0f, 0.004f);
 				return Table;
 			}();
 

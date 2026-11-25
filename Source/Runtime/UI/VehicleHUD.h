@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "UI/UserWidget.h"
@@ -23,23 +22,10 @@ protected:
 private:
     UVehicleMovementComponent* VehicleMovement = nullptr;
 
-    // 기본 차량 정보
     UTextBlock* SpeedText = nullptr;
     UTextBlock* GearText = nullptr;
     UTextBlock* RPMText = nullptr;
     UTextBlock* InputText = nullptr;
     UTextBlock* WheelText = nullptr;
-
-    // 차량 로컬 속도 정보
-    UTextBlock* LocalVelocityText = nullptr;
-    UTextBlock* LocalAngularVelocityText = nullptr;
-
-    // 바퀴별 텔레메트리
-    UTextBlock* WheelTelemetryTitleText = nullptr;
-    UTextBlock* WheelTelemetryText[4] = {};
-
-    UTextBlock* WheelSuspensionTitleText = nullptr;
-    UTextBlock* WheelSuspensionText[4] = {};
-
     UTextBlock* DriveModeText = nullptr;
 };

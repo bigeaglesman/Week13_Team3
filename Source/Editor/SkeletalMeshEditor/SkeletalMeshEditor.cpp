@@ -135,6 +135,7 @@ void FSkeletalMeshEditor::SetPhysicsAssetMode(bool bEnabled)
 {
 	BoneGizmo.EndDrag();
 	bPhysicsAssetMode = bEnabled;
+	GraphFocusBone = bEnabled ? SelectedBoneIndex : -1;
 	SelectedConstraintIndex = -1;
 	bPhysicsPickPending = false;
 	SyncBoneGizmo();
@@ -152,9 +153,24 @@ void FSkeletalMeshEditor::SetPhysicsAssetMode(bool bEnabled)
 	}
 }
 
+void FSkeletalMeshEditor::OnBoneSelected()
+{
+	SelectedConstraintIndex = -1;
+	GraphFocusBone = bPhysicsAssetMode ? SelectedBoneIndex : -1;
+	BoneGizmo.EndDrag();
+	SyncBoneGizmo();
+}
+
+void FSkeletalMeshEditor::SelectBodyFromGraph(int32 BoneIndex)
+{
+	const int32 PreviousFocus = GraphFocusBone;
+	SelectBone(BoneIndex);
+	GraphFocusBone = PreviousFocus;
+}
+
 void FSkeletalMeshEditor::SelectConstraint(int32 Index)
 {
-	SelectBone(-1);
+	SelectBodyFromGraph(-1);
 	SelectedConstraintIndex = Index;
 	bShowConstraints = true;
 }
@@ -287,7 +303,6 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 		}
 		if (bShowConstraints)
 		{
-			const UBodySetup* Selected = GetSelectedBodySetup();
 			const float Radius = BoneSphereSize * Scale * 7.0f;
 			for (int32 i = 0; i < Asset->ConstraintSetups.Num(); ++i)
 			{
@@ -296,8 +311,7 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 				const FTransform* Child = BodyPoses.Find(Joint.ChildBoneName);
 				if (Parent && Child)
 				{
-					const bool bConnected = Selected && (Selected->BoneName == Joint.ParentBoneName || Selected->BoneName == Joint.ChildBoneName);
-					const bool bHighlighted = i == SelectedConstraintIndex || bConnected;
+					const bool bHighlighted = i == SelectedConstraintIndex;
 					const uint32 First = LineBatcher.GetVertexCount();
 					DrawConstraintFrames(LineBatcher, Joint, *Parent, *Child, Scale, bHighlighted ? Radius * 1.5f : Radius, bHighlighted);
 					if (bPick)
@@ -315,7 +329,10 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 		if (bPick)
 		{
 			if (HitConstraint >= 0)
+			{
 				SelectConstraint(HitConstraint);
+				GraphFocusBone = Mesh->FindBoneIndex(Asset->ConstraintSetups[HitConstraint].ChildBoneName);
+			}
 			else
 				SelectBone(HitBody);
 		}

@@ -2,6 +2,8 @@
 
 #include "SkeletalMeshEditorPanel.h"
 
+class UBodySetup;
+
 // 메시 상세 정보 UI를 확장하기 위한 패널 골격입니다.
 class FSkeletalMeshDetailsPanel : public FSkeletalMeshEditorPanel
 {
@@ -13,4 +15,5 @@ protected:
 
 private:
 	void DrawPhysicsAssetDetails();
+	void DrawBodyCapsules(const UBodySetup& Setup, int32 BoneIndex);
 };

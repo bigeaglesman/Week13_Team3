@@ -5,18 +5,70 @@
 #include "Physics/BodySetup.h"
 #include "Physics/PhysicsAsset.h"
 #include "Render/SkeletalMesh.h"
+#include <format>
 
 namespace
 {
-	void DrawAngularExtent(const char* Label, EConstraintMotion Motion, float Degrees)
+	FString FormatAngularExtent(EConstraintMotion Motion, float Degrees)
 	{
-		const float Extent = FConstraintSetup::AngularExtentDeg(Motion, Degrees);
 		if (Motion == EConstraintMotion::Free)
-			ImGui::Text("%s: Free", Label);
-		else if (Extent == 0.0f)
-			ImGui::Text("%s: Locked", Label);
-		else
-			ImGui::Text("%s: -%g to +%g deg", Label, Extent, Extent);
+			return "Free";
+		const float Extent = FConstraintSetup::AngularExtentDeg(Motion, Degrees);
+		return Extent == 0.0f ? "Locked" : std::format("±{:g}°", Extent);
+	}
+
+	void DrawBodyNode(FSkeletalMeshEditor& Editor, const FString& Name, float Width)
+	{
+		const int32 Index = Editor.GetMesh()->FindBoneIndex(Name);
+		const bool bValid = Editor.GetBoneItems().IsValidIndex(Index);
+		const char* Label = bValid ? Editor.GetBoneItems()[Index].Name.c_str() : Name.empty() ? "World" : Name.c_str();
+		const bool bSelected = bValid && Index == Editor.GetSelectedBoneIndex();
+		ImGui::BeginDisabled(!bValid);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(bSelected ? ImGuiCol_ButtonActive : ImGuiCol_Button));
+		const bool bClicked = ImGui::Button(Label, ImVec2(Width, 0));
+		if (bValid && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			Editor.SelectBone(Index);
+		else if (bClicked && !bSelected)
+			Editor.SelectBodyFromGraph(Index);
+		ImGui::PopStyleColor();
+		ImGui::EndDisabled();
+		if (!Name.empty())
+			ImGui::SetItemTooltip("%s\nDouble-click to focus connections", Name.c_str());
+	}
+
+	void DrawJointConnection(FSkeletalMeshEditor& Editor, const FConstraintSetup& Joint, int32 JointIndex, bool bSelected)
+	{
+		const float Gap = ImGui::GetStyle().ItemSpacing.x;
+		const float JointWidth = ImGui::CalcTextSize("Joint").x + ImGui::GetStyle().FramePadding.x * 2;
+		const float BodyWidth = std::max(1.0f, (ImGui::GetContentRegionAvail().x - JointWidth - Gap * 2) * 0.5f);
+		const ImVec2 Start = ImGui::GetCursorScreenPos();
+		const float MidY = Start.y + ImGui::GetFrameHeight() * 0.5f;
+		const ImU32 LineColor = ImGui::GetColorU32(ImGuiCol_TextDisabled);
+		const float ParentEnd = Start.x + BodyWidth;
+		const float JointEnd = ParentEnd + Gap + JointWidth;
+		ImGui::GetWindowDrawList()->AddLine(ImVec2(ParentEnd, MidY), ImVec2(ParentEnd + Gap, MidY), LineColor);
+		ImGui::GetWindowDrawList()->AddLine(ImVec2(JointEnd, MidY), ImVec2(JointEnd + Gap, MidY), LineColor);
+
+		ImGui::PushID(JointIndex);
+		ImGui::PushID("Parent");
+		DrawBodyNode(Editor, Joint.ParentBoneName, BodyWidth);
+		ImGui::PopID();
+		ImGui::SameLine(0, Gap);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(bSelected ? ImGuiCol_ButtonActive : ImGuiCol_Header));
+		if (ImGui::Button("Joint", ImVec2(JointWidth, 0)))
+			Editor.SelectConstraint(JointIndex);
+		ImGui::PopStyleColor();
+		ImGui::SetItemTooltip("%s", Joint.JointName.c_str());
+		ImGui::SameLine(0, Gap);
+		ImGui::PushID("Child");
+		DrawBodyNode(Editor, Joint.ChildBoneName, BodyWidth);
+		ImGui::PopID();
+		ImGui::PopID();
+
+		ImGui::TextWrapped("Twist %s   Swing 1 %s   Swing 2 %s",
+			FormatAngularExtent(Joint.TwistMotion, Joint.TwistLimitDeg).c_str(),
+			FormatAngularExtent(Joint.Swing1Motion, Joint.Swing1LimitDeg).c_str(),
+			FormatAngularExtent(Joint.Swing2Motion, Joint.Swing2LimitDeg).c_str());
 	}
 }
 
@@ -86,39 +138,57 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 		ImGui::TextWrapped("%s", Editor.GetPhysicsAssetStatus().c_str());
 	}
 
-	if (const FConstraintSetup* Joint = Editor.GetSelectedConstraint())
-	{
-		ImGui::SeparatorText("Constraint");
-		ImGui::TextWrapped("%s -> %s", Joint->ParentBoneName.c_str(), Joint->ChildBoneName.c_str());
-		DrawAngularExtent("Twist", Joint->TwistMotion, Joint->TwistLimitDeg);
-		DrawAngularExtent("Swing 1", Joint->Swing1Motion, Joint->Swing1LimitDeg);
-		DrawAngularExtent("Swing 2", Joint->Swing2Motion, Joint->Swing2LimitDeg);
-		return;
-	}
-
-	const int32 BoneIndex = Editor.GetSelectedBoneIndex();
-	const UBodySetup* Setup = Editor.GetSelectedBodySetup();
-	if (!Setup || Setup->AggGeom.IsEmpty())
+	const FConstraintSetup* SelectedJoint = Editor.GetSelectedConstraint();
+	const auto& Bones = Editor.GetMesh()->GetRefSkeleton();
+	const int32 Focus = Editor.GetGraphFocusBone();
+	const UPhysicsAsset* Asset = Editor.GetMesh()->GetPhysicsAsset();
+	if (!Asset || (!Bones.IsValidIndex(Focus) && !SelectedJoint))
 	{
 		ImGui::TextWrapped("Select a body or constraint in the viewport, or a body in Collider Hierarchy.");
 		return;
 	}
 
+	ImGui::SeparatorText("Constraint Graph");
+	bool bHasConnection = false;
+	const auto& Joints = Asset->ConstraintSetups;
+	for (int32 i = 0; i < Joints.Num(); ++i)
+	{
+		const FConstraintSetup& Joint = Joints[i];
+		const bool bVisible = Bones.IsValidIndex(Focus)
+			? Joint.ParentBoneName == Bones[Focus].Name || Joint.ChildBoneName == Bones[Focus].Name
+			: &Joint == SelectedJoint;
+		if (bVisible)
+		{
+			if (bHasConnection)
+				ImGui::Separator();
+			DrawJointConnection(Editor, Joint, i, &Joint == SelectedJoint);
+			bHasConnection = true;
+		}
+	}
+	if (!bHasConnection)
+		ImGui::TextDisabled("No connected constraints.");
+
+	if (const UBodySetup* Setup = Editor.GetSelectedBodySetup())
+		DrawBodyCapsules(*Setup, Editor.GetSelectedBoneIndex());
+}
+
+void FSkeletalMeshDetailsPanel::DrawBodyCapsules(const UBodySetup& Setup, int32 BoneIndex)
+{
 	ImGui::SeparatorText(Editor.GetBoneItems()[BoneIndex].Name.c_str());
-	if (Setup->AggGeom.SphylElems.IsEmpty())
+	if (Setup.AggGeom.SphylElems.IsEmpty())
 	{
 		ImGui::TextDisabled("No capsule on this body.");
 	}
 
 	ImGui::PushID(BoneIndex);
-	for (int32 Index = 0; Index < Setup->AggGeom.SphylElems.Num(); ++Index)
+	for (int32 Index = 0; Index < Setup.AggGeom.SphylElems.Num(); ++Index)
 	{
 		ImGui::PushID(Index);
-		if (Setup->AggGeom.SphylElems.Num() > 1)
+		if (Setup.AggGeom.SphylElems.Num() > 1)
 		{
 			ImGui::Text("Capsule %d", Index + 1);
 		}
-		float Radius = Setup->AggGeom.SphylElems[Index].Radius;
+		float Radius = Setup.AggGeom.SphylElems[Index].Radius;
 		if (ImGui::DragFloat("Capsule Radius", &Radius, 0.01f, 0.0f, 0.0f, "%.5g"))
 		{
 			Editor.SetSelectedCapsuleRadius(Index, Radius);
@@ -127,24 +197,4 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 	}
 	ImGui::PopID();
 
-	ImGui::SeparatorText("Connected Constraints");
-	bool bHasConnection = false;
-	const auto& Joints = Editor.GetMesh()->GetPhysicsAsset()->ConstraintSetups;
-	for (int32 i = 0; i < Joints.Num(); ++i)
-	{
-		const FConstraintSetup& Joint = Joints[i];
-		if (Joint.ParentBoneName == Setup->BoneName || Joint.ChildBoneName == Setup->BoneName)
-		{
-			const FString Label = Joint.ParentBoneName + " -> " + Joint.ChildBoneName;
-			ImGui::PushID(i);
-			if (ImGui::Selectable(Label.c_str()))
-				Editor.SelectConstraint(i);
-			ImGui::PopID();
-			bHasConnection = true;
-		}
-	}
-	if (!bHasConnection)
-	{
-		ImGui::TextDisabled("None");
-	}
 }

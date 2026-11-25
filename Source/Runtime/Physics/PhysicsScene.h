@@ -4,14 +4,23 @@
 #include "Math/Vector.h"
 
 class UWorld;
+class USceneComponent;
 class FLineBatcher;
 struct FBodyInstance;
 class FPhysicsSimulationEventCallback;
+class UPrimitiveComponent;
 
 namespace physx
 {
 	class PxScene;
+	class PxVehicleWheels;
+	class PxRigidActor;
+	class PxMaterial;
 }
+
+enum class EVehicleSurfaceType : uint8;
+
+struct FVehicleSceneQueryData;
 
 // simulate 도중 PhysX가 알려 준 충돌 하나. 시뮬레이션이 끝난 뒤 게임 스레드에서 보낸다.
 // UE의 FCollisionNotifyInfo 자리다.
@@ -19,10 +28,72 @@ struct FCollisionNotifyInfo
 {
 	FBodyInstance* BodyA = nullptr;   // 바디가 지워지면 nullptr로 바뀐다
 	FBodyInstance* BodyB = nullptr;
+	UPrimitiveComponent* ComponentA = nullptr;
+	UPrimitiveComponent* ComponentB = nullptr;
 	bool bNotifyA = false;            // A 쪽 컴포넌트에 OnComponentHit을 보낼지 (A의 bNotifyRigidBodyCollision)
 	bool bNotifyB = false;
 	FVector ImpactPoint = FVector(0, 0, 0);
 	FVector ImpactNormal = FVector(0, 0, 0);   // B에서 A 쪽을 향한다
+	FVector NormalImpulse = FVector(0, 0, 0);
+};
+
+struct FVehicleWheelState
+{
+	bool bIsInAir = true;
+	bool bHasContact = false;
+
+	FVector SuspensionLineStart = FVector(0.0f, 0.0f, 0.0f);
+	FVector SuspensionLineDirection = FVector(0.0f, 0.0f, 0.0f);
+	float SuspensionLineLength = 0.0f;
+
+	FVector WheelCenterOffset = FVector(0.0f, 0.0f, 0.0f);
+	FVector SuspensionTravelDirection = FVector(0.0f, 0.0f, 0.0f);
+
+	FVector TireContactPoint = FVector(0.0f, 0.0f, 0.0f);
+	FVector TireContactNormal = FVector(0.0f, 0.0f, 0.0f);
+	FVector TireLongitudinalDirection = FVector(0.0f, 0.0f, 0.0f);
+	FVector TireLateralDirection = FVector(0.0f, 0.0f, 0.0f);
+
+	float WheelRadius = 0.0f;
+	float WheelWidth = 0.0f;
+
+	float SuspensionJounce = 0.0f;
+	float SuspensionTotalForce = 0.0f;
+	float SuspensionJounceVelocityEstimate = 0.0f;
+	float SuspensionSpringComponent = 0.0f;
+	float SuspensionDamperComponent = 0.0f;
+
+	float TireFriction = 0.0f;
+	float LongitudinalSlip = 0.0f;
+	float LateralSlip = 0.0f;
+
+	float SteerAngle = 0.0f;
+	float WheelRotationAngle = 0.0f;
+
+	int32 TireSurfaceType = -1;
+};
+
+enum class EVehicleDriveMode : uint8
+{
+	AWDLSD = 0,
+	AWDOpen,
+	RWDLSD
+};
+
+struct FVehicleDriveState
+{
+	float ForwardSpeed = 0.0f;
+	float LinearSpeed = 0.0f;
+
+	FVector LocalLinearVelocity = FVector(0.0f, 0.0f, 0.0f);
+	FVector LocalAngularVelocity = FVector(0.0f, 0.0f, 0.0f);
+
+	float EngineRPM = 0.0f;
+
+	int32 CurrentGear = 0;
+	int32 TargetGear = 0;
+
+	bool bUseAutoGears = false;
 };
 
 // 월드 하나당 PxScene 하나. 고정 스텝으로 시뮬레이션한다.
@@ -59,15 +130,32 @@ public:
 	// 바디가 지워질 때 부른다. 모아 둔 이벤트에서 이 바디를 지운다.
 	void RemovePendingNotifies(const FBodyInstance* Body);
 
+	bool AddVehicle(physx::PxVehicleWheels* Vehicle, USceneComponent* SyncComponent);
+	void RemoveVehicle(physx::PxVehicleWheels* Vehicle);
+
+	void SetVehicleInput(physx::PxVehicleWheels* Vehicle, bool bAccelerate, bool bBrake, bool bHandbrake, bool bSteerLeft, bool bSteerRight);
+	bool GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehicleWheelState* OutWheelStates, int32 MaxWheelCount, bool& OutIsInAir) const;
+	bool GetVehicleDriveState(physx::PxVehicleWheels* Vehicle, FVehicleDriveState& OutState) const;
+	bool SetVehicleGear(physx::PxVehicleWheels* Vehicle, int32 Gear, bool bUseAutoGears, bool bForce);
+	bool SetVehicleAutomaticGears(physx::PxVehicleWheels* Vehicle, bool bUseAutoGears);
+	bool SetVehicleDriveMode(physx::PxVehicleWheels* Vehicle, EVehicleDriveMode Mode);
+	bool RefreshVehicleFrictionPairs();
+	physx::PxMaterial* GetVehicleSurfaceMaterial(EVehicleSurfaceType SurfaceType) const;
+
 	static constexpr float FixedStep = 1.0f / 60.0f;
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다
 
 private:
+	friend class FPhysicsSimulationEventCallback;
+
+	UPrimitiveComponent* FindVehicleComponent(const physx::PxRigidActor* Actor) const;
+
 	void SetDebugVisualization(bool bEnable);
 	void StepOnce(float Step);
 
 	// 시뮬레이션 결과(움직인 바디의 위치·회전)를 컴포넌트에 되돌려 쓴다. UE의 SyncComponentsToBodies 자리
 	void SyncActiveBodiesToComponents();
+	void SyncVehiclesToComponents();
 
 	// 모아 둔 충돌 이벤트를 컴포넌트에 보낸다. 씬 락 밖에서 부른다 (받는 쪽이 바디를 만들거나 지울 수 있다).
 	// UE의 FPhysScene_PhysX::DispatchPhysNotifications_AssumesLocked 자리
@@ -81,4 +169,6 @@ private:
 
 	FPhysicsSimulationEventCallback* EventCallback = nullptr;
 	TArray<FCollisionNotifyInfo>     PendingCollisionNotifies;
+
+	FVehicleSceneQueryData* VehicleSceneQueryData = nullptr;
 };

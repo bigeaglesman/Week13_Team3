@@ -1,0 +1,564 @@
+{
+    "Version": 4,
+    "World": {
+        "PersistentLevel": {
+            "Actors": [
+                {
+                    "Class": "AStaticMeshActor",
+                    "Name": "MonsterTruck_BumpyDirtTrack",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "BumpyDirtSurface",
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bBlockComponent": true,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bVisible": true,
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": true,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/MonsterTruck/MonsterTruckBumpyTerrain.obj",
+                                "bIsVehicleDrivableSurface": true,
+                                "VehicleSurfaceType": "Dirt"
+                            }
+                        }
+                    ],
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "APawn",
+                    "Name": "MonsterTruckPawn",
+                    "Components": [
+                        {
+                            "Class": "UBoxComponent",
+                            "Name": "VehicleRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "BoxExtent": {
+                                    "X": 1.95,
+                                    "Y": 0.95,
+                                    "Z": 0.42
+                                },
+                                "Transform": {
+                                    "Location": {
+                                        "X": -7.0,
+                                        "Y": 0.0,
+                                        "Z": 1.82
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true,
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": true,
+                                    "bSimulatePhysics": false
+                                }
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "VehicleBody",
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bVisible": true,
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/MonsterTruck/MonsterTruckBody.obj"
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "Wheel_FL",
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 1.58,
+                                        "Y": -1.28,
+                                        "Z": -0.92
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 90,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 0.82,
+                                        "Y": 0.82,
+                                        "Z": 0.56
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bVisible": true,
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/MonsterTruck/MonsterTruckWheel.obj"
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "Wheel_FR",
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 1.58,
+                                        "Y": 1.28,
+                                        "Z": -0.92
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 90,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 0.82,
+                                        "Y": 0.82,
+                                        "Z": 0.56
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bVisible": true,
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/MonsterTruck/MonsterTruckWheel.obj"
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "Wheel_RL",
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": -1.58,
+                                        "Y": -1.28,
+                                        "Z": -0.92
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 90,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 0.82,
+                                        "Y": 0.82,
+                                        "Z": 0.56
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bVisible": true,
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/MonsterTruck/MonsterTruckWheel.obj"
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "Wheel_RR",
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": -1.58,
+                                        "Y": 1.28,
+                                        "Z": -0.92
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 90,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 0.82,
+                                        "Y": 0.82,
+                                        "Z": 0.56
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bVisible": true,
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": false,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/MonsterTruck/MonsterTruckWheel.obj"
+                            }
+                        },
+                        {
+                            "Class": "USpringArmComponent",
+                            "Name": "VehicleSpringArm",
+                            "Parent": "VehicleRoot",
+                            "Properties": {
+                                "CameraLagMaxDistance": 0.0,
+                                "CameraLagSpeed": 5.5,
+                                "CameraRotationLagSpeed": 10.0,
+                                "ProbeSize": 0.3,
+                                "SocketOffset": {
+                                    "X": 0,
+                                    "Y": 0,
+                                    "Z": 0
+                                },
+                                "TargetArmLength": 19.0,
+                                "TargetOffset": {
+                                    "X": 0,
+                                    "Y": 0,
+                                    "Z": 4.6
+                                },
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 12,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bDoCollisionTest": true,
+                                "bDrawDebug": false,
+                                "bDrawOnlyIfSelected": false,
+                                "bEnableCameraLag": true,
+                                "bEnableCameraRotationLag": true,
+                                "bHiddenInGame": false,
+                                "bInheritPitch": false,
+                                "bInheritRoll": false,
+                                "bInheritYaw": true,
+                                "bUsePawnControlRotation": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UCameraComponent",
+                            "Name": "VehicleTestCamera",
+                            "Parent": "VehicleSpringArm",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bExternalInputManaged": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UVehicleMovementComponent",
+                            "Name": "VehicleMovementComponent",
+                            "Parent": "",
+                            "Properties": {
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true,
+                                "bMonsterTruckSetup": true
+                            }
+                        }
+                    ],
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "ADirectionalLightActor",
+                    "Name": "MonsterTruck_Sun",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UDirectionalLightComponent",
+                            "Name": "UDirectionalLightComponent",
+                            "Parent": "",
+                            "Properties": {
+                                "AngularRadiusDegrees": 0.75,
+                                "Intensity": 1.35,
+                                "LightColor": 4294967295,
+                                "ShadowBias": 0.45,
+                                "ShadowResolutionScale": 1.0,
+                                "ShadowSharpen": 0.0,
+                                "ShadowSlopeBias": 0.45,
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 12
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 48,
+                                        "Roll": 0,
+                                        "Yaw": 28
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bCastShadows": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "ASkyLightActor",
+                    "Name": "MonsterTruck_Sky",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "USkyLightComponent",
+                            "Name": "USkyLightComponent",
+                            "Parent": "",
+                            "Properties": {
+                                "Intensity": 0.55,
+                                "LightColor": 4294967295,
+                                "ShadowBias": 0.01,
+                                "ShadowResolutionScale": 1.0,
+                                "ShadowSharpen": 0.0,
+                                "ShadowSlopeBias": 0.01,
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bCastShadows": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                }
+            ]
+        }
+    }
+}

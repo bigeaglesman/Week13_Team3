@@ -1,0 +1,9 @@
+# High-clearance off-road tire materials
+newmtl Rubber
+Kd 0.018 0.021 0.024
+
+newmtl Rim
+Kd 0.48 0.53 0.58
+
+newmtl Hub
+Kd 0.96 0.42 0.035

@@ -187,8 +187,7 @@ void UEditorEngine::TickPIEInput(float DeltaTime)
 		GameViewport.LostFocus();
 		return;
 	}
-	constexpr EKeyCode Keys[] = { EKeyCode::W, EKeyCode::A, EKeyCode::S, EKeyCode::D,
-		EKeyCode::Space, EKeyCode::Shift };
+	constexpr EKeyCode Keys[] = { EKeyCode::W, EKeyCode::A, EKeyCode::S, EKeyCode::D, EKeyCode::Space, EKeyCode::Shift, EKeyCode::N, EKeyCode::M, EKeyCode::E, EKeyCode::Q, EKeyCode::V };
 	for (EKeyCode Key : Keys)
 	{
 		if (FInputSystem::IsKeyPressed(Key))

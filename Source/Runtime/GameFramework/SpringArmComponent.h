@@ -28,6 +28,18 @@ public:
 	float TargetArmLength = 4.0f;			// 팔 길이 (월드 단위)
 
 	UPROPERTY(EditAnywhere)
+	bool bEnableMouseWheelZoom = false;
+
+	UPROPERTY(EditAnywhere)
+	float MinArmLength = 2.5f;
+
+	UPROPERTY(EditAnywhere)
+	float MaxArmLength = 12.0f;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomSpeed = 0.5f;
+
+	UPROPERTY(EditAnywhere)
 	FVector SocketOffset;					// 팔 "끝"에서 카메라 공간 오프셋 (어깨 너머: Y+)
 
 	UPROPERTY(EditAnywhere)

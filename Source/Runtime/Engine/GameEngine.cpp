@@ -142,8 +142,7 @@ void UGameEngine::DispatchInput(FGameViewportClient& Viewport, float DeltaTime)
 		return;
 	}
 
-	constexpr EKeyCode Keys[] = { EKeyCode::W, EKeyCode::A, EKeyCode::S, EKeyCode::D,
-		EKeyCode::Space, EKeyCode::Shift, EKeyCode::Escape };
+	constexpr EKeyCode Keys[] = { EKeyCode::W, EKeyCode::A, EKeyCode::S, EKeyCode::D, EKeyCode::Space, EKeyCode::Shift, EKeyCode::Escape, EKeyCode::N, EKeyCode::M, EKeyCode::E, EKeyCode::Q, EKeyCode::V };
 	for (EKeyCode Key : Keys)
 	{
 		if (FInputSystem::IsKeyPressed(Key))  Viewport.InputKey(nullptr, static_cast<int32>(Key), true);

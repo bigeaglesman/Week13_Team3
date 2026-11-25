@@ -1,0 +1,8 @@
+newmtl Print
+Kd 1 1 1
+Ks 0 0 0
+map_Kd MangoCarton.png
+
+newmtl Kraft
+Kd 0.64 0.41 0.23
+Ks 0 0 0

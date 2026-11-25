@@ -1,0 +1,857 @@
+{
+  "Version": 4,
+  "World": {
+    "PersistentLevel": {
+      "Actors": [
+        {
+          "Class": "ACameraActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1.0,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "bOverride_DepthOfFieldMinFstop": true,
+                "bOverride_DepthOfFieldBladeCount": true,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "bOverride_DepthOfFieldDepthBlurAmount": false,
+                "bOverride_DepthOfFieldDepthBlurRadius": false,
+                "DepthOfFieldFstop": 0.9,
+                "DepthOfFieldMinFstop": 0.9,
+                "DepthOfFieldBladeCount": 5,
+                "DepthOfFieldSensorWidth": 170.0,
+                "DepthOfFieldFocalDistance": 3.0,
+                "DepthOfFieldDepthBlurAmount": 1.0,
+                "DepthOfFieldDepthBlurRadius": 0.0
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 6.8, "Y": 0, "Z": 1.62 },
+                  "Rotation": { "Pitch": 0, "Yaw": 180, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Name": "BandCamera",
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1.0,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "bOverride_DepthOfFieldMinFstop": true,
+                "bOverride_DepthOfFieldBladeCount": true,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "bOverride_DepthOfFieldDepthBlurAmount": false,
+                "bOverride_DepthOfFieldDepthBlurRadius": false,
+                "DepthOfFieldFstop": 0.9,
+                "DepthOfFieldMinFstop": 0.9,
+                "DepthOfFieldBladeCount": 5,
+                "DepthOfFieldSensorWidth": 170.0,
+                "DepthOfFieldFocalDistance": 6.7,
+                "DepthOfFieldDepthBlurAmount": 1.0,
+                "DepthOfFieldDepthBlurRadius": 0.0
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 6.8, "Y": 0, "Z": 1.62 },
+                  "Rotation": { "Pitch": 0, "Yaw": 180, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Name": "HitoriCamera",
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AActor",
+          "Name": "StageManager",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "Scripts/bocchi_soundcheck.lua",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Nijika",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 3.65, "Y": 1.48, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 118, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/Nijika/Nijika.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Kita",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 3.45, "Y": -2.62, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": -132, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/Ikuyo/Ikuyo.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Ryo",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1.55, "Y": 3.48, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 110, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/Ryo/Ryo.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Hitori",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": -0.95, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 165, "Roll": 0 },
+                  "Scale": { "X": 1.22, "Y": 1.22, "Z": 1.22 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/Hiroti_Seated/Hitori_Seated.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "StageDeck",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": -0.17 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 18, "Y": 20, "Z": 0.34 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/MangoCarton/MangoCarton.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true,
+                "BodyInstance": {
+                  "bEnablePhysicsCollision": true,
+                  "bSimulatePhysics": false,
+                  "bEnableGravity": true,
+                  "bNotifyRigidBodyCollision": false,
+                  "MassInKg": 3.0
+                }
+              },
+              "OverrideMaterials": [
+                {
+                  "Base": "DefaultMaterial",
+                  "Instance": {
+                    "BaseColor": { "X": 1, "Y": 1, "Z": 1, "W": 1 },
+                    "BlendState": "Opaque",
+                    "FlipNormalY": false,
+                    "PSOType": 0,
+                    "Properties": {},
+                    "SamplerState": "LinearClamp",
+                    "Shininess": 32.0,
+                    "SpecularColor": { "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                    "Textures": [
+                      "Assets/Models/MangoCarton/StageBoards.png"
+                    ],
+                    "UVScrollSpeed": [
+                      0.0,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "Base": "DefaultMaterial",
+                  "Instance": {
+                    "BaseColor": { "X": 1, "Y": 1, "Z": 1, "W": 1 },
+                    "BlendState": "Opaque",
+                    "FlipNormalY": false,
+                    "PSOType": 0,
+                    "Properties": {},
+                    "SamplerState": "LinearClamp",
+                    "Shininess": 32.0,
+                    "SpecularColor": { "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                    "Textures": [
+                      "Assets/Models/MangoCarton/StageBoards.png"
+                    ],
+                    "UVScrollSpeed": [
+                      0.0,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "Base": "DefaultMaterial",
+                  "Instance": {
+                    "BaseColor": { "X": 1, "Y": 1, "Z": 1, "W": 1 },
+                    "BlendState": "Opaque",
+                    "FlipNormalY": false,
+                    "PSOType": 0,
+                    "Properties": {},
+                    "SamplerState": "LinearClamp",
+                    "Shininess": 32.0,
+                    "SpecularColor": { "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                    "Textures": [
+                      "Assets/Models/MangoCarton/StageBoards.png"
+                    ],
+                    "UVScrollSpeed": [
+                      0.0,
+                      0.0
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "BackWall",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -2.1, "Y": 0, "Z": 4.43 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 0.25, "Y": 32, "Z": 9 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/MangoCarton/MangoCarton.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": [
+                {
+                  "Base": "DefaultMaterial",
+                  "Instance": {
+                    "BaseColor": { "X": 1, "Y": 1, "Z": 1, "W": 1 },
+                    "BlendState": "Opaque",
+                    "FlipNormalY": false,
+                    "PSOType": 0,
+                    "Properties": {},
+                    "SamplerState": "LinearClamp",
+                    "Shininess": 32.0,
+                    "SpecularColor": { "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                    "Textures": [
+                      "Assets/Models/MangoCarton/StarryWall.png"
+                    ],
+                    "UVScrollSpeed": [
+                      0.0,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "Base": "DefaultMaterial",
+                  "Instance": {
+                    "BaseColor": { "X": 1, "Y": 1, "Z": 1, "W": 1 },
+                    "BlendState": "Opaque",
+                    "FlipNormalY": false,
+                    "PSOType": 0,
+                    "Properties": {},
+                    "SamplerState": "LinearClamp",
+                    "Shininess": 32.0,
+                    "SpecularColor": { "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                    "Textures": [
+                      "Assets/Models/MangoCarton/StarryWall.png"
+                    ],
+                    "UVScrollSpeed": [
+                      0.0,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "Base": "DefaultMaterial",
+                  "Instance": {
+                    "BaseColor": { "X": 1, "Y": 1, "Z": 1, "W": 1 },
+                    "BlendState": "Opaque",
+                    "FlipNormalY": false,
+                    "PSOType": 0,
+                    "Properties": {},
+                    "SamplerState": "LinearClamp",
+                    "Shininess": 32.0,
+                    "SpecularColor": { "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                    "Textures": [
+                      "Assets/Models/MangoCarton/StarryWall.png"
+                    ],
+                    "UVScrollSpeed": [
+                      0.0,
+                      0.0
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "MangoCarton",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": -0.95, "Z": 7.8 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 2.12, "Y": 2.28, "Z": 1.87 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/MangoCarton/MangoCarton.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true,
+                "BodyInstance": {
+                  "bEnablePhysicsCollision": true,
+                  "bSimulatePhysics": true,
+                  "bEnableGravity": true,
+                  "bNotifyRigidBodyCollision": false,
+                  "MassInKg": 3.0
+                }
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "AActor",
+          "Name": "ReleaseShelf",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": -0.95, "Z": 6.78 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UBoxComponent",
+              "Name": "Shelf",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": true,
+                "BoxExtent": { "X": 1.35, "Y": 1.35, "Z": 0.08 },
+                "BodyInstance": {
+                  "bEnablePhysicsCollision": true,
+                  "bSimulatePhysics": false,
+                  "bEnableGravity": true,
+                  "bNotifyRigidBodyCollision": false,
+                  "MassInKg": 3.0
+                }
+              }
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "AActor",
+          "Name": "Hinge",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": -2.09, "Z": 6.87 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UPhysicsConstraintComponent",
+              "Name": "CartonHinge",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "Actor1Name": "",
+                "Actor2Name": "MangoCarton",
+                "LinearXMotion": "Locked",
+                "LinearYMotion": "Locked",
+                "LinearZMotion": "Locked",
+                "TwistMotion": "Free",
+                "Swing1Motion": "Locked",
+                "Swing2Motion": "Locked",
+                "bDisableCollision": true
+              }
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ASkyLightActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "USkyLightComponent",
+              "Name": "USkyLightComponent",
+              "Parent": "",
+              "Properties": {
+                "Intensity": 0.58,
+                "LightColor": 4294967295,
+                "Transform": {
+                  "Location": { "X": -5.947237491607666, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UBillboardComponent",
+              "Material": {
+                "Base": "BillboardMaterial",
+                "Instance": {
+                  "BaseColor": { "W": 1.0, "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                  "BlendState": "AlphaBlend",
+                  "FlipNormalY": false,
+                  "PSOType": 14,
+                  "Properties": {},
+                  "SamplerState": "LinearClamp",
+                  "Shininess": 32.0,
+                  "SpecularColor": { "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                  "Textures": [
+                    "Assets/Icons/Sky.png"
+                  ],
+                  "UVScrollSpeed": [
+                    0.0,
+                    0.0
+                  ]
+                }
+              },
+              "Name": "UBillboardComponent",
+              "Parent": "USkyLightComponent",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": true,
+                "bVisible": false
+              }
+            }
+          ],
+          "Name": "ASkyLightActor_0",
+          "Properties": {
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "ADirectionalLightActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UDirectionalLightComponent",
+              "Name": "UDirectionalLightComponent",
+              "Parent": "",
+              "Properties": {
+                "Intensity": 1.7,
+                "LightColor": 4294967295,
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 2.324465751647949 },
+                  "Rotation": { "Pitch": 52, "Roll": 0.0, "Yaw": 158 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UBillboardComponent",
+              "Material": {
+                "Base": "BillboardMaterial",
+                "Instance": {
+                  "BaseColor": { "W": 1.0, "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                  "BlendState": "AlphaBlend",
+                  "FlipNormalY": false,
+                  "PSOType": 14,
+                  "Properties": {},
+                  "SamplerState": "LinearClamp",
+                  "Shininess": 32.0,
+                  "SpecularColor": { "X": 1.0, "Y": 1.0, "Z": 1.0 },
+                  "Textures": [
+                    "Assets/Icons/Directional.png"
+                  ],
+                  "UVScrollSpeed": [
+                    0.0,
+                    0.0
+                  ]
+                }
+              },
+              "Name": "UBillboardComponent",
+              "Parent": "UDirectionalLightComponent",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": true,
+                "bVisible": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UArrowComponent",
+              "OverrideMaterials": [
+                {
+                  "Asset": "EditorArrowMaterial"
+                }
+              ],
+              "Parent": "UDirectionalLightComponent",
+              "Properties": {
+                "StaticMesh": "Arrow",
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 90.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 0.30000001192092896, "Y": 0.30000001192092896, "Z": 0.5 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": true,
+                "bVisible": false
+              }
+            }
+          ],
+          "Name": "ADirectionalLightActor_0",
+          "Properties": {
+            "bActorEnableCollision": true
+          }
+        }
+      ],
+      "Properties": {}
+    },
+    "Properties": {}
+  }
+}

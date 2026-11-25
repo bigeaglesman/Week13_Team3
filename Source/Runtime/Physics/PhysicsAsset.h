@@ -22,6 +22,7 @@ public:
 
 	// 뼈 이름으로 바디 찾기. 없으면 -1
 	int32 FindBodyIndex(const FString& BoneName) const;
+	bool HasConstraintBetween(const FString& BoneA, const FString& BoneB) const;
 	bool RemoveBody(const FString& BoneName);
 
 	// 바디와 관절을 모두 지운다.

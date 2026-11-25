@@ -4,6 +4,9 @@
 #include "Math/Transform.h"
 #include "Physics/BodySetup.h"
 #include "Physics/ConstraintSetup.h"
+#include "Physics/PhysicsAsset.h"
+#include "Physics/PhysicsAssetUtils.h"
+#include "Render/SkeletalMesh.h"
 #include <cmath>
 #include <cstdio>
 
@@ -121,6 +124,22 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 			if (Changed)
 				Editor.MarkPhysicsAssetDirty();
 			ImGui::EndTable();
+		}
+		ImGui::Separator();
+		if (ImGui::Button("Remove Joint..."))
+			ImGui::OpenPopup("RemoveJoint");
+		if (ImGui::BeginPopup("RemoveJoint"))
+		{
+			ImGui::Text("Disconnect %s and %s?", Parent.c_str(), Child.c_str());
+			if (ImGui::Button("Remove Joint"))
+			{
+				ImGui::CloseCurrentPopup();
+				Editor.RemoveSelectedConstraint();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel"))
+				ImGui::CloseCurrentPopup();
+			ImGui::EndPopup();
 		}
 		ImGui::PopID();
 		return;
@@ -244,6 +263,8 @@ void FSkeletalMeshDetailsPanel::DrawBodyShapes(UBodySetup& Setup, int32 BoneInde
 			? "Select a shape to remove." : "Use Remove Body to delete the last shape and its body.");
 
 	ImGui::Separator();
+	DrawAddJointMenu(BoneIndex);
+	ImGui::SameLine();
 	if (ImGui::Button("Remove Body..."))
 		ImGui::OpenPopup("RemoveBody");
 	if (ImGui::BeginPopup("RemoveBody"))
@@ -260,4 +281,43 @@ void FSkeletalMeshDetailsPanel::DrawBodyShapes(UBodySetup& Setup, int32 BoneInde
 		ImGui::EndPopup();
 	}
 	ImGui::PopID();
+}
+
+void FSkeletalMeshDetailsPanel::DrawAddJointMenu(int32 ChildBone)
+{
+	if (ImGui::Button("Add Joint..."))
+		ImGui::OpenPopup("AddJoint");
+	if (!ImGui::BeginPopup("AddJoint")) return;
+
+	const USkeletalMesh& Mesh = *Editor.GetMesh();
+	const UPhysicsAsset& Asset = *Mesh.GetPhysicsAsset();
+	const auto& Bones = Mesh.GetRefSkeleton();
+	const FString& Child = Bones[ChildBone].Name;
+	ImGui::TextDisabled("Choose a parent for %s", Child.c_str());
+	const int32 Nearest = FPhysicsAssetUtils::FindNearestParentBodyBone(Mesh, ChildBone);
+	auto DrawParent = [&](int32 ParentBone)
+	{
+		const FString& Parent = Bones[ParentBone].Name;
+		const bool bConnected = Asset.HasConstraintBetween(Child, Parent);
+		const char* Hint = bConnected ? "Connected" : (ParentBone == Nearest ? "Nearest ancestor" : nullptr);
+		if (ImGui::MenuItem(Parent.c_str(), Hint, false, !bConnected))
+			Editor.AddConstraintToSelectedBody(ParentBone);
+	};
+	if (Nearest >= 0)
+	{
+		DrawParent(Nearest);
+		ImGui::Separator();
+	}
+	bool bHasOtherBody = Nearest >= 0;
+	for (const UBodySetup* Setup : Asset.BodySetups)
+	{
+		if (!Setup || Setup->AggGeom.IsEmpty()) continue;
+		const int32 Parent = Mesh.FindBoneIndex(Setup->BoneName);
+		if (Parent < 0 || Parent == ChildBone || Parent == Nearest) continue;
+		DrawParent(Parent);
+		bHasOtherBody = true;
+	}
+	if (!bHasOtherBody)
+		ImGui::TextDisabled("Add another body to create a joint.");
+	ImGui::EndPopup();
 }

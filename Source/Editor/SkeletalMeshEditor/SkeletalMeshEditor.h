@@ -37,6 +37,8 @@ public:
 	bool AreConstraintsVisible() const { return bShowConstraints; }
 	void SetConstraintsVisible(bool bVisible);
 	void SelectConstraint(int32 Index);
+	void AddConstraintToSelectedBody(int32 ParentBone);
+	void RemoveSelectedConstraint();
 	void SelectBodyFromGraph(int32 BoneIndex);
 	int32 GetGraphFocusBone() const { return GraphFocusBone; }
 	FConstraintSetup* GetSelectedConstraint() const;

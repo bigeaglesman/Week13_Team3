@@ -321,6 +321,30 @@ void FSkeletalMeshEditor::SelectConstraint(int32 Index)
 	SyncBoneGizmo();
 }
 
+void FSkeletalMeshEditor::AddConstraintToSelectedBody(int32 ParentBone)
+{
+	if (!bPhysicsAssetMode || IsPhysicsPreviewRunning() || !Mesh) return;
+	const int32 Index = FPhysicsAssetUtils::AddConstraint(*Mesh, SelectedBoneIndex, ParentBone);
+	if (Index < 0) return;
+	if (GraphFocusBone != ParentBone && GraphFocusBone != SelectedBoneIndex)
+		GraphFocusBone = SelectedBoneIndex;
+	SelectConstraint(Index);
+	MarkPhysicsAssetDirty();
+}
+
+void FSkeletalMeshEditor::RemoveSelectedConstraint()
+{
+	const FConstraintSetup* Joint = GetSelectedConstraint();
+	if (!bPhysicsAssetMode || IsPhysicsPreviewRunning() || !Joint) return;
+	const int32 ChildBone = Mesh->FindBoneIndex(Joint->ChildBoneName);
+	Mesh->GetPhysicsAsset()->ConstraintSetups.RemoveAt(SelectedConstraintIndex);
+	if (GraphFocusBone < 0)
+		SelectBone(ChildBone);
+	else
+		SelectBodyFromGraph(ChildBone);
+	MarkPhysicsAssetDirty();
+}
+
 void FSkeletalMeshEditor::SetConstraintsVisible(bool bVisible)
 {
 	bShowConstraints = bVisible;

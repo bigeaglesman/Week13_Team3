@@ -105,6 +105,17 @@ int32 UPhysicsAsset::FindBodyIndex(const FString& BoneName) const
 	return -1;
 }
 
+bool UPhysicsAsset::HasConstraintBetween(const FString& BoneA, const FString& BoneB) const
+{
+	for (const FConstraintSetup& Joint : ConstraintSetups)
+	{
+		if ((Joint.ChildBoneName == BoneA && Joint.ParentBoneName == BoneB)
+			|| (Joint.ChildBoneName == BoneB && Joint.ParentBoneName == BoneA))
+			return true;
+	}
+	return false;
+}
+
 bool UPhysicsAsset::RemoveBody(const FString& BoneName)
 {
 	const int32 BodyIndex = FindBodyIndex(BoneName);

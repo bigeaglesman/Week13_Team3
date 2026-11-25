@@ -16,4 +16,5 @@ protected:
 private:
 	void DrawPhysicsAssetDetails();
 	void DrawBodyShapes(UBodySetup& Setup, int32 BoneIndex);
+	void DrawAddJointMenu(int32 ChildBone);
 };

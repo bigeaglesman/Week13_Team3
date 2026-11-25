@@ -137,7 +137,7 @@ namespace
 		Asset.BodySetups.Add(Setup);
 	}
 
-	FConstraintSetup MakeBoneConstraint(const FString& ChildName, const FString& ParentName, const FQuat& CapsuleRotation,
+	FConstraintSetup MakeBoneConstraint(const FString& ChildName, const FString& ParentName, const FKAggregateGeom& ChildGeom,
 		const FMatrix& ChildBind, const FMatrix& InverseParentBind, const FPhysAssetCreateParams& Params)
 	{
 		FConstraintSetup Constraint;
@@ -146,7 +146,8 @@ namespace
 		Constraint.ParentBoneName = ParentName;
 		// 자식 본 원점에 피벗을 두고, 캡슐 축이 Twist가 되도록 같은 프레임을 양쪽 본 로컬로 표현한다.
 		const FQuat TwistToCapsule = FQuat::MakeFromAxisAngle(FVector(0, 1, 0), -HalfPi);
-		Constraint.ChildFrame = FTransform(CapsuleRotation * TwistToCapsule, FVector(0, 0, 0));
+		if (!ChildGeom.SphylElems.IsEmpty())
+			Constraint.ChildFrame.Rotation = ChildGeom.SphylElems[0].Rotation * TwistToCapsule;
 		const FMatrix FrameInParent = Constraint.ChildFrame.GetLocalMatrix() * ChildBind * InverseParentBind;
 		Constraint.ParentFrame = ToFTransform(ToPxNoScale(FrameInParent));
 		Constraint.TwistLimitDeg = Params.TwistLimitDeg;
@@ -271,8 +272,7 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 			continue;   // 루트 바디
 		}
 
-		const FQuat& Rotation = Asset->BodySetups[ChildBody]->AggGeom.SphylElems[0].Rotation;
-		Asset->ConstraintSetups.Add(MakeBoneConstraint(Bones[i].Name, Bones[Parent].Name, Rotation,
+		Asset->ConstraintSetups.Add(MakeBoneConstraint(Bones[i].Name, Bones[Parent].Name, Asset->BodySetups[ChildBody]->AggGeom,
 			BindNoScale[i], InvBindNoScale[Parent], Params));
 	}
 
@@ -305,8 +305,6 @@ bool FPhysicsAssetUtils::AddCapsuleBodyForBone(USkeletalMesh& Mesh, int32 BoneIn
 	}
 
 	const FKSphylElem Capsule = FitCapsule(Vertices, ChildBind, MinPrimitiveExtentMeters / Mesh.GetMetersPerAssetUnit());
-	const FPhysAssetCreateParams Params;
-
 	if (Existing)
 	{
 		Existing->AggGeom.SphylElems.Add(Capsule);
@@ -321,22 +319,44 @@ bool FPhysicsAssetUtils::AddCapsuleBodyForBone(USkeletalMesh& Mesh, int32 BoneIn
 		AppendBody(*Asset, Bone.Name, Capsule);
 	}
 
-	for (int32 Parent = Bone.ParentIndex; Bones.IsValidIndex(Parent); Parent = Bones[Parent].ParentIndex)
+	const int32 Parent = FindNearestParentBodyBone(Mesh, BoneIndex);
+	if (Parent >= 0)
 	{
-		const FBoneInfo& ParentBone = Bones[Parent];
-		const int32 ParentBody = Asset->FindBodyIndex(ParentBone.Name);
-		if (ParentBody < 0 || Asset->BodySetups[ParentBody]->AggGeom.IsEmpty()) continue;
-
 		// 비어 있던 바디에 도형을 복구할 때 기존 관절을 중복 생성하지 않는다.
 		for (const FConstraintSetup& Joint : Asset->ConstraintSetups)
 		{
-			if (Joint.ChildBoneName == Bone.Name ||
-				(Joint.ParentBoneName == Bone.Name && Joint.ChildBoneName == ParentBone.Name))
-				return true;
+			if (Joint.ChildBoneName == Bone.Name) return true;
 		}
-		Asset->ConstraintSetups.Add(MakeBoneConstraint(Bone.Name, ParentBone.Name, Capsule.Rotation,
-			ChildBind, RigidBindMatrix(ParentBone).Inverse(), Params));
-		break;
+		AddConstraint(Mesh, BoneIndex, Parent);
 	}
 	return true;
+}
+
+int32 FPhysicsAssetUtils::FindNearestParentBodyBone(const USkeletalMesh& Mesh, int32 ChildBone)
+{
+	const auto& Bones = Mesh.GetRefSkeleton();
+	const UPhysicsAsset* Asset = Mesh.GetPhysicsAsset();
+	if (!Asset || !Bones.IsValidIndex(ChildBone)) return -1;
+	for (int32 Parent = Bones[ChildBone].ParentIndex; Bones.IsValidIndex(Parent); Parent = Bones[Parent].ParentIndex)
+	{
+		const int32 Index = Asset->FindBodyIndex(Bones[Parent].Name);
+		if (Index >= 0 && !Asset->BodySetups[Index]->AggGeom.IsEmpty()) return Parent;
+	}
+	return -1;
+}
+
+int32 FPhysicsAssetUtils::AddConstraint(USkeletalMesh& Mesh, int32 ChildBone, int32 ParentBone)
+{
+	UPhysicsAsset* Asset = Mesh.GetPhysicsAsset();
+	const auto& Bones = Mesh.GetRefSkeleton();
+	if (!Asset || ChildBone == ParentBone || !Bones.IsValidIndex(ChildBone) || !Bones.IsValidIndex(ParentBone)) return -1;
+	const FBoneInfo& Child = Bones[ChildBone];
+	const FBoneInfo& Parent = Bones[ParentBone];
+	const int32 ChildBody = Asset->FindBodyIndex(Child.Name);
+	const int32 ParentBody = Asset->FindBodyIndex(Parent.Name);
+	if (ChildBody < 0 || ParentBody < 0 || Asset->BodySetups[ChildBody]->AggGeom.IsEmpty()
+		|| Asset->BodySetups[ParentBody]->AggGeom.IsEmpty() || Asset->HasConstraintBetween(Child.Name, Parent.Name)) return -1;
+
+	return Asset->ConstraintSetups.Add(MakeBoneConstraint(Child.Name, Parent.Name, Asset->BodySetups[ChildBody]->AggGeom,
+		RigidBindMatrix(Child), RigidBindMatrix(Parent).Inverse(), FPhysAssetCreateParams{}));
 }

@@ -31,4 +31,6 @@ namespace FPhysicsAssetUtils
 	// 반환된 에셋은 호출한 쪽이 소유한다. 실패하면 nullptr
 	UPhysicsAsset* CreateFromSkeletalMesh(const USkeletalMesh* Mesh, const FPhysAssetCreateParams& Params = FPhysAssetCreateParams());
 	bool AddCapsuleBodyForBone(USkeletalMesh& Mesh, int32 BoneIndex);
+	int32 FindNearestParentBodyBone(const USkeletalMesh& Mesh, int32 ChildBone);
+	int32 AddConstraint(USkeletalMesh& Mesh, int32 ChildBone, int32 ParentBone);
 }

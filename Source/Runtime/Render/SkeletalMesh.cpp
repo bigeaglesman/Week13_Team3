@@ -2,7 +2,13 @@
 #include "SkeletalMesh.h"
 #include "Render/RenderCommand.h"
 #include "Asset/AssetManager.h"
+#include "Asset/FbxImporter/FbxMeshBake.h"
 #include "Physics/PhysicsAsset.h"
+
+float USkeletalMesh::GetMetersPerAssetUnit() const
+{
+	return FFbxMeshBake::IsBakedPath(GetPath()) ? 0.01f : 1.0f;
+}
 
 USkeletalMesh::~USkeletalMesh()
 {

@@ -9,18 +9,19 @@ namespace
 {
 	constexpr float HalfPi = 1.57079632679f;
 	constexpr float Pi = 3.14159265359f;
+	constexpr float MinPrimitiveExtentMeters = 0.005f; // UE4.27 MinPrimSize = 0.5 cm
 
-	struct FBoneVertexBounds
+	struct FBoneVertices
 	{
 		FVector Min = FVector(FLT_MAX, FLT_MAX, FLT_MAX);
 		FVector Max = FVector(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-		int32 NumVertices = 0;
+		TArray<FVector> Points;
 
 		void Add(const FVector& P)
 		{
 			Min = Min.ComponentMin(P);
 			Max = Max.ComponentMax(P);
-			++NumVertices;
+			Points.Add(P);
 		}
 	};
 
@@ -55,31 +56,75 @@ namespace
 		return V.Y >= V.Z ? 1 : 2;
 	}
 
-	// 로컬 Z를 Axis 방향으로 돌린다. 캡슐(Sphyl) 축이 Z라서 쓴다.
-	FQuat RotateZToAxis(int32 Axis)
+	FQuat CapsuleOrientationInBox(int32 Axis)
 	{
-		if (Axis == 0) return FQuat::MakeFromAxisAngle(FVector(0, 1, 0), HalfPi);    // Z → X
-		if (Axis == 1) return FQuat::MakeFromAxisAngle(FVector(1, 0, 0), -HalfPi);   // Z → Y
+		if (Axis == 0) return FQuat::MakeFromAxisAngle(FVector(0, 1, 0), -HalfPi);
+		if (Axis == 1) return FQuat::MakeFromAxisAngle(FVector(1, 0, 0), HalfPi);
 		return FQuat::Identity();
 	}
 
-	// 로컬 X를 Axis 방향으로 돌린다. 관절 Twist 축이 X라서 쓴다.
-	FQuat RotateXToAxis(int32 Axis)
+	FQuat FitBoneOrientation(const TArray<FVector>& Points)
 	{
-		if (Axis == 1) return FQuat::MakeFromAxisAngle(FVector(0, 0, 1), HalfPi);    // X → Y
-		if (Axis == 2) return FQuat::MakeFromAxisAngle(FVector(0, 1, 0), -HalfPi);   // X → Z
-		return FQuat::Identity();
+		if (Points.Num() < 2) return FQuat::Identity();
+		FVector Mean(0);
+		for (const FVector& P : Points) Mean += P;
+		Mean /= static_cast<float>(Points.Num());
+
+		// UE의 Auto Orient와 같이 공분산 행렬의 주축을 구해 도형의 로컬 Z로 쓴다.
+		FVector Rows[3] = { FVector(0), FVector(0), FVector(0) };
+		for (const FVector& P : Points)
+		{
+			const FVector Offset = P - Mean;
+			for (int32 Axis = 0; Axis < 3; ++Axis)
+				Rows[Axis] += Offset * Offset.Component(Axis);
+		}
+		FVector Z(0, 0, 1);
+		for (int32 i = 0; i < 32; ++i)
+		{
+			const FVector Next(Rows[0].Dot(Z), Rows[1].Dot(Z), Rows[2].Dot(Z));
+			const float Length = Next.Size();
+			if (Length == 0.0f) return FQuat::Identity();
+			Z = Next / Length;
+		}
+		const FVector AbsZ = Z.GetAbs();
+		const FVector Seed = AbsZ.Z > AbsZ.X && AbsZ.Z > AbsZ.Y ? FVector(1, 0, 0) : FVector(0, 0, 1);
+		const FVector Y = (Seed - Z * Seed.Dot(Z)).GetSafeNormal();
+		FMatrix Basis = FMatrix::Identity;
+		Basis.SetAxis(0, Y.Cross(Z));
+		Basis.SetAxis(1, Y);
+		Basis.SetAxis(2, Z);
+		return ToFQuat(ToPxNoScale(Basis).q);
 	}
 
-	FKSphylElem FitCapsule(const FBoneVertexBounds& Bounds, const FVector& Extent, int32 Long, float MinRadius)
+	FKSphylElem FitCapsule(const FBoneVertices& Vertices, const FMatrix& BoneBind, float MinExtent)
 	{
-		const float Radius = std::max(GetAxis(Extent, (Long + 1) % 3), GetAxis(Extent, (Long + 2) % 3));
-		const float HalfHeight = std::max(GetAxis(Extent, Long), Radius);
+		const FQuat Orientation = FitBoneOrientation(Vertices.Points);
+		FVector Extent(MinExtent);
 		FKSphylElem Elem;
-		Elem.Center = (Bounds.Max + Bounds.Min) * 0.5f;
-		Elem.Rotation = RotateZToAxis(Long);
-		Elem.Radius = std::max(Radius, MinRadius);
-		Elem.Length = 2.0f * std::max(HalfHeight - Elem.Radius, 0.0f);
+		if (!Vertices.Points.IsEmpty())
+		{
+			const FQuat ToElement = Orientation.UnitInverse();
+			FBox Box{ FVector(FLT_MAX), FVector(-FLT_MAX) };
+			for (const FVector& P : Vertices.Points)
+			{
+				const FVector Local = ToElement.RotateVector(P);
+				Box.Min = Box.Min.ComponentMin(Local);
+				Box.Max = Box.Max.ComponentMax(Local);
+			}
+			Elem.Center = Orientation.RotateVector((Box.Max + Box.Min) * 0.5f);
+			const FBox BindBox = Box.GetWorldAABB(BoneBind);
+			const FVector BindExtent = (BindBox.Max - BindBox.Min) * 0.5f;
+			if (std::min({ BindExtent.X, BindExtent.Y, BindExtent.Z }) >= MinExtent)
+				Extent = (Box.Max - Box.Min) * 0.5f;
+		}
+		// UE4.27은 동률이면 Z를 쓰고, 반폭과 원기둥 길이에 각각 1% 여유를 준다.
+		int32 Long = 2;
+		if (Extent.X > Extent.Y && Extent.X > Extent.Z) Long = 0;
+		else if (Extent.Y > Extent.X && Extent.Y > Extent.Z) Long = 1;
+		Elem.Rotation = Orientation * CapsuleOrientationInBox(Long);
+		const float Radius = std::max(GetAxis(Extent, (Long + 1) % 3), GetAxis(Extent, (Long + 2) % 3));
+		Elem.Radius = 1.01f * (Radius > 0.0f ? Radius : MinExtent);
+		Elem.Length = 1.01f * GetAxis(Extent, Long);
 		return Elem;
 	}
 
@@ -90,6 +135,24 @@ namespace
 		Setup->AggGeom.SphylElems.Add(Capsule);
 		Setup->DefaultInstance.bSimulatePhysics = true;
 		Asset.BodySetups.Add(Setup);
+	}
+
+	FConstraintSetup MakeBoneConstraint(const FString& ChildName, const FString& ParentName, const FQuat& CapsuleRotation,
+		const FMatrix& ChildBind, const FMatrix& InverseParentBind, const FPhysAssetCreateParams& Params)
+	{
+		FConstraintSetup Constraint;
+		Constraint.JointName = ChildName;
+		Constraint.ChildBoneName = ChildName;
+		Constraint.ParentBoneName = ParentName;
+		// 자식 본 원점에 피벗을 두고, 캡슐 축이 Twist가 되도록 같은 프레임을 양쪽 본 로컬로 표현한다.
+		const FQuat TwistToCapsule = FQuat::MakeFromAxisAngle(FVector(0, 1, 0), -HalfPi);
+		Constraint.ChildFrame = FTransform(CapsuleRotation * TwistToCapsule, FVector(0, 0, 0));
+		const FMatrix FrameInParent = Constraint.ChildFrame.GetLocalMatrix() * ChildBind * InverseParentBind;
+		Constraint.ParentFrame = ToFTransform(ToPxNoScale(FrameInParent));
+		Constraint.TwistLimitDeg = Params.TwistLimitDeg;
+		Constraint.Swing1LimitDeg = Params.Swing1LimitDeg;
+		Constraint.Swing2LimitDeg = Params.Swing2LimitDeg;
+		return Constraint;
 	}
 }
 
@@ -124,7 +187,7 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 
 	// ---- 1. 뼈마다 담당 정점의 로컬 AABB ----
 	// 정점은 가중치가 가장 큰 뼈 하나에만 넣는다 (UE의 EVW_DominantWeight). 크기는 메시 단위다.
-	TArray<FBoneVertexBounds> Bounds;
+	TArray<FBoneVertices> Bounds;
 	Bounds.SetNum(NumBones);
 
 	const int32 NumVertices = std::min(LOD.BindVertices.Num(), LOD.SkinWeights.Num());
@@ -148,13 +211,13 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 
 	TArray<int32> BoneToBody;     // 뼈 인덱스 → 바디 인덱스 (-1 = 바디 없음)
 	BoneToBody.Init(-1, NumBones);
-	TArray<int32> BodyLongAxis;   // 바디 인덱스 → 캡슐 축 (0=X, 1=Y, 2=Z, 뼈 로컬)
+	const float MinExtent = MinPrimitiveExtentMeters / Mesh->GetMetersPerAssetUnit();
 	TArray<float> BodyVolume;
 
 	for (int32 i = 0; i < NumBones; ++i)
 	{
-		const FBoneVertexBounds& B = Bounds[i];
-		if (B.NumVertices == 0)
+		const FBoneVertices& B = Bounds[i];
+		if (B.Points.IsEmpty())
 		{
 			continue;
 		}
@@ -166,10 +229,9 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 			continue;
 		}
 
-		const FKSphylElem Elem = FitCapsule(B, Extent, Long, MinBoneSize * 0.25f);
+		const FKSphylElem Elem = FitCapsule(B, BindNoScale[i], MinExtent);
 		BoneToBody[i] = Asset->BodySetups.Num();
 		AppendBody(*Asset, Bones[i].Name, Elem);
-		BodyLongAxis.Add(Long);
 		BodyVolume.Add(Pi * Elem.Radius * Elem.Radius * (Elem.Length + 4.0f / 3.0f * Elem.Radius));
 	}
 
@@ -209,23 +271,9 @@ UPhysicsAsset* FPhysicsAssetUtils::CreateFromSkeletalMesh(const USkeletalMesh* M
 			continue;   // 루트 바디
 		}
 
-		FConstraintSetup Constraint;
-		Constraint.JointName = Bones[i].Name;
-		Constraint.ChildBoneName = Bones[i].Name;
-		Constraint.ParentBoneName = Bones[Parent].Name;
-
-		// 자식 뼈 원점에서, X(Twist)를 캡슐 축에 맞춘다.
-		Constraint.ChildFrame = FTransform(RotateXToAxis(BodyLongAxis[ChildBody]), FVector(0, 0, 0));
-
-		// 같은 프레임을 부모 뼈 로컬로 옮긴다: 자식 로컬 → 컴포넌트(바인드) → 부모 로컬
-		const FMatrix FrameInParent = Constraint.ChildFrame.GetLocalMatrix() * BindNoScale[i] * InvBindNoScale[Parent];
-		Constraint.ParentFrame = ToFTransform(ToPxNoScale(FrameInParent));
-
-		Constraint.TwistLimitDeg = Params.TwistLimitDeg;
-		Constraint.Swing1LimitDeg = Params.Swing1LimitDeg;
-		Constraint.Swing2LimitDeg = Params.Swing2LimitDeg;
-
-		Asset->ConstraintSetups.Add(Constraint);
+		const FQuat& Rotation = Asset->BodySetups[ChildBody]->AggGeom.SphylElems[0].Rotation;
+		Asset->ConstraintSetups.Add(MakeBoneConstraint(Bones[i].Name, Bones[Parent].Name, Rotation,
+			BindNoScale[i], InvBindNoScale[Parent], Params));
 	}
 
 	return Asset;
@@ -244,36 +292,20 @@ bool FPhysicsAssetUtils::AddCapsuleBodyForBone(USkeletalMesh& Mesh, int32 BoneIn
 	if (Existing && !Existing->AggGeom.IsEmpty()) return false;
 
 	const auto& LOD = LODs[0];
-	const FMatrix ToBone = RigidBindMatrix(Bone).Inverse();
-	FBoneVertexBounds Bounds;
+	const FMatrix ChildBind = RigidBindMatrix(Bone);
+	const FMatrix ToBone = ChildBind.Inverse();
+	FBoneVertices Vertices;
 	const int32 NumVertices = std::min(LOD.BindVertices.Num(), LOD.SkinWeights.Num());
 	for (int32 i = 0; i < NumVertices; ++i)
 	{
 		if (DominantBone(LOD.SkinWeights[i]) == BoneIndex)
 		{
-			Bounds.Add(ToBone.TransformPosition(LOD.BindVertices[i].Position));
+			Vertices.Add(ToBone.TransformPosition(LOD.BindVertices[i].Position));
 		}
 	}
 
-	// 담당 정점이 없는 끝 본도 편집할 수 있도록 본 원점에 작은 캡슐을 둔다.
-	FKSphylElem Capsule;
-	const FVector MeshSize = LOD.BindAABB.Max - LOD.BindAABB.Min;
-	const float MeshLength = std::max({ MeshSize.X, MeshSize.Y, MeshSize.Z });
-	if (MeshLength > 0.0f)
-	{
-		Capsule.Radius = MeshLength * FPhysAssetCreateParams{}.MinBoneSizeRatio * 0.25f;
-		Capsule.Length = 2.0f * Capsule.Radius;
-	}
-	if (Bounds.NumVertices > 0)
-	{
-		const FVector Extent = (Bounds.Max - Bounds.Min) * 0.5f;
-		const int32 Axis = GetLongestAxis(Extent);
-		const float HalfLength = GetAxis(Extent, Axis);
-		if (HalfLength > 0.0f)
-		{
-			Capsule = FitCapsule(Bounds, Extent, Axis, std::min(Capsule.Radius, HalfLength * 0.25f));
-		}
-	}
+	const FKSphylElem Capsule = FitCapsule(Vertices, ChildBind, MinPrimitiveExtentMeters / Mesh.GetMetersPerAssetUnit());
+	const FPhysAssetCreateParams Params;
 
 	if (Existing)
 	{
@@ -287,6 +319,24 @@ bool FPhysicsAssetUtils::AddCapsuleBodyForBone(USkeletalMesh& Mesh, int32 BoneIn
 			Mesh.SetPhysicsAsset(Asset);
 		}
 		AppendBody(*Asset, Bone.Name, Capsule);
+	}
+
+	for (int32 Parent = Bone.ParentIndex; Bones.IsValidIndex(Parent); Parent = Bones[Parent].ParentIndex)
+	{
+		const FBoneInfo& ParentBone = Bones[Parent];
+		const int32 ParentBody = Asset->FindBodyIndex(ParentBone.Name);
+		if (ParentBody < 0 || Asset->BodySetups[ParentBody]->AggGeom.IsEmpty()) continue;
+
+		// 비어 있던 바디에 도형을 복구할 때 기존 관절을 중복 생성하지 않는다.
+		for (const FConstraintSetup& Joint : Asset->ConstraintSetups)
+		{
+			if (Joint.ChildBoneName == Bone.Name ||
+				(Joint.ParentBoneName == Bone.Name && Joint.ChildBoneName == ParentBone.Name))
+				return true;
+		}
+		Asset->ConstraintSetups.Add(MakeBoneConstraint(Bone.Name, ParentBone.Name, Capsule.Rotation,
+			ChildBind, RigidBindMatrix(ParentBone).Inverse(), Params));
+		break;
 	}
 	return true;
 }

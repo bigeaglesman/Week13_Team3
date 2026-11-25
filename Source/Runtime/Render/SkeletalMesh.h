@@ -54,6 +54,7 @@ public:
 	int32 GetNumBones() const { return RefSkeleton.Num(); }
 	int32 FindBoneIndex(const FString& Name) const;
 	const FSkeletalMeshRenderData& GetRenderData() const { return RenderData; }
+	float GetMetersPerAssetUnit() const;
 	const TArray<FSkeletalMaterialSlot>& GetMaterialSlots() const { return MaterialSlots; }
 	UMaterial* GetMaterial(uint32 SlotIndex) const;
 

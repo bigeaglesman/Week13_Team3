@@ -2,7 +2,6 @@
 #include "Editor/SkeletalMeshEditor/SkeletalMeshEditor.h"
 #include "SkeletalMeshEditorTab.h"
 #include "Editor/HitoriEd/EditorEngine.h"
-#include "Asset/FbxImporter/FbxMeshBake.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -124,9 +123,8 @@ namespace
 bool FSkeletalMeshEditor::InitializeResources()
 {
 	// FBX 임포터는 cm로 베이크하고 물리 월드는 m 단위로 시뮬레이션한다.
-	constexpr float CentimetersToMeters = 0.01f;
 	if (!Mesh) return false;
-	float PreviewScale = FFbxMeshBake::IsBakedPath(Mesh->GetPath()) ? CentimetersToMeters : 1.0f;
+	float PreviewScale = Mesh->GetMetersPerAssetUnit();
 	if (const FEditorSettings* Settings = EditorEngine.GetEditorSettings())
 	{
 		if (const float* Saved = Settings->SkeletalPreviewScales.Find(Mesh->GetPath()))
@@ -378,30 +376,23 @@ void FSkeletalMeshEditor::AddShapeToSelectedBody(EColliderShape Type)
 	UBodySetup* Setup = GetSelectedBodySetup();
 	if (!bPhysicsAssetMode || IsPhysicsPreviewRunning() || !Setup) return;
 	FKAggregateGeom& Geom = Setup->AggGeom;
-	// 다른 단위로 임포트한 메시에서도 새 도형이 보이도록 기존 바디의 두께를 쓴다.
-	float Radius = FKSphereElem{}.Radius;
-	if (!Geom.SphylElems.IsEmpty()) Radius = Geom.SphylElems[0].Radius;
-	else if (!Geom.SphereElems.IsEmpty()) Radius = Geom.SphereElems[0].Radius;
-	else if (!Geom.BoxElems.IsEmpty())
-	{
-		const FVector& Extent = Geom.BoxElems[0].HalfExtent;
-		Radius = std::min({ Extent.X, Extent.Y, Extent.Z });
-	}
+	// UE4.27 AddNewPrimitive의 기본 치수 15 cm를 메시 원본 단위로 저장한다.
+	const float DefaultSize = 0.15f / Mesh->GetMetersPerAssetUnit();
 	int32 Index;
 	switch (Type)
 	{
 	case EColliderShape::Sphere:
 		Index = Geom.SphereElems.Emplace();
-		Geom.SphereElems[Index].Radius = Radius;
+		Geom.SphereElems[Index].Radius = DefaultSize;
 		break;
 	case EColliderShape::Box:
 		Index = Geom.BoxElems.Emplace();
-		Geom.BoxElems[Index].HalfExtent = FVector(Radius);
+		Geom.BoxElems[Index].HalfExtent = FVector(DefaultSize * 0.25f); // UE 박스 한 변은 기본 치수의 절반
 		break;
 	case EColliderShape::Capsule:
 		Index = Geom.SphylElems.Emplace();
-		Geom.SphylElems[Index].Radius = Radius;
-		Geom.SphylElems[Index].Length = 2.0f * Radius;
+		Geom.SphylElems[Index].Radius = DefaultSize;
+		Geom.SphylElems[Index].Length = DefaultSize;
 		break;
 	default: return;
 	}

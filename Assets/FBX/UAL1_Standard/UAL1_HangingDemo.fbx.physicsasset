@@ -1,0 +1,1870 @@
+{
+    "Bodies": [
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 5.001104831695557,
+                            "Y": 0.0010924339294433594,
+                            "Z": 3.1051025390625
+                        },
+                        "Length": 13.817630767822266,
+                        "Radius": 12.130940437316895,
+                        "Rotation": {
+                            "W": 0.45534858107566833,
+                            "X": -0.4578709304332733,
+                            "Y": -0.5414021611213684,
+                            "Z": -0.5384196043014526
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "pelvis",
+                "DefaultInstance": {
+                    "MassInKg": 6.194575786590576,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 7.881922721862793,
+                            "Y": 0.050203800201416016,
+                            "Z": 2.517648696899414
+                        },
+                        "Length": 13.046483993530273,
+                        "Radius": 11.052985191345215,
+                        "Rotation": {
+                            "W": 0.48640716075897217,
+                            "X": -0.5036612749099731,
+                            "Y": -0.5135632753372192,
+                            "Z": -0.49596989154815674
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "spine_01",
+                "DefaultInstance": {
+                    "MassInKg": 4.763924598693848,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 7.660980224609375,
+                            "Y": -0.12386351823806763,
+                            "Z": 0.9683102369308472
+                        },
+                        "Length": 16.299110412597656,
+                        "Radius": 12.149982452392578,
+                        "Rotation": {
+                            "W": 0.007409331388771534,
+                            "X": 0.0068735177628695965,
+                            "Y": 0.6800669431686401,
+                            "Z": 0.7330803871154785
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "spine_02",
+                "DefaultInstance": {
+                    "MassInKg": 6.733432292938232,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 9.86523151397705,
+                            "Y": 0.001139521598815918,
+                            "Z": -1.6507534980773926
+                        },
+                        "Length": 17.347042083740234,
+                        "Radius": 14.050339698791504,
+                        "Rotation": {
+                            "W": -0.00015544758934993297,
+                            "X": -0.0001553911715745926,
+                            "Y": 0.706978440284729,
+                            "Z": 0.7072351574897766
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "spine_03",
+                "DefaultInstance": {
+                    "MassInKg": 9.99687385559082,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 4.645759105682373,
+                            "Y": 0.00000858306884765625,
+                            "Z": -3.523686408996582
+                        },
+                        "Length": 10.154026985168457,
+                        "Radius": 9.30342960357666,
+                        "Rotation": {
+                            "W": -0.48819392919540405,
+                            "X": 0.4881933629512787,
+                            "Y": 0.5115336179733276,
+                            "Z": 0.5115343332290649
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "neck_01",
+                "DefaultInstance": {
+                    "MassInKg": 2.7403900623321533,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 11.604665756225586,
+                            "Y": 0.00000476837158203125,
+                            "Z": -1.079268455505371
+                        },
+                        "Length": 14.439324378967285,
+                        "Radius": 12.533053398132324,
+                        "Rotation": {
+                            "W": 0.5563580393791199,
+                            "X": 0.43642404675483704,
+                            "Y": -0.4364238977432251,
+                            "Z": -0.5563578605651855
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "Head",
+                "DefaultInstance": {
+                    "MassInKg": 6.867311000823975,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 8.981755256652832,
+                            "Y": 0.5274405479431152,
+                            "Z": -3.4852216243743896
+                        },
+                        "Length": 17.07651138305664,
+                        "Radius": 9.529817581176758,
+                        "Rotation": {
+                            "W": 0.7376282811164856,
+                            "X": 0.4047372043132782,
+                            "Y": 0.25998300313949585,
+                            "Z": 0.47381559014320374
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "clavicle_l",
+                "DefaultInstance": {
+                    "MassInKg": 3.7962143421173096,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 10.281539916992188,
+                            "Y": -0.33182764053344727,
+                            "Z": 0.17181682586669922
+                        },
+                        "Length": 18.130762100219727,
+                        "Radius": 7.538745403289795,
+                        "Rotation": {
+                            "W": 0.4816574156284332,
+                            "X": 0.4604663848876953,
+                            "Y": 0.5152565836906433,
+                            "Z": 0.5389690399169922
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "upperarm_l",
+                "DefaultInstance": {
+                    "MassInKg": 2.2479701042175293,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 13.41494369506836,
+                            "Y": 0.9382810592651367,
+                            "Z": -0.17138671875
+                        },
+                        "Length": 13.427633285522461,
+                        "Radius": 6.185617446899414,
+                        "Rotation": {
+                            "W": 0.508750319480896,
+                            "X": 0.4777626395225525,
+                            "Y": 0.49026787281036377,
+                            "Z": 0.5220665335655212
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "lowerarm_l",
+                "DefaultInstance": {
+                    "MassInKg": 1.163969874382019,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 6.873830795288086,
+                            "Y": 1.2199063301086426,
+                            "Z": -0.6894922256469727
+                        },
+                        "Length": 6.5532612800598145,
+                        "Radius": 5.474067211151123,
+                        "Rotation": {
+                            "W": 0.5684934854507446,
+                            "X": 0.4225813150405884,
+                            "Y": 0.4210966229438782,
+                            "Z": 0.5664961338043213
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "hand_l",
+                "DefaultInstance": {
+                    "MassInKg": 0.5825690031051636,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 10.232885360717773,
+                            "Y": -0.3411865234375,
+                            "Z": -3.47271728515625
+                        },
+                        "Length": 16.54705810546875,
+                        "Radius": 9.034281730651855,
+                        "Rotation": {
+                            "W": 0.43167757987976074,
+                            "X": 0.2323666512966156,
+                            "Y": 0.4131147265434265,
+                            "Z": 0.7674610614776611
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "clavicle_r",
+                "DefaultInstance": {
+                    "MassInKg": 3.275348424911499,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 10.281519889831543,
+                            "Y": 0.3318672180175781,
+                            "Z": 0.17174148559570312
+                        },
+                        "Length": 18.130752563476562,
+                        "Radius": 7.538742542266846,
+                        "Rotation": {
+                            "W": 0.5389682650566101,
+                            "X": 0.5152572393417358,
+                            "Y": 0.46046704053878784,
+                            "Z": 0.4816567897796631
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "upperarm_r",
+                "DefaultInstance": {
+                    "MassInKg": 2.24796724319458,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 13.41492748260498,
+                            "Y": -0.9382767677307129,
+                            "Z": -0.17152976989746094
+                        },
+                        "Length": 13.427637100219727,
+                        "Radius": 6.1856184005737305,
+                        "Rotation": {
+                            "W": 0.5220659375190735,
+                            "X": 0.49026837944984436,
+                            "Y": 0.4777633547782898,
+                            "Z": 0.5087499022483826
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "lowerarm_r",
+                "DefaultInstance": {
+                    "MassInKg": 1.1639704704284668,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 6.873809814453125,
+                            "Y": -1.2199373245239258,
+                            "Z": -0.6896886825561523
+                        },
+                        "Length": 6.553273677825928,
+                        "Radius": 5.474067211151123,
+                        "Rotation": {
+                            "W": 0.5664956569671631,
+                            "X": 0.421097069978714,
+                            "Y": 0.42258191108703613,
+                            "Z": 0.5684931874275208
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "hand_r",
+                "DefaultInstance": {
+                    "MassInKg": 0.5825694799423218,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Kinematic"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 16.722679138183594,
+                            "Y": 0.17341899871826172,
+                            "Z": -1.0385284423828125
+                        },
+                        "Length": 24.383193969726562,
+                        "Radius": 9.328179359436035,
+                        "Rotation": {
+                            "W": -0.5108355283737183,
+                            "X": -0.48203960061073303,
+                            "Y": 0.4885280728340149,
+                            "Z": 0.5177115797996521
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "thigh_l",
+                "DefaultInstance": {
+                    "MassInKg": 4.496769905090332,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 21.740440368652344,
+                            "Y": 0.2129507064819336,
+                            "Z": 2.3069229125976562
+                        },
+                        "Length": 22.219839096069336,
+                        "Radius": 8.321345329284668,
+                        "Rotation": {
+                            "W": 0.5187550783157349,
+                            "X": 0.49472862482070923,
+                            "Y": 0.4811965227127075,
+                            "Z": 0.5045658349990845
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "calf_l",
+                "DefaultInstance": {
+                    "MassInKg": 3.237729072570801,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 6.880433082580566,
+                            "Y": 0.46712732315063477,
+                            "Z": 1.8305573463439941
+                        },
+                        "Length": 10.952773094177246,
+                        "Radius": 5.676152229309082,
+                        "Rotation": {
+                            "W": 0.6223649382591248,
+                            "X": 0.38975533843040466,
+                            "Y": -0.36027324199676514,
+                            "Z": -0.5752876400947571
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "foot_l",
+                "DefaultInstance": {
+                    "MassInKg": 0.8375023007392883,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 4.112208366394043,
+                            "Y": -1.4483293294906616,
+                            "Z": 0.6647670269012451
+                        },
+                        "Length": 6.153435230255127,
+                        "Radius": 3.9397475719451904,
+                        "Rotation": {
+                            "W": 0.1494770497083664,
+                            "X": 0.13728460669517517,
+                            "Y": 0.6623533964157104,
+                            "Z": 0.7211779356002808
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "ball_l",
+                "DefaultInstance": {
+                    "MassInKg": 0.24848529696464539,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 16.722667694091797,
+                            "Y": -0.17345619201660156,
+                            "Z": -1.0385074615478516
+                        },
+                        "Length": 24.383190155029297,
+                        "Radius": 9.328176498413086,
+                        "Rotation": {
+                            "W": 0.5177111625671387,
+                            "X": 0.48852765560150146,
+                            "Y": -0.4820399284362793,
+                            "Z": -0.5108358860015869
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "thigh_r",
+                "DefaultInstance": {
+                    "MassInKg": 4.496766567230225,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 21.74041175842285,
+                            "Y": -0.21112918853759766,
+                            "Z": 2.3073501586914062
+                        },
+                        "Length": 22.21984100341797,
+                        "Radius": 8.32175064086914,
+                        "Rotation": {
+                            "W": 0.5045562386512756,
+                            "X": 0.481194406747818,
+                            "Y": 0.49473804235458374,
+                            "Z": 0.5187574028968811
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "calf_r",
+                "DefaultInstance": {
+                    "MassInKg": 3.2380971908569336,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 6.87962532043457,
+                            "Y": -0.4586472511291504,
+                            "Z": 1.8291163444519043
+                        },
+                        "Length": 10.952773094177246,
+                        "Radius": 5.6805949211120605,
+                        "Rotation": {
+                            "W": -0.5749460458755493,
+                            "X": -0.36012473702430725,
+                            "Y": 0.38998696208000183,
+                            "Z": 0.6226215362548828
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "foot_r",
+                "DefaultInstance": {
+                    "MassInKg": 0.8390820026397705,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        },
+        {
+            "AggGeom": {
+                "Boxes": [],
+                "Convexes": [],
+                "Spheres": [],
+                "Sphyls": [
+                    {
+                        "Center": {
+                            "X": 4.112185478210449,
+                            "Y": 1.4484952688217163,
+                            "Z": 0.6647653579711914
+                        },
+                        "Length": 6.153436183929443,
+                        "Radius": 3.9397470951080322,
+                        "Rotation": {
+                            "W": 0.7211768627166748,
+                            "X": 0.6623544096946716,
+                            "Y": 0.13728509843349457,
+                            "Z": 0.14947713911533356
+                        }
+                    }
+                ]
+            },
+            "Properties": {
+                "BoneName": "ball_r",
+                "DefaultInstance": {
+                    "MassInKg": 0.2484852373600006,
+                    "bEnableGravity": true,
+                    "bEnablePhysicsCollision": false,
+                    "bNotifyRigidBodyCollision": false,
+                    "bSimulatePhysics": true
+                },
+                "PhysicsType": "Simulated"
+            }
+        }
+    ],
+    "Constraints": [
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "spine_01",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": 1.9968098402023315,
+                    "Roll": 178.8845977783203,
+                    "Yaw": 90.00001525878906
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "spine_01",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "pelvis",
+            "ParentFrame": {
+                "Location": {
+                    "X": 13.817635536193848,
+                    "Y": 4.547473508864641e-12,
+                    "Z": -0.000007152557373046875
+                },
+                "Rotation": {
+                    "Pitch": 1.9800838232040405,
+                    "Roll": -173.69146728515625,
+                    "Yaw": 90.25798797607422
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "spine_02",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -4.2968268394470215,
+                    "Roll": 90.00001525878906,
+                    "Yaw": 88.84187316894531
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "spine_02",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "spine_01",
+            "ParentFrame": {
+                "Location": {
+                    "X": 12.40346908569336,
+                    "Y": 2.2737367544323206e-12,
+                    "Z": 0.000002115964889526367
+                },
+                "Rotation": {
+                    "Pitch": -4.066980361938477,
+                    "Roll": 98.88518524169922,
+                    "Yaw": 88.1926498413086
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "spine_03",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -0.020796220749616623,
+                    "Roll": 90.00003814697266,
+                    "Yaw": 90.02520751953125
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "spine_03",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "spine_02",
+            "ParentFrame": {
+                "Location": {
+                    "X": 14.127164840698242,
+                    "Y": 8.697043085703626e-12,
+                    "Z": -0.0000032186508178710938
+                },
+                "Rotation": {
+                    "Pitch": -0.02080646902322769,
+                    "Roll": 90.03079986572266,
+                    "Yaw": 90.02519989013672
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "neck_01",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -0.00007267751061590388,
+                    "Roll": 177.3251953125,
+                    "Yaw": 90.00000762939453
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "neck_01",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "spine_03",
+            "ParentFrame": {
+                "Location": {
+                    "X": 17.28907585144043,
+                    "Y": 5.4569682106375694e-12,
+                    "Z": -0.000007271766662597656
+                },
+                "Rotation": {
+                    "Pitch": -0.00007171698234742507,
+                    "Roll": 164.58090209960938,
+                    "Yaw": 90.00004577636719
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "Head",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -13.77658748626709,
+                    "Roll": 90.0000228881836,
+                    "Yaw": -180.00001525878906
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "Head",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "neck_01",
+            "ParentFrame": {
+                "Location": {
+                    "X": 8.258628845214844,
+                    "Y": -5.002220859751105e-12,
+                    "Z": 0.000011563301086425781
+                },
+                "Rotation": {
+                    "Pitch": -22.801307678222656,
+                    "Roll": 90.00001525878906,
+                    "Yaw": -180.00001525878906
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "clavicle_l",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -32.4927864074707,
+                    "Roll": 90.00001525878906,
+                    "Yaw": -24.57067108154297
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "clavicle_l",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "spine_03",
+            "ParentFrame": {
+                "Location": {
+                    "X": 14.055371284484863,
+                    "Y": 1.8799998760223389,
+                    "Z": 8.089498519897461
+                },
+                "Rotation": {
+                    "Pitch": 42.359859466552734,
+                    "Roll": 140.7806854248047,
+                    "Yaw": 40.85967254638672
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "upperarm_l",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -2.577049732208252,
+                    "Roll": 90.0000228881836,
+                    "Yaw": 6.427957057952881
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "upperarm_l",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "clavicle_l",
+            "ParentFrame": {
+                "Location": {
+                    "X": 21.858179092407227,
+                    "Y": -3.0072364807128906,
+                    "Z": -1.6968261003494263
+                },
+                "Rotation": {
+                    "Pitch": 6.390402317047119,
+                    "Roll": 0.2717646062374115,
+                    "Yaw": 32.094993591308594
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "lowerarm_l",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -3.5982840061187744,
+                    "Roll": 90.00001525878906,
+                    "Yaw": 1.4802309274673462
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "lowerarm_l",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "upperarm_l",
+            "ParentFrame": {
+                "Location": {
+                    "X": 27.444028854370117,
+                    "Y": 0.00005145708564668894,
+                    "Z": -0.0000019073486328125
+                },
+                "Rotation": {
+                    "Pitch": -5.566732883453369,
+                    "Roll": 89.95126342773438,
+                    "Yaw": 1.484083652496338
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "hand_l",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -16.750547409057617,
+                    "Roll": 90.0000228881836,
+                    "Yaw": -0.20165492594242096
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "hand_l",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "lowerarm_l",
+            "ParentFrame": {
+                "Location": {
+                    "X": 27.264060974121094,
+                    "Y": -0.000006670794391538948,
+                    "Z": -0.00001049041748046875
+                },
+                "Rotation": {
+                    "Pitch": -15.762786865234375,
+                    "Roll": 89.99646759033203,
+                    "Yaw": -0.20067207515239716
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "clavicle_r",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -33.41395568847656,
+                    "Roll": 90.0000228881836,
+                    "Yaw": 31.286691665649414
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "clavicle_r",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "spine_03",
+            "ParentFrame": {
+                "Location": {
+                    "X": 14.05537223815918,
+                    "Y": -1.8800004720687866,
+                    "Z": 8.089498519897461
+                },
+                "Rotation": {
+                    "Pitch": 45.838375091552734,
+                    "Roll": 47.27060317993164,
+                    "Yaw": -34.550392150878906
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "upperarm_r",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -2.5768942832946777,
+                    "Roll": 90.00003051757812,
+                    "Yaw": -6.427947044372559
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "upperarm_r",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "clavicle_r",
+            "ParentFrame": {
+                "Location": {
+                    "X": 21.858177185058594,
+                    "Y": 3.0072364807128906,
+                    "Z": -1.6968352794647217
+                },
+                "Rotation": {
+                    "Pitch": 6.390389919281006,
+                    "Roll": 179.7283172607422,
+                    "Yaw": -32.094852447509766
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "lowerarm_r",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -3.5981554985046387,
+                    "Roll": 90.00003051757812,
+                    "Yaw": -1.4802086353302002
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "lowerarm_r",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "upperarm_r",
+            "ParentFrame": {
+                "Location": {
+                    "X": 27.444028854370117,
+                    "Y": -0.00001619569957256317,
+                    "Z": -0.000010967254638671875
+                },
+                "Rotation": {
+                    "Pitch": -5.566586494445801,
+                    "Roll": 90.04877471923828,
+                    "Yaw": -1.4840761423110962
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "hand_r",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -16.750442504882812,
+                    "Roll": 90.0000228881836,
+                    "Yaw": 0.20167799293994904
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "hand_r",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "lowerarm_r",
+            "ParentFrame": {
+                "Location": {
+                    "X": 27.264060974121094,
+                    "Y": 0.00001905993303807918,
+                    "Z": -0.0000019073486328125
+                },
+                "Rotation": {
+                    "Pitch": -15.762697219848633,
+                    "Roll": 90.00357818603516,
+                    "Yaw": 0.20068974792957306
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "thigh_l",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -3.3225173950195312,
+                    "Roll": 90.00003051757812,
+                    "Yaw": 179.23397827148438
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "thigh_l",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "pelvis",
+            "ParentFrame": {
+                "Location": {
+                    "X": 2.777094602584839,
+                    "Y": 8.90000057220459,
+                    "Z": 4.602370262145996
+                },
+                "Rotation": {
+                    "Pitch": 17.37909698486328,
+                    "Roll": -89.80500793457031,
+                    "Yaw": 0.8013242483139038
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "calf_l",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -2.7160964012145996,
+                    "Roll": 90.0000228881836,
+                    "Yaw": -1.5888127088546753
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "calf_l",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "thigh_l",
+            "ParentFrame": {
+                "Location": {
+                    "X": 40.03099060058594,
+                    "Y": 0,
+                    "Z": 0.000006094574928283691
+                },
+                "Rotation": {
+                    "Pitch": -6.9074320793151855,
+                    "Roll": 90.13214111328125,
+                    "Yaw": -1.5993516445159912
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "foot_l",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -25.886384963989258,
+                    "Roll": 90.0000228881836,
+                    "Yaw": -175.49798583984375
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "foot_l",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "calf_l",
+            "ParentFrame": {
+                "Location": {
+                    "X": 42.947967529296875,
+                    "Y": -9.5367431640625e-7,
+                    "Z": 0.00000476837158203125
+                },
+                "Rotation": {
+                    "Pitch": -85.93632507324219,
+                    "Roll": 4.206301689147949,
+                    "Yaw": -92.28518676757812
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "ball_l",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -4.869236469268799,
+                    "Roll": 90.0000228881836,
+                    "Yaw": 66.58047485351562
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "ball_l",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "foot_l",
+            "ParentFrame": {
+                "Location": {
+                    "X": 17.330101013183594,
+                    "Y": 0.00000286102294921875,
+                    "Z": -0.000003814697265625
+                },
+                "Rotation": {
+                    "Pitch": 15.918596267700195,
+                    "Roll": -119.1906509399414,
+                    "Yaw": -72.0012435913086
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "thigh_r",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -3.3225181102752686,
+                    "Roll": 90.00000762939453,
+                    "Yaw": -179.23406982421875
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "thigh_r",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "pelvis",
+            "ParentFrame": {
+                "Location": {
+                    "X": 2.7770895957946777,
+                    "Y": -8.900001525878906,
+                    "Z": 4.6023712158203125
+                },
+                "Rotation": {
+                    "Pitch": 17.379100799560547,
+                    "Roll": -90.19493103027344,
+                    "Yaw": -0.8012992143630981
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "calf_r",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -2.7152581214904785,
+                    "Roll": 90.00003051757812,
+                    "Yaw": 1.5901581048965454
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "calf_r",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "thigh_r",
+            "ParentFrame": {
+                "Location": {
+                    "X": 40.03097915649414,
+                    "Y": -9.5367431640625e-7,
+                    "Z": 0.000006034970283508301
+                },
+                "Rotation": {
+                    "Pitch": -6.907429218292236,
+                    "Roll": 89.89801788330078,
+                    "Yaw": 1.5992705821990967
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "foot_r",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -25.87701416015625,
+                    "Roll": 90.00003814697266,
+                    "Yaw": 175.44052124023438
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "foot_r",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "calf_r",
+            "ParentFrame": {
+                "Location": {
+                    "X": 42.94796371459961,
+                    "Y": 0.0000019073486328125,
+                    "Z": 0.0000045299530029296875
+                },
+                "Rotation": {
+                    "Pitch": -85.90621185302734,
+                    "Roll": 175.67926025390625,
+                    "Yaw": 92.26819610595703
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        },
+        {
+            "AngularDriveDamping": 0,
+            "AngularDriveStiffness": 0,
+            "ChildBone": "ball_r",
+            "ChildFrame": {
+                "Location": {
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0
+                },
+                "Rotation": {
+                    "Pitch": -4.8690595626831055,
+                    "Roll": 90.0000228881836,
+                    "Yaw": -66.5804214477539
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "DisableCollision": true,
+            "JointName": "ball_r",
+            "LinearLimit": 0,
+            "LinearX": "Locked",
+            "LinearY": "Locked",
+            "LinearZ": "Locked",
+            "ParentBone": "foot_r",
+            "ParentFrame": {
+                "Location": {
+                    "X": 17.330102920532227,
+                    "Y": 0,
+                    "Z": 0.000003337860107421875
+                },
+                "Rotation": {
+                    "Pitch": 16.031417846679688,
+                    "Roll": -60.84760665893555,
+                    "Yaw": 71.99063873291016
+                },
+                "Scale": {
+                    "X": 1,
+                    "Y": 1,
+                    "Z": 1
+                }
+            },
+            "Swing1": "Limited",
+            "Swing1LimitDeg": 45,
+            "Swing2": "Limited",
+            "Swing2LimitDeg": 45,
+            "Twist": "Limited",
+            "TwistLimitDeg": 30
+        }
+    ],
+    "Properties": {},
+    "Version": 1
+}

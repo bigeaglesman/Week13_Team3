@@ -1,0 +1,1966 @@
+{
+    "Version": 4,
+    "World": {
+        "PersistentLevel": {
+            "Actors": [
+                {
+                    "Class": "ADefaultPawn",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UCameraComponent",
+                            "Name": "CameraComponent",
+                            "Parent": "StaticMeshComponent",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bExternalInputManaged": true,
+                                "bHiddenInGame": false,
+                                "bUsePawnControlRotation": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "StaticMeshComponent",
+                            "OverrideMaterials": [],
+                            "Parent": "",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Models/Hitori/Hitori.obj",
+                                "Transform": {
+                                    "Location": {
+                                        "X": -3.9,
+                                        "Y": -0.7,
+                                        "Z": 1.28
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 22.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": true,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "Observer",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": false
+                    }
+                },
+                {
+                    "Class": "AStaticMeshActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": -0.5
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 30.0,
+                                        "Y": 30.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "UStaticMeshComponent",
+                            "OverrideMaterials": [],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": true,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Cube",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "Floor_0",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "ADirectionalLightActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UDirectionalLightComponent",
+                            "Name": "UDirectionalLightComponent",
+                            "Parent": "",
+                            "Properties": {
+                                "AngularRadiusDegrees": 0.5,
+                                "CascadeDistributionExponent": 3.0,
+                                "CascadeTransitionFraction": 0.10000000149011612,
+                                "DynamicShadowCascades": 4,
+                                "DynamicShadowDistanceMovableLight": 1000.0,
+                                "Intensity": 1.0,
+                                "LightColor": 4294967295,
+                                "ShadowBias": 0.5,
+                                "ShadowDistanceFadeoutFraction": 0.10000000149011612,
+                                "ShadowResolutionScale": 1.0,
+                                "ShadowSharpen": 0.0,
+                                "ShadowSlopeBias": 0.5,
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 30.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 59.99999237060547,
+                                        "Roll": 0.0,
+                                        "Yaw": 19.999998092651367
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bCastShadows": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UBillboardComponent",
+                            "Material": {
+                                "Base": "BillboardMaterial",
+                                "Instance": {
+                                    "BaseColor": {
+                                        "W": 1.0,
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    },
+                                    "BlendState": "AlphaBlend",
+                                    "FlipNormalY": false,
+                                    "PSOType": 14,
+                                    "Properties": {},
+                                    "SamplerState": "LinearClamp",
+                                    "Shininess": 32.0,
+                                    "SpecularColor": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    },
+                                    "Textures": [
+                                        "Engine/Icons/Directional.png"
+                                    ],
+                                    "UVScrollSpeed": [
+                                        0.0,
+                                        0.0
+                                    ]
+                                }
+                            },
+                            "Name": "UBillboardComponent",
+                            "Parent": "UDirectionalLightComponent",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": false,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": true,
+                                "bReceiveShadow": false,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "UArrowComponent",
+                            "OverrideMaterials": [
+                                {
+                                    "Asset": "EditorArrowMaterial"
+                                }
+                            ],
+                            "Parent": "UDirectionalLightComponent",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Arrow",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 90.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 0.30000001192092896,
+                                        "Y": 0.30000001192092896,
+                                        "Z": 0.5
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": false,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": false,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "DirectionalLight_0",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "AStaticMeshActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.3462485671043396,
+                                        "Y": 0.0,
+                                        "Z": 2.4791481494903564
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 0.04500000178813934,
+                                        "Y": 1.350000023841858,
+                                        "Z": 0.04500000178813934
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "Class": "UStaticMeshComponent",
+                            "Name": "UStaticMeshComponent",
+                            "OverrideMaterials": [],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "BodyInstance": {
+                                    "MassInKg": 10.0,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "StaticMesh": "Cube",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            }
+                        }
+                    ],
+                    "Name": "GripBar",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": false
+                    }
+                },
+                {
+                    "Class": "ASkeletalMeshActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 1.100000023841858
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 39.999996185302734,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 0.009999999776482582,
+                                        "Y": 0.009999999776482582,
+                                        "Z": 0.009999999776482582
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "BonePose": [
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.0,
+                                            "Y": 0.0,
+                                            "Z": 0.0
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 0.0,
+                                            "Roll": 0.0,
+                                            "Yaw": 0.0
+                                        },
+                                        "Scale": {
+                                            "X": 100.0,
+                                            "Y": 100.0,
+                                            "Z": 100.0
+                                        }
+                                    },
+                                    "Name": "Armature"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.0,
+                                            "Y": 0.0,
+                                            "Z": 0.0
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 0.0,
+                                            "Roll": 0.0,
+                                            "Yaw": 0.0
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "root"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.3079916536808014,
+                                            "Y": 0.02922728657722473,
+                                            "Z": 0.7237929105758667
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -37.667484283447266,
+                                            "Roll": -168.45782470703125,
+                                            "Yaw": -177.35154724121094
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "pelvis"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.13817642629146576,
+                                            "Y": -1.862645149230957e-09,
+                                            "Z": 1.5832483768463135e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 7.4195685386657715,
+                                            "Roll": -3.8098737604741473e-06,
+                                            "Yaw": 7.442986884598213e-07
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 0.9999998211860657
+                                        }
+                                    },
+                                    "Name": "spine_01"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.12403486669063568,
+                                            "Y": 0.0,
+                                            "Z": -5.029141902923584e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 3.4081952571868896,
+                                            "Roll": -4.424654006958008,
+                                            "Yaw": 0.5452737808227539
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "spine_02"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.1412716954946518,
+                                            "Y": 4.307366907596588e-09,
+                                            "Z": 9.778887033462524e-09
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -5.366544723510742,
+                                            "Roll": -13.483894348144531,
+                                            "Yaw": 0.9651109576225281
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "spine_03"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.17289070785045624,
+                                            "Y": -1.3969838619232178e-09,
+                                            "Z": 3.213062882423401e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -7.115113258361816,
+                                            "Roll": 9.00474739074707,
+                                            "Yaw": -1.670646071434021
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "neck_01"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.0825866237282753,
+                                            "Y": 9.313225746154785e-10,
+                                            "Z": 1.0710209608078003e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 36.236392974853516,
+                                            "Roll": -6.302168846130371,
+                                            "Yaw": -7.449314117431641
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "Head"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.14055359363555908,
+                                            "Y": 0.018799999728798866,
+                                            "Z": 0.08089505881071091
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 24.23994255065918,
+                                            "Roll": 89.85875701904297,
+                                            "Yaw": 91.86042785644531
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "clavicle_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.21858173608779907,
+                                            "Y": -0.030072301626205444,
+                                            "Z": -0.01696860045194626
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -52.343055725097656,
+                                            "Roll": -146.5143280029297,
+                                            "Yaw": 124.58270263671875
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "upperarm_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.274440199136734,
+                                            "Y": 2.2351741790771484e-08,
+                                            "Z": -5.21540641784668e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -1.0557093620300293,
+                                            "Roll": 35.47274398803711,
+                                            "Yaw": -0.752190887928009
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 0.9999998211860657
+                                        }
+                                    },
+                                    "Name": "lowerarm_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.2726404368877411,
+                                            "Y": -4.842877388000488e-08,
+                                            "Z": 7.450580596923828e-09
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 1.9483740329742432,
+                                            "Roll": 1.7973315715789795,
+                                            "Yaw": -80.27821350097656
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 0.9999998807907104,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "hand_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.1198999285697937,
+                                            "Y": 0.0020000520162284374,
+                                            "Z": 0.030899981036782265
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 2.4833780865041177e-11,
+                                            "Roll": -89.99954223632813,
+                                            "Yaw": -3.2149566777661676e-06
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "index_01_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04070005193352699,
+                                            "Y": -5.587935447692871e-09,
+                                            "Z": 3.073364496231079e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.12108612060547,
+                                            "Roll": -1.0141324310097843e-05,
+                                            "Yaw": 2.9279970476636663e-05
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "index_02_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.0347999632358551,
+                                            "Y": 1.30385160446167e-08,
+                                            "Z": 2.0302832126617432e-07
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -2.5719926270539872e-05,
+                                            "Roll": -2.0010193679809163e-07,
+                                            "Yaw": -5.549527941184351e-06
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 0.9999998807907104,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "index_03_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.030099980533123016,
+                                            "Y": 2.60770320892334e-08,
+                                            "Z": -1.3783574104309082e-07
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -5.336026021041107e-08,
+                                            "Roll": -179.9995880126953,
+                                            "Yaw": -1.6008272041290184e-07
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "index_04_leaf_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.12159989774227142,
+                                            "Y": -0.00040002167224884033,
+                                            "Z": 0.0052000004798173904
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 2.7069778442382813,
+                                            "Roll": -90.00042724609375,
+                                            "Yaw": 2.809916804835666e-05
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "middle_01_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04234734922647476,
+                                            "Y": -2.421438694000244e-08,
+                                            "Z": 1.3504177331924438e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.12107849121094,
+                                            "Roll": 6.7032710830972064e-06,
+                                            "Yaw": -0.1734093278646469
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "middle_02_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.033933114260435104,
+                                            "Y": -2.0489096641540527e-08,
+                                            "Z": 6.705522537231445e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -3.572574496502057e-05,
+                                            "Roll": 5.332732939677953e-07,
+                                            "Yaw": 0.12944556772708893
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "middle_03_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.03443717956542969,
+                                            "Y": 1.862645149230957e-09,
+                                            "Z": -1.0244548320770264e-07
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -3.2016933459999564e-07,
+                                            "Roll": -179.9995880126953,
+                                            "Yaw": 1.1205768259969773e-06
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999997019767761,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "middle_04_leaf_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.10769981145858765,
+                                            "Y": 0.001599879004061222,
+                                            "Z": -0.04080001264810562
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 3.842460870742798,
+                                            "Roll": -90.00043487548828,
+                                            "Yaw": 8.343049557879567e-06
+                                        },
+                                        "Scale": {
+                                            "X": 1.000000238418579,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "pinky_01_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04029058665037155,
+                                            "Y": 1.4901161193847656e-08,
+                                            "Z": 6.752088665962219e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.12115478515625,
+                                            "Roll": 7.434992585331202e-05,
+                                            "Yaw": 0.09554430097341537
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998807907104,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 0.9999998211860657
+                                        }
+                                    },
+                                    "Name": "pinky_02_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.02766519784927368,
+                                            "Y": 1.30385160446167e-08,
+                                            "Z": -7.078051567077637e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 0.00017224947805516422,
+                                            "Roll": 9.88947817859298e-07,
+                                            "Yaw": -0.06981947273015976
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "pinky_03_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.028164129704236984,
+                                            "Y": 5.029141902923584e-08,
+                                            "Z": 7.078051567077637e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -2.9349487817853515e-07,
+                                            "Roll": -179.9995880126953,
+                                            "Yaw": 2.7747628337237984e-06
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "pinky_04_leaf_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.11909984052181244,
+                                            "Y": -9.994115680456161e-05,
+                                            "Z": -0.01709999516606331
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 2.0401995182037354,
+                                            "Roll": -90.00042724609375,
+                                            "Yaw": -2.135788434998176e-07
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "ring_01_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.039324961602687836,
+                                            "Y": -2.2351741790771484e-08,
+                                            "Z": 2.2817403078079224e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.1211929321289,
+                                            "Roll": 4.596078360918909e-05,
+                                            "Yaw": -0.0014189303619787097
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998807907104,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 0.9999998211860657
+                                        }
+                                    },
+                                    "Name": "ring_02_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.030919518321752548,
+                                            "Y": 4.284083843231201e-08,
+                                            "Z": -4.0978193283081055e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 8.636375423520803e-05,
+                                            "Roll": 8.39214408188127e-07,
+                                            "Yaw": 0.12228429317474365
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998807907104,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "ring_03_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.031822629272937775,
+                                            "Y": 9.313225746154785e-09,
+                                            "Z": 1.0803341865539551e-07
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -6.936930390111229e-07,
+                                            "Roll": -179.9995880126953,
+                                            "Yaw": 5.336059984983876e-07
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "ring_04_leaf_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.02730003371834755,
+                                            "Y": 0.022800080478191376,
+                                            "Z": 0.033599983900785446
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -42.336692810058594,
+                                            "Roll": -167.39871215820313,
+                                            "Yaw": 6.925968170166016
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "thumb_01_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04302991181612015,
+                                            "Y": -9.313225746154785e-09,
+                                            "Z": 1.341104507446289e-07
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 0.014173602685332298,
+                                            "Roll": -11.038732528686523,
+                                            "Yaw": -0.00833675917237997
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 0.9999999403953552
+                                        }
+                                    },
+                                    "Name": "thumb_02_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.049078039824962616,
+                                            "Y": 4.7031790018081665e-08,
+                                            "Z": -4.0978193283081055e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -26.92756462097168,
+                                            "Roll": 6.615154266357422,
+                                            "Yaw": 6.128476619720459
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "thumb_03_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.040862467139959335,
+                                            "Y": 2.421438694000244e-08,
+                                            "Z": 4.470348358154297e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -1.6907453755266033e-05,
+                                            "Roll": -60.819129943847656,
+                                            "Yaw": -2.709573345782701e-05
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "thumb_04_leaf_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.14055362343788147,
+                                            "Y": -0.01879999227821827,
+                                            "Z": 0.08089501410722733
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 36.17036437988281,
+                                            "Roll": -90.0582504272461,
+                                            "Yaw": -91.79409790039063
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "clavicle_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.21858173608779907,
+                                            "Y": 0.03007233701646328,
+                                            "Z": -0.016968432813882828
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -51.454856872558594,
+                                            "Roll": 135.89430236816406,
+                                            "Yaw": -112.06382751464844
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "upperarm_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.2744402289390564,
+                                            "Y": 1.5832483768463135e-08,
+                                            "Z": 3.725290298461914e-09
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -1.1551417112350464,
+                                            "Roll": -24.402647018432617,
+                                            "Yaw": 0.5240117311477661
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 0.9999998807907104,
+                                            "Z": 0.9999998211860657
+                                        }
+                                    },
+                                    "Name": "lowerarm_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.2726404666900635,
+                                            "Y": -9.918585419654846e-08,
+                                            "Z": 3.725290298461914e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 14.753841400146484,
+                                            "Roll": -10.77536392211914,
+                                            "Yaw": 82.98413848876953
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 0.9999998807907104,
+                                            "Z": 0.9999998807907104
+                                        }
+                                    },
+                                    "Name": "hand_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.11990004777908325,
+                                            "Y": -0.0020000082440674305,
+                                            "Z": 0.030900008976459503
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 2.127155743214537e-11,
+                                            "Roll": 89.99954223632813,
+                                            "Yaw": 2.741399384831311e-06
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "index_01_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.0407000370323658,
+                                            "Y": -1.4901161193847656e-08,
+                                            "Z": 7.450580596923828e-09
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.1210708618164,
+                                            "Roll": 6.4753721744637005e-06,
+                                            "Yaw": -3.751724580070004e-05
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 1.0,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "index_02_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.034799959510564804,
+                                            "Y": -7.450580596923828e-09,
+                                            "Z": -8.381903171539307e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -4.423614518600516e-05,
+                                            "Roll": 2.6683618870038117e-08,
+                                            "Yaw": -8.164209248207044e-06
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 0.9999997615814209
+                                        }
+                                    },
+                                    "Name": "index_03_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.030099937692284584,
+                                            "Y": 1.1175870895385742e-08,
+                                            "Z": 9.313225746154785e-09
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -4.802492981070827e-07,
+                                            "Roll": 179.9995880126953,
+                                            "Yaw": -4.2688506596277875e-07
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 0.9999999403953552
+                                        }
+                                    },
+                                    "Name": "index_04_leaf_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.12160003930330276,
+                                            "Y": 0.0004000663757324219,
+                                            "Z": 0.005199998617172241
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 2.7070233821868896,
+                                            "Roll": 90.00043487548828,
+                                            "Yaw": -4.9146838136948645e-06
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "middle_01_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04234715551137924,
+                                            "Y": -2.421438694000244e-08,
+                                            "Z": 5.541369318962097e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.12110900878906,
+                                            "Roll": -9.875380783341825e-06,
+                                            "Yaw": 0.17344783246517181
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 1.0,
+                                            "Z": 0.9999998807907104
+                                        }
+                                    },
+                                    "Name": "middle_02_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.03393310680985451,
+                                            "Y": 9.313225746154785e-09,
+                                            "Z": 1.434236764907837e-07
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -5.0400893087498844e-05,
+                                            "Roll": -1.317110104537278e-06,
+                                            "Yaw": -0.12944556772708893
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 0.9999998807907104,
+                                            "Z": 0.9999999403953552
+                                        }
+                                    },
+                                    "Name": "middle_03_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.034437209367752075,
+                                            "Y": -3.725290298461914e-09,
+                                            "Z": -7.82310962677002e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -1.8676712443266297e-07,
+                                            "Roll": 179.9995880126953,
+                                            "Yaw": -1.1205770533706527e-06
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998807907104,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "middle_04_leaf_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.10770002007484436,
+                                            "Y": -0.0015998953022062778,
+                                            "Z": -0.04079996794462204
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 3.8424527645111084,
+                                            "Roll": 90.00043487548828,
+                                            "Yaw": -8.129124580591451e-06
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "pinky_01_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04029051214456558,
+                                            "Y": -6.332993507385254e-08,
+                                            "Z": -8.009374141693115e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.12117767333984,
+                                            "Roll": -4.575616549118422e-05,
+                                            "Yaw": -0.095582515001297
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 0.9999998807907104,
+                                            "Z": 0.9999998211860657
+                                        }
+                                    },
+                                    "Name": "pinky_02_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.02766535058617592,
+                                            "Y": -2.60770320892334e-08,
+                                            "Z": -5.960464477539063e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 0.0001570936874486506,
+                                            "Roll": 1.2162870461907005e-06,
+                                            "Yaw": 0.06981446593999863
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998211860657,
+                                            "Y": 1.0,
+                                            "Z": 0.9999999403953552
+                                        }
+                                    },
+                                    "Name": "pinky_03_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.028164155781269073,
+                                            "Y": -2.9802322387695313e-08,
+                                            "Z": -5.960464477539063e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 1.0671215733282224e-07,
+                                            "Roll": 179.9995880126953,
+                                            "Yaw": -2.614681534396368e-06
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "pinky_04_leaf_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.11910012364387512,
+                                            "Y": 9.999284520745277e-05,
+                                            "Z": -0.017100011929869652
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 2.040191650390625,
+                                            "Roll": 90.00043487548828,
+                                            "Yaw": 1.5591254850733094e-05
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "ring_01_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.039324913173913956,
+                                            "Y": -1.6763806343078613e-08,
+                                            "Z": -1.0710209608078003e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.12122344970703,
+                                            "Roll": -4.001084016636014e-05,
+                                            "Yaw": 0.001402188092470169
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0,
+                                            "Z": 0.9999999403953552
+                                        }
+                                    },
+                                    "Name": "ring_02_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.03091951459646225,
+                                            "Y": -3.725290298461914e-09,
+                                            "Z": 1.4901161193847656e-07
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 8.569755300413817e-05,
+                                            "Roll": -9.14497988446783e-08,
+                                            "Yaw": -0.12228323519229889
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998807907104,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "ring_03_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.03182259947061539,
+                                            "Y": -5.587935447692871e-09,
+                                            "Z": 4.0978193283081055e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 8.00386317223456e-08,
+                                            "Roll": 179.9995880126953,
+                                            "Yaw": -7.470522973562765e-07
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999995231628418,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 0.9999999403953552
+                                        }
+                                    },
+                                    "Name": "ring_04_leaf_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.02730007842183113,
+                                            "Y": -0.022800039499998093,
+                                            "Z": 0.03359999507665634
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -42.33674240112305,
+                                            "Roll": 167.398681640625,
+                                            "Yaw": -6.9259562492370605
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "thumb_01_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04302995651960373,
+                                            "Y": 0.0,
+                                            "Z": -1.564621925354004e-07
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 0.014173967763781548,
+                                            "Roll": 11.038727760314941,
+                                            "Yaw": 0.008343580178916454
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "thumb_02_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04907800257205963,
+                                            "Y": 1.7113052308559418e-08,
+                                            "Z": -7.82310962677002e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -26.927587509155273,
+                                            "Roll": -6.615131378173828,
+                                            "Yaw": -6.1284942626953125
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "thumb_03_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.04086233302950859,
+                                            "Y": -6.705522537231445e-08,
+                                            "Z": 5.960464477539063e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -1.7851694792625494e-05,
+                                            "Roll": 60.819129943847656,
+                                            "Yaw": 2.7115480406791903e-05
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "thumb_04_leaf_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.027770910412073135,
+                                            "Y": 0.08900000154972076,
+                                            "Z": 0.04602382704615593
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -71.96916198730469,
+                                            "Roll": -86.28870391845703,
+                                            "Yaw": 72.3109130859375
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998807907104,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "thigh_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.4003097712993622,
+                                            "Y": -2.2817403078079224e-08,
+                                            "Z": 5.587935447692871e-09
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -71.64293670654297,
+                                            "Roll": 88.68122100830078,
+                                            "Yaw": -88.6093978881836
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "calf_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.4294798672199249,
+                                            "Y": 3.6088749766349792e-09,
+                                            "Z": 1.5832483768463135e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 74.42390441894531,
+                                            "Roll": 173.87530517578125,
+                                            "Yaw": 170.9584503173828
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "foot_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.1733010858297348,
+                                            "Y": 9.127688826993108e-09,
+                                            "Z": -1.30385160446167e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 30.708587646484375,
+                                            "Roll": 179.93096923828125,
+                                            "Yaw": -0.03525625169277191
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998807907104,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "ball_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.07890002429485321,
+                                            "Y": -1.4069314602238592e-09,
+                                            "Z": -1.0353408130825414e-09
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 1.7075470850613783e-06,
+                                            "Roll": 2.3412071641359944e-06,
+                                            "Yaw": 3.805836938999829e-14
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "ball_leaf_l"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.02777090109884739,
+                                            "Y": -0.08900001645088196,
+                                            "Z": 0.04602384939789772
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -69.29216766357422,
+                                            "Roll": -179.2984161376953,
+                                            "Yaw": 179.06507873535156
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999999403953552,
+                                            "Y": 1.000000238418579,
+                                            "Z": 0.9999999403953552
+                                        }
+                                    },
+                                    "Name": "thigh_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.4003097414970398,
+                                            "Y": 1.1175870895385742e-08,
+                                            "Z": -1.3877787807814457e-17
+                                        },
+                                        "Rotation": {
+                                            "Pitch": -77.38145446777344,
+                                            "Roll": 0.82601398229599,
+                                            "Yaw": -0.8049610257148743
+                                        },
+                                        "Scale": {
+                                            "X": 0.9999998807907104,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 0.9999998211860657
+                                        }
+                                    },
+                                    "Name": "calf_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.4294799566268921,
+                                            "Y": 1.1175870895385742e-08,
+                                            "Z": 1.1102230246251565e-16
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 63.17725372314453,
+                                            "Roll": 136.93740844726563,
+                                            "Yaw": 130.2338104248047
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "foot_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.1733011156320572,
+                                            "Y": -2.0081643015146255e-09,
+                                            "Z": 2.0489096641540527e-08
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 42.15678405761719,
+                                            "Roll": -179.78970336914063,
+                                            "Yaw": 0.5035162568092346
+                                        },
+                                        "Scale": {
+                                            "X": 1.0,
+                                            "Y": 0.9999999403953552,
+                                            "Z": 1.0
+                                        }
+                                    },
+                                    "Name": "ball_r"
+                                },
+                                {
+                                    "Local": {
+                                        "Location": {
+                                            "X": 0.07890001684427261,
+                                            "Y": -7.741618901491165e-09,
+                                            "Z": 3.4924596548080444e-10
+                                        },
+                                        "Rotation": {
+                                            "Pitch": 1.7380057215632405e-06,
+                                            "Roll": 2.361217184443376e-06,
+                                            "Yaw": -3.924384373021894e-07
+                                        },
+                                        "Scale": {
+                                            "X": 1.0000001192092896,
+                                            "Y": 1.0000001192092896,
+                                            "Z": 1.0000001192092896
+                                        }
+                                    },
+                                    "Name": "ball_leaf_r"
+                                }
+                            ],
+                            "Class": "USkeletalMeshComponent",
+                            "Name": "USkeletalMeshComponent",
+                            "OverrideMaterials": [],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "AnimBlueprintPath": "",
+                                "AnimInstance": null,
+                                "BlendSpaceInput": 300.0,
+                                "BodyInstance": {
+                                    "MassInKg": 1.0,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": true,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": true
+                                },
+                                "SkeletalMesh": "FBX/UAL1_Standard/UAL1_HangingDemo.fbx.bin",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0.0,
+                                        "Y": 0.0,
+                                        "Z": 0.0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0.0,
+                                        "Roll": 0.0,
+                                        "Yaw": 0.0
+                                    },
+                                    "Scale": {
+                                        "X": 1.0,
+                                        "Y": 1.0,
+                                        "Z": 1.0
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": true,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            },
+                            "SingleAnimation": {
+                                "Asset": "FBX/UAL1_Standard/UAL1_Standard_Armature_Push_Loop.anim.bin",
+                                "Looping": true,
+                                "PlayRate": 1.0
+                            }
+                        }
+                    ],
+                    "Name": "HangingRagdoll",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": true
+                    }
+                },
+                {
+                    "Class": "ASkeletalMeshActor",
+                    "Components": [
+                        {
+                            "Class": "USceneComponent",
+                            "Name": "DefaultSceneRoot",
+                            "Parent": "",
+                            "Properties": {
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 1.8,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 0.009999999776482582,
+                                        "Y": 0.009999999776482582,
+                                        "Z": 0.009999999776482582
+                                    }
+                                },
+                                "bAutoActivate": true,
+                                "bHiddenInGame": false,
+                                "bVisible": true
+                            }
+                        },
+                        {
+                            "BonePose": [],
+                            "Class": "USkeletalMeshComponent",
+                            "Name": "USkeletalMeshComponent",
+                            "OverrideMaterials": [],
+                            "Parent": "DefaultSceneRoot",
+                            "Properties": {
+                                "AnimBlueprintPath": "",
+                                "AnimInstance": null,
+                                "BlendSpaceInput": 300,
+                                "BodyInstance": {
+                                    "MassInKg": 1,
+                                    "bEnableGravity": true,
+                                    "bEnablePhysicsCollision": false,
+                                    "bNotifyRigidBodyCollision": false,
+                                    "bSimulatePhysics": false
+                                },
+                                "SkeletalMesh": "FBX/UAL1_Standard/UAL1_Standard.fbx.bin",
+                                "Transform": {
+                                    "Location": {
+                                        "X": 0,
+                                        "Y": 0,
+                                        "Z": 0
+                                    },
+                                    "Rotation": {
+                                        "Pitch": 0,
+                                        "Roll": 0,
+                                        "Yaw": 0
+                                    },
+                                    "Scale": {
+                                        "X": 1,
+                                        "Y": 1,
+                                        "Z": 1
+                                    }
+                                },
+                                "TranslucencySortPriority": 0,
+                                "bAutoActivate": true,
+                                "bBlockComponent": false,
+                                "bCastShadow": true,
+                                "bGenerateOverlapEvents": false,
+                                "bHiddenInGame": false,
+                                "bReceiveShadow": true,
+                                "bReceivesDecals": true,
+                                "bVisible": true
+                            },
+                            "SingleAnimation": {
+                                "Asset": "FBX/UAL1_Standard/UAL1_Standard_Armature_Push_Loop.anim.bin",
+                                "Looping": true,
+                                "PlayRate": 1
+                            }
+                        }
+                    ],
+                    "Name": "AnimationReference",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bActorEnableCollision": false
+                    }
+                }
+            ],
+            "Properties": {}
+        },
+        "Properties": {}
+    }
+}

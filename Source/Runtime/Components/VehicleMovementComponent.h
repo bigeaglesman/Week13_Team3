@@ -51,6 +51,8 @@ public:
     int32 GetWheelContactCount() const { return WheelContactCount; }
     bool IsWheelInContact(int32 Index) const { return Index >= 0 && Index < 4 && WheelContactStates[Index]; }
 
+    int32 GetDriveModeIndex() const { return VehicleDriveModeIndex; }
+
 protected:
     virtual void OnUnregister() override;
 
@@ -91,4 +93,6 @@ private:
 
     UVehicleHUD* VehicleHUD = nullptr;
 
+    int32 VehicleDriveModeIndex = 0;
+    bool bPreviousDriveModeKeyDown = false;
 };

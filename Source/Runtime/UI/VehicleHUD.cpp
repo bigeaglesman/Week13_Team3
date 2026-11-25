@@ -46,6 +46,7 @@ void UVehicleHUD::NativeConstruct()
     RPMText = GetWidget<UTextBlock>("RPMText");
     InputText = GetWidget<UTextBlock>("InputText");
     WheelText = GetWidget<UTextBlock>("WheelText");
+    DriveModeText = GetWidget<UTextBlock>("DriveModeText");
 
     LocalVelocityText = GetWidget<UTextBlock>("LocalVelocityText");
     LocalAngularVelocityText = GetWidget<UTextBlock>("LocalAngularVelocityText");
@@ -117,6 +118,16 @@ void UVehicleHUD::NativeTick(float DeltaTime)
             << " | CONTACT " << VehicleMovement->GetWheelContactCount() << "/4";
 
         WheelText->SetText(Stream.str());
+    }
+
+    if (DriveModeText)
+    {
+        static const char* DriveModeNames[3] = { "AWD + LSD", "AWD + OPEN", "RWD + LSD" };
+
+        const int32 ModeIndex = VehicleMovement->GetDriveModeIndex();
+        const int32 SafeModeIndex = ModeIndex >= 0 && ModeIndex < 3 ? ModeIndex : 0;
+
+        DriveModeText->SetText(std::string("DRIVE MODE [V]  ") + DriveModeNames[SafeModeIndex]);
     }
 
     // ------------------------------------------------------------
@@ -200,6 +211,7 @@ void UVehicleHUD::NativeDestruct()
     RPMText = nullptr;
     InputText = nullptr;
     WheelText = nullptr;
+    DriveModeText = nullptr;
 
     LocalVelocityText = nullptr;
     LocalAngularVelocityText = nullptr;

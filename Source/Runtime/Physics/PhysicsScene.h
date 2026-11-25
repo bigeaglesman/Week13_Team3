@@ -67,6 +67,13 @@ struct FVehicleWheelState
 	int32 TireSurfaceType = -1;
 };
 
+enum class EVehicleDriveMode : uint8
+{
+	AWDLSD = 0,
+	AWDOpen,
+	RWDLSD
+};
+
 struct FVehicleDriveState
 {
 	float ForwardSpeed = 0.0f;
@@ -125,6 +132,7 @@ public:
 	bool GetVehicleDriveState(physx::PxVehicleWheels* Vehicle, FVehicleDriveState& OutState) const;
 	bool SetVehicleGear(physx::PxVehicleWheels* Vehicle, int32 Gear, bool bUseAutoGears, bool bForce);
 	bool SetVehicleAutomaticGears(physx::PxVehicleWheels* Vehicle, bool bUseAutoGears);
+	bool SetVehicleDriveMode(physx::PxVehicleWheels* Vehicle, EVehicleDriveMode Mode);
 
 	static constexpr float FixedStep = 1.0f / 60.0f;
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다

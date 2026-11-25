@@ -142,16 +142,19 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     const bool bAutomaticToggleKeyDown = IsKeyDown(EKeyCode::M);
     const bool bGearUpKeyDown = IsKeyDown(EKeyCode::E);
     const bool bGearDownKeyDown = IsKeyDown(EKeyCode::Q);
+    const bool bDriveModeKeyDown = IsKeyDown(EKeyCode::V);
 
     const bool bNeutralPressed = bNeutralKeyDown && !bPreviousNeutralKeyDown;
     const bool bAutomaticTogglePressed = bAutomaticToggleKeyDown && !bPreviousAutomaticToggleKeyDown;
     const bool bGearUpPressed = bGearUpKeyDown && !bPreviousGearUpKeyDown;
     const bool bGearDownPressed = bGearDownKeyDown && !bPreviousGearDownKeyDown;
+    const bool bDriveModePressed = bDriveModeKeyDown && !bPreviousDriveModeKeyDown;
 
     bPreviousNeutralKeyDown = bNeutralKeyDown;
     bPreviousAutomaticToggleKeyDown = bAutomaticToggleKeyDown;
     bPreviousGearUpKeyDown = bGearUpKeyDown;
     bPreviousGearDownKeyDown = bGearDownKeyDown;
+    bPreviousDriveModeKeyDown = bDriveModeKeyDown;
 
     FVehicleDriveState DriveState;
 
@@ -161,6 +164,27 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
 
     VehicleSpeed = DriveState.LinearSpeed;
+
+    if (bDriveModePressed)
+    {
+        if (std::abs(DriveState.LinearSpeed) > 1.0f || std::abs(ForwardInput) > KINDA_SMALL_NUMBER)
+        {
+            HTR_LOG(Warning, "[Vehicle] Drive mode can only be changed while stopped.");
+        }
+        else
+        {
+            const int32 NextModeIndex = (VehicleDriveModeIndex + 1) % 3;
+            const EVehicleDriveMode NextMode = static_cast<EVehicleDriveMode>(NextModeIndex);
+
+            if (PhysicsScene->SetVehicleDriveMode(Vehicle, NextMode))
+            {
+                VehicleDriveModeIndex = NextModeIndex;
+
+                HTR_LOG(Info, "[Vehicle] Drive Mode Changed | Mode={}", VehicleDriveModeIndex);
+            }
+        }
+    }
+
     LocalLinearVelocity = DriveState.LocalLinearVelocity;
     LocalAngularVelocity = DriveState.LocalAngularVelocity;
 

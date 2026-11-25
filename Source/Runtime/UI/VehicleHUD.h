@@ -37,4 +37,6 @@ private:
     // 바퀴별 텔레메트리
     UTextBlock* WheelTelemetryTitleText = nullptr;
     UTextBlock* WheelTelemetryText[4] = {};
+
+    UTextBlock* DriveModeText = nullptr;
 };

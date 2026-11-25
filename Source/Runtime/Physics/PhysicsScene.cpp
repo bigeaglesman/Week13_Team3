@@ -893,6 +893,58 @@ bool FPhysicsScene::SetVehicleAutomaticGears(PxVehicleWheels* Vehicle, bool bUse
 	return true;
 }
 
+bool FPhysicsScene::SetVehicleDriveMode(physx::PxVehicleWheels* Vehicle, EVehicleDriveMode Mode)
+{
+	if (!Scene || !Vehicle || !VehicleSceneQueryData)
+	{
+		return false;
+	}
+
+	SCOPED_SCENE_WRITE_LOCK(Scene);
+
+	const auto& Vehicles = VehicleSceneQueryData->Vehicles;
+
+	if (std::find(Vehicles.begin(), Vehicles.end(), Vehicle) == Vehicles.end())
+	{
+		return false;
+	}
+
+	PxVehicleDrive4W* DriveVehicle = static_cast<PxVehicleDrive4W*>(Vehicle);
+	PxVehicleDifferential4WData DifferentialData = DriveVehicle->mDriveSimData.getDiffData();
+
+	switch (Mode)
+	{
+	case EVehicleDriveMode::AWDLSD:
+		DifferentialData.mType = PxVehicleDifferential4WData::eDIFF_TYPE_LS_4WD;
+		DifferentialData.mFrontRearSplit = 0.55f;
+		DifferentialData.mFrontLeftRightSplit = 0.5f;
+		DifferentialData.mRearLeftRightSplit = 0.5f;
+		DifferentialData.mCentreBias = 1.3f;
+		DifferentialData.mFrontBias = 1.3f;
+		DifferentialData.mRearBias = 1.3f;
+		break;
+
+	case EVehicleDriveMode::AWDOpen:
+		DifferentialData.mType = PxVehicleDifferential4WData::eDIFF_TYPE_OPEN_4WD;
+		DifferentialData.mFrontRearSplit = 0.55f;
+		DifferentialData.mFrontLeftRightSplit = 0.5f;
+		DifferentialData.mRearLeftRightSplit = 0.5f;
+		break;
+
+	case EVehicleDriveMode::RWDLSD:
+		DifferentialData.mType = PxVehicleDifferential4WData::eDIFF_TYPE_LS_REARWD;
+		DifferentialData.mRearLeftRightSplit = 0.5f;
+		DifferentialData.mRearBias = 1.3f;
+		break;
+
+	default:
+		return false;
+	}
+
+	DriveVehicle->mDriveSimData.setDiffData(DifferentialData);
+	return true;
+}
+
 
 void FPhysicsScene::SetDebugVisualization(bool bEnable)
 {

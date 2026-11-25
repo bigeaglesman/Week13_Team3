@@ -15,6 +15,7 @@
 #include "Render/LineBatcher.h"
 #include "Render/SkeletalMesh.h"
 #include <cmath>
+#include <format>
 
 namespace
 {
@@ -256,8 +257,9 @@ void FSkeletalMeshEditor::StartPhysicsPreview()
 	if (Bodies.Num() != Asset->BodySetups.Num()
 		|| MeshComponent->GetNumConstraints() != Asset->ConstraintSetups.Num())
 	{
+		PhysicsAssetStatus = std::format("Cannot simulate: created {}/{} bodies and {}/{} joints. See Output Log.",
+			Bodies.Num(), Asset->BodySetups.Num(), MeshComponent->GetNumConstraints(), Asset->ConstraintSetups.Num());
 		StopPhysicsPreview();
-		PhysicsAssetStatus = "Cannot simulate: one or more asset bodies or joints could not be created for this mesh.";
 		return;
 	}
 

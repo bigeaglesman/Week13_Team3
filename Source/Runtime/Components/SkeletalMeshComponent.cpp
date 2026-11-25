@@ -237,6 +237,7 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 		const int32 BoneIndex = FindBoneIndex(Setup->BoneName);
 		if (BoneIndex < 0)
 		{
+			HTR_LOG(Error, "[PhysX] Cannot create body '{}': bone missing from skeleton.", Setup->BoneName);
 			continue;
 		}
 
@@ -262,6 +263,7 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 		}
 		else
 		{
+			HTR_LOG(Error, "[PhysX] Cannot create body for bone '{}' (asset scale {}).", Setup->BoneName, Scale);
 			delete Body;
 		}
 	}
@@ -286,6 +288,8 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 		FBodyInstance* ParentBody = FindBody(Setup.ParentBoneName);
 		if (!ChildBody || !ParentBody)
 		{
+			HTR_LOG(Error, "[PhysX] Cannot create joint '{}' -> '{}': missing body '{}'.", Setup.ParentBoneName, Setup.ChildBoneName,
+				!ParentBody ? Setup.ParentBoneName : Setup.ChildBoneName);
 			continue;
 		}
 
@@ -297,6 +301,7 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 		}
 		else
 		{
+			HTR_LOG(Error, "[PhysX] Failed to create joint '{}' -> '{}'.", Setup.ParentBoneName, Setup.ChildBoneName);
 			delete Constraint;
 		}
 	}

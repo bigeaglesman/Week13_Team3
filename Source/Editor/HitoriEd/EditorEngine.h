@@ -92,6 +92,10 @@ public:
 	// GetDefault<ULevelEditorViewportSettings>()). 다만 이 세 함수의 이름은 UE에 없는, 이 엔진 고유의 이름이다.
 	// 설정 패널이 아직 없으면 nullptr이다.
 	const FEditorSettings* GetEditorSettings() const { return SettingsPanel ? &SettingsPanel->GetSettings() : nullptr; }
+	void SetSkeletalPreviewScale(const FString& MeshPath, float Scale)
+	{
+		if (SettingsPanel) SettingsPanel->GetMutableSettings().SkeletalPreviewScales.Add(MeshPath, Scale);
+	}
 	// 지금 선택된 컴포넌트와 조작 모드를 가진 기즈모
 	FGizmo* GetGizmo() const { return Gizmo.get(); }
 	// 지금 선택된 메시의 외곽선

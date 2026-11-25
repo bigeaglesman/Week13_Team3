@@ -7,6 +7,7 @@
 
 
 class UBodySetup;
+class UBoxComponent;
 struct FConstraintSetup;
 
 class FSkeletalMeshEditor : public FSkeletalPreviewEditor
@@ -25,6 +26,11 @@ public:
 
 	bool IsPhysicsAssetMode() const { return bPhysicsAssetMode; }
 	void SetPhysicsAssetMode(bool bEnabled);
+	void StartPhysicsPreview();
+	void StopPhysicsPreview();
+	float GetPreviewScale() const;
+	void SetPreviewScale(float Scale);
+	bool IsPhysicsPreviewRunning() const { return FloorCollision != nullptr; }
 	bool AreConstraintsVisible() const { return bShowConstraints; }
 	void SetConstraintsVisible(bool bVisible);
 	void SelectConstraint(int32 Index);
@@ -68,6 +74,9 @@ private:
 	bool bPhysicsPickPending = false;
 	FVector2 PhysicsPickPosition;
 	FString PhysicsAssetStatus;
+	UBoxComponent* FloorCollision = nullptr;
+	TArray<FTransform> PreviewStartPose;
+	bool bPreviousSimulatePhysics = false;
 
 	void SyncBoneGizmo();
 	bool UpdateBoneGizmo();

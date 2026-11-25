@@ -24,9 +24,11 @@ public:
 
 	// PreviewScene에 빈 액터를 만들고 컴포넌트를 추가합니다.
 	class UActorComponent* AddComponent(class UClass* ComponentClass);
+	class UStaticMeshComponent* AddFloor(const struct FBox& SubjectBounds);
+	static void FitFloor(UStaticMeshComponent& Floor, const FBox& SubjectBounds);
 
 	// 기초 장면을 세팅합니다.
-	// Skybox, Directional Light, SkyLight, 바닥 Plane등을 세팅합니다.
+	// 프리뷰 조명을 세팅한다. 바닥은 대상 메시의 범위를 구한 뒤 배치한다.
 	void Setup();
 
 private:

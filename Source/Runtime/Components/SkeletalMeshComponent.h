@@ -89,6 +89,7 @@ public:
 
 	// ---- 물리 (래그돌) ----
 	const TArray<FBodyInstance*>& GetBodies() const { return Bodies; }
+	int32 GetNumConstraints() const { return Constraints.Num(); }
 
 	// 메시의 Physics Asset. 아직 없으면 메시 옆의 .physicsasset을 읽거나, 없으면 뼈 모양으로 자동 생성해 메시에 붙인다.
 	// 메시가 없거나 뼈가 없으면 nullptr

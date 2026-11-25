@@ -11,6 +11,7 @@
 #include "GameFramework/DefaultPawn.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/UObjectIterator.h"
+#include <iomanip>
 
 // 종료 시 렌더·에디터·뷰포트 설정을 함께 저장한다.
 FSettingsPanel::~FSettingsPanel()
@@ -275,6 +276,10 @@ bool FSettingsPanel::SaveSettings() const
 	File << "PointShadowMapSizeLevel=" << Settings.PointShadowMapSizeLevel << '\n';
 	File << "SpotShadowMapSizeLevel=" << Settings.SpotShadowMapSizeLevel << '\n';
 
+	File << "\n[SkeletalMeshPreview]\n";
+	for (const auto& [MeshPath, Scale] : Settings.SkeletalPreviewScales)
+		File << "MeshScale=" << Scale << ' ' << std::quoted(MeshPath) << '\n';
+
     File.close();
 	return true;
 }
@@ -288,6 +293,7 @@ bool FSettingsPanel::LoadSettings()
 		return false;
 	}
 
+	Settings.SkeletalPreviewScales.Reset();
 	uint8 LocationComponentMasks[4]{};
 	uint8 RotationComponentMasks[4]{};
 	for (int32 Index = 0; Index < 4; ++Index)
@@ -305,6 +311,14 @@ bool FSettingsPanel::LoadSettings()
 		std::string Key;
 		if (std::getline(Iss, Key, '='))
 		{
+			if (Key == "MeshScale")
+			{
+				float Scale;
+				FString MeshPath;
+				if (Iss >> Scale >> std::quoted(MeshPath) && std::isfinite(Scale) && Scale > 0 && !MeshPath.empty())
+					Settings.SkeletalPreviewScales.Add(MeshPath, Scale);
+				continue;
+			}
 			std::string ValueStr;
 			if (std::getline(Iss, ValueStr))
 			{

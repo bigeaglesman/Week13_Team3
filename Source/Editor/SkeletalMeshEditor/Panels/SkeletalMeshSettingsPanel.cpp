@@ -9,15 +9,19 @@ FSkeletalMeshSettingsPanel::FSkeletalMeshSettingsPanel(FSkeletalMeshEditor& InEd
 
 void FSkeletalMeshSettingsPanel::DrawContent()
 {
-	float CameraSpeed = Editor.GetCameraSpeed();
-	ImGui::TextUnformatted("Camera Speed");
-	ImGui::SetNextItemWidth(-FLT_MIN);
-	if (ImGui::SliderFloat("##CameraSpeed", &CameraSpeed, 1.0f, 150.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp))
+	if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		Editor.SetCameraSpeed(CameraSpeed);
+		float CameraSpeed = Editor.GetCameraSpeed();
+		ImGui::TextUnformatted("Camera Speed");
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		if (ImGui::SliderFloat("##CameraSpeed", &CameraSpeed, 1.0f, 150.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp))
+		{
+			Editor.SetCameraSpeed(CameraSpeed);
+		}
 	}
 
-	if (!Editor.IsPhysicsAssetMode())
+	const bool bPhysics = Editor.IsPhysicsAssetMode();
+	if (!bPhysics && ImGui::CollapsingHeader("Skeleton", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImGui::Button("Reset All Transform"))
 		{
@@ -38,7 +42,7 @@ void FSkeletalMeshSettingsPanel::DrawContent()
 			Editor.SetBoneVisualizerVisible(bShowBoneVisualizer);
 		}
 	}
-	else
+	if (bPhysics && ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		bool bVisible = Editor.AreConstraintsVisible();
 		if (ImGui::Checkbox("Show Constraints", &bVisible))
@@ -47,18 +51,32 @@ void FSkeletalMeshSettingsPanel::DrawContent()
 		}
 	}
 
-	if (FEditorViewportClient* Client = Editor.GetViewportClient())
+	if (ImGui::CollapsingHeader("Display", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		bool bWireframe = Client->IsWireframe();
-		if (ImGui::Checkbox("Wireframe", &bWireframe))
+		if (FEditorViewportClient* Client = Editor.GetViewportClient())
 		{
-			Client->SetViewMode(bWireframe ? VMI_Wireframe : VMI_Lit);
+			bool bWireframe = Client->IsWireframe();
+			if (ImGui::Checkbox("Wireframe", &bWireframe))
+			{
+				Client->SetViewMode(bWireframe ? VMI_Wireframe : VMI_Lit);
+			}
+		}
+
+		bool bHeatmap = Editor.IsWeightHeatmapEnabled();
+		if (ImGui::Checkbox("Weight Heatmap", &bHeatmap))
+		{
+			Editor.SetWeightHeatmap(bHeatmap);
 		}
 	}
 
-	bool bHeatmap = Editor.IsWeightHeatmapEnabled();
-	if (ImGui::Checkbox("Weight Heatmap", &bHeatmap))
+	if (ImGui::CollapsingHeader("Preview Scene", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		Editor.SetWeightHeatmap(bHeatmap);
+		ImGui::BeginDisabled(Editor.IsPhysicsPreviewRunning());
+		float Scale = Editor.GetPreviewScale();
+		ImGui::TextUnformatted("Preview Scale");
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		if (ImGui::InputFloat("##PreviewScale", &Scale, 0.0f, 0.0f, "%.6g", ImGuiInputTextFlags_EnterReturnsTrue))
+			Editor.SetPreviewScale(Scale);
+		ImGui::EndDisabled();
 	}
 }

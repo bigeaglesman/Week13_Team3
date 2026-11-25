@@ -55,6 +55,7 @@ bool FStaticMeshEditor::InitializeResources()
 
 	// StaticMeshComponent에 메시를 설정
 	MeshComponent->SetStaticMesh(Mesh);
+	PreviewScene.AddFloor(MeshComponent->CalcBounds());
 
 	// 카메라를 메시에 포커싱
 	FocusMesh();

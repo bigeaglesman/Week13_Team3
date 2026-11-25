@@ -1,6 +1,7 @@
 #pragma once
 
 #include <format>
+#include "Containers/Map.h"
 #include "Editor/EditorUI/EditorPanel.h"
 #include "Math/Quat.h"
 #include "Math/Vector.h"
@@ -42,6 +43,7 @@ struct FEditorSettings
 	// Values
 	float SceneDepthMaxRange = 50.0f;
 	float CameraSpeed = 1.0f;
+	TMap<FString, float> SkeletalPreviewScales;
 	float MouseSensitivity = 1.0f;
 	int32 GridSpacing = 1;
 	float MultipleViewportsHorizontal = 0.5f;

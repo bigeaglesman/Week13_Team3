@@ -113,6 +113,29 @@ UActorComponent* FPreviewScene::AddComponent(UClass* ComponentClass)
 	return Component;
 }
 
+UStaticMeshComponent* FPreviewScene::AddFloor(const FBox& SubjectBounds)
+{
+	UStaticMesh* Plane = UAssetManager::GetAssetByPath<UStaticMesh>("Plane");
+	if (!Plane) return nullptr;
+	auto* Floor = Cast<UStaticMeshComponent>(AddComponent(UStaticMeshComponent::StaticClass()));
+	if (!Floor) return nullptr;
+
+	Floor->SetStaticMesh(Plane);
+	FitFloor(*Floor, SubjectBounds);
+	return Floor;
+}
+
+void FPreviewScene::FitFloor(UStaticMeshComponent& Floor, const FBox& SubjectBounds)
+{
+	const FVector Size = SubjectBounds.Max - SubjectBounds.Min;
+	const float Span = std::max({ Size.X, Size.Y, Size.Z, 0.1f });
+	const FVector Center = (SubjectBounds.Min + SubjectBounds.Max) * 0.5f;
+	Floor.SetRelativeScale3D(FVector(4.0f * Span, 4.0f * Span, 1.0f));
+	// 수평 평면 에셋만 바닥과 같은 깊이에서 깜빡이지 않도록 살짝 띄운다.
+	const float FloorZ = Size.Z == 0.0f ? SubjectBounds.Min.Z - 0.001f * Span : SubjectBounds.Min.Z;
+	Floor.SetWorldLocation(FVector(Center.X, Center.Y, FloorZ), false);
+}
+
 void FPreviewScene::Setup()
 {
 	if (!WorldContext || bEnvironmentCreated)

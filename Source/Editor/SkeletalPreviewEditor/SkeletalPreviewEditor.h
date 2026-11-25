@@ -59,7 +59,8 @@ public:
 	bool IsWeightHeatmapEnabled() const { return bShowWeightHeatmap; }
 
 protected:
-	bool InitializePreview();                // Mesh 검증, 프리뷰 씬 생성, 컴포넌트·본 목록·포커스
+	bool InitializePreview(float MeshScale = 1.0f);  // Mesh 검증, 프리뷰 씬 생성, 컴포넌트·본 목록·포커스
+	void ApplyPreviewMeshScale(float Scale);
 	void ShutdownResources() override;       // 선택·컴포넌트·Mesh 정리 후 FAssetEditor::ShutdownResources
 
 	virtual void TickBeforeWorld(float DeltaTime) {}
@@ -78,6 +79,7 @@ protected:
 
 	USkeletalMesh* Mesh = nullptr;
 	USkeletalMeshComponent* MeshComponent = nullptr;
+	class UStaticMeshComponent* FloorMesh = nullptr;
 
 	FViewportCameraInput CameraInput;
 	FViewportPointerInput PointerInput;

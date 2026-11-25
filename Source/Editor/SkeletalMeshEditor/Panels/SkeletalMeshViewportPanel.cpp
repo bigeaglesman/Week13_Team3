@@ -14,6 +14,38 @@ void FSkeletalMeshViewportPanel::DrawContent()
 	constexpr int32 GizmoModeCount = 3;   // 이동, 회전, 크기 (툴바 버튼과 Space 순환)
 
 	FEditorViewportClient* Client = Editor.GetViewportClient();
+	const float RowStart = ImGui::GetCursorPosX();
+	const float RowWidth = ImGui::GetContentRegionAvail().x;
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float ModeWidth = 2.0f * (ImGui::GetFrameHeight() + Style.ItemInnerSpacing.x)
+		+ ImGui::CalcTextSize("Mesh").x + ImGui::CalcTextSize("Physics Asset").x + Style.ItemSpacing.x;
+	ImGui::SetCursorPosX(RowStart + std::max(0.0f, RowWidth - ModeWidth));
+	const bool bWasPhysics = Editor.IsPhysicsAssetMode();
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.5f);
+	ImGui::PushStyleColor(ImGuiCol_Border, Style.Colors[ImGuiCol_TextDisabled]);
+	if (ImGui::RadioButton("Mesh", !bWasPhysics) && bWasPhysics)
+		Editor.SetPhysicsAssetMode(false);
+	ImGui::SameLine();
+	if (ImGui::RadioButton("Physics Asset", bWasPhysics) && !bWasPhysics)
+		Editor.SetPhysicsAssetMode(true);
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar();
+	if (Editor.IsPhysicsAssetMode())
+	{
+		const bool bPlaying = Editor.IsPhysicsPreviewRunning();
+		const float ActionWidth = ImGui::CalcTextSize("Simulate").x + 2.0f * Style.FramePadding.x;
+		if (RowWidth >= ActionWidth + Style.ItemSpacing.x + ModeWidth)
+		{
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(RowStart);
+		}
+		if (ImGui::Button(bPlaying ? "Stop" : "Simulate", ImVec2(ActionWidth, 0)))
+		{
+			if (bPlaying) Editor.StopPhysicsPreview();
+			else Editor.StartPhysicsPreview();
+		}
+	}
+
 	const ImVec2 Size = ImGui::GetContentRegionAvail();
 	if (!Client || Size.x < 1.0f || Size.y < 1.0f)
 	{

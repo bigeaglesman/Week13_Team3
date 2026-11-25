@@ -118,13 +118,13 @@ void FSkeletalPreviewEditor::FocusMesh()
 		return;
 	}
 
-	if (!Mesh)
+	if (!Mesh || !MeshComponent)
 	{
 		return;
 	}
 
 	// 메시의 AABB를 가져와서 BoxSphereBounds로 변환
-	const FBox& Box = Mesh->GetRenderData().LODRenderData[0].BindAABB;
+	const FBox Box = Mesh->GetRenderData().LODRenderData[0].BindAABB.GetWorldAABB(MeshComponent->GetWorldMatrix());
 	const FVector Extent = (Box.Max - Box.Min) * 0.5f;
 	FBoxSphereBounds Bound
 	{
@@ -137,7 +137,7 @@ void FSkeletalPreviewEditor::FocusMesh()
 	ViewportClient->FocusOnBounds(Bound);
 }
 
-bool FSkeletalPreviewEditor::InitializePreview()
+bool FSkeletalPreviewEditor::InitializePreview(float MeshScale)
 {
 	if (!Mesh) return false;
 	const auto& LODs = Mesh->GetRenderData().LODRenderData;
@@ -148,20 +148,32 @@ bool FSkeletalPreviewEditor::InitializePreview()
 	MeshComponent = Cast<USkeletalMeshComponent>(PreviewScene.AddComponent(USkeletalMeshComponent::StaticClass()));
 	if (!MeshComponent) return false;
 	MeshComponent->SetSkeletalMesh(Mesh);
+	ApplyPreviewMeshScale(MeshScale);
 	MeshComponent->RefreshBoneTransformsNow();
-
-	const FBox& MeshBox = LODs[0].BindAABB;                       // 멤버였던 MeshBox
-	BoneSphereSize = FMath::Max((MeshBox.Max - MeshBox.Min).Size() * 0.0025f, 0.001f);
 
 	BuildBoneItems();
 	FocusMesh();
 	return true;
 }
 
+void FSkeletalPreviewEditor::ApplyPreviewMeshScale(float Scale)
+{
+	MeshComponent->SetRelativeScale3D(FVector(Scale, Scale, Scale));
+	const FBox& Bounds = Mesh->GetRenderData().LODRenderData[0].BindAABB;
+	BoneSphereSize = FMath::Max((Bounds.Max - Bounds.Min).Size() * 0.0025f, 0.001f) * Scale;
+	// 바닥은 렌더 컬링용 여백이 없는 기준 포즈의 최저점에 고정한다.
+	const FBox WorldBounds = Bounds.GetWorldAABB(MeshComponent->GetWorldMatrix());
+	if (FloorMesh)
+		FPreviewScene::FitFloor(*FloorMesh, WorldBounds);
+	else
+		FloorMesh = PreviewScene.AddFloor(WorldBounds);
+}
+
 void FSkeletalPreviewEditor::ShutdownResources()
 {
 	SelectedBoneIndex = -1;
 	MeshComponent = nullptr;
+	FloorMesh = nullptr;
 	Mesh = nullptr;
 	FAssetEditor::ShutdownResources();
 }

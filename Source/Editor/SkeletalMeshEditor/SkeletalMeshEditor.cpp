@@ -1,11 +1,17 @@
 #include "EnginePCH.h"
 #include "Editor/SkeletalMeshEditor/SkeletalMeshEditor.h"
 #include "SkeletalMeshEditorTab.h"
+#include "Editor/HitoriEd/EditorEngine.h"
+#include "Asset/FbxImporter/FbxMeshBake.h"
+#include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Containers/Map.h"
+#include "Engine/World.h"
 #include "Physics/BodySetup.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetFile.h"
+#include "Physics/PhysicsScene.h"
 #include "Render/LineBatcher.h"
 #include "Render/SkeletalMesh.h"
 #include <cmath>
@@ -95,7 +101,16 @@ namespace
 
 bool FSkeletalMeshEditor::InitializeResources()
 {
-	if (!InitializePreview()) return false;
+	// FBX 임포터는 cm로 베이크하고 물리 월드는 m 단위로 시뮬레이션한다.
+	constexpr float CentimetersToMeters = 0.01f;
+	if (!Mesh) return false;
+	float PreviewScale = FFbxMeshBake::IsBakedPath(Mesh->GetPath()) ? CentimetersToMeters : 1.0f;
+	if (const FEditorSettings* Settings = EditorEngine.GetEditorSettings())
+	{
+		if (const float* Saved = Settings->SkeletalPreviewScales.Find(Mesh->GetPath()))
+			PreviewScale = *Saved;
+	}
+	if (!InitializePreview(PreviewScale)) return false;
 	BoneGizmoTarget = Cast<USceneComponent>(PreviewScene.AddComponent(USceneComponent::StaticClass()));
 	if (!BoneGizmoTarget) return false;
 	BoneGizmoTarget->DetachFromParent();
@@ -104,14 +119,36 @@ bool FSkeletalMeshEditor::InitializeResources()
 
 void FSkeletalMeshEditor::ShutdownResources()
 {
+	StopPhysicsPreview();
 	BoneGizmo.EndDrag();
 	BoneGizmo.SetTarget(nullptr);
 	BoneGizmoTarget = nullptr;
 	FSkeletalPreviewEditor::ShutdownResources();
 }
 
+float FSkeletalMeshEditor::GetPreviewScale() const
+{
+	return MeshComponent->GetRelativeScale3D().X;
+}
+
+void FSkeletalMeshEditor::SetPreviewScale(float Scale)
+{
+	if (IsPhysicsPreviewRunning() || !std::isfinite(Scale) || Scale <= 0.0f || Scale == GetPreviewScale())
+		return;
+	ApplyPreviewMeshScale(Scale);
+	FocusMesh();
+	SyncBoneGizmo();
+	EditorEngine.SetSkeletalPreviewScale(Mesh->GetPath(), Scale);
+}
+
 void FSkeletalMeshEditor::TickAfterWorld(float DeltaTime)
 {
+	if (IsPhysicsPreviewRunning())
+	{
+		PreviewScene.GetWorld()->GetPhysicsScene()->Tick(DeltaTime);
+		MeshComponent->RefreshBoneTransformsNow();
+		return;
+	}
 	if (bPhysicsAssetMode)
 	{
 		bPhysicsPickPending = CanProcessViewportInput() && PointerInput.bHovered && PointerInput.bMousePressed
@@ -133,6 +170,8 @@ TUniquePtr<IEditorTab> FSkeletalMeshEditor::CreateTab()
 
 void FSkeletalMeshEditor::SetPhysicsAssetMode(bool bEnabled)
 {
+	if (bPhysicsAssetMode == bEnabled) return;
+	StopPhysicsPreview();
 	BoneGizmo.EndDrag();
 	bPhysicsAssetMode = bEnabled;
 	GraphFocusBone = bEnabled ? SelectedBoneIndex : -1;
@@ -151,6 +190,79 @@ void FSkeletalMeshEditor::SetPhysicsAssetMode(bool bEnabled)
 			SelectBone(-1);
 		}
 	}
+}
+
+void FSkeletalMeshEditor::StartPhysicsPreview()
+{
+	if (!bPhysicsAssetMode || IsPhysicsPreviewRunning()) return;
+	const UPhysicsAsset* Asset = MeshComponent->GetOrCreatePhysicsAsset();
+	if (!Asset || Asset->BodySetups.IsEmpty())
+	{
+		PhysicsAssetStatus = "Cannot simulate: the physics asset has no bodies.";
+		return;
+	}
+
+	UWorld* World = PreviewScene.GetWorld();
+	World->InitPhysicsScene();
+	if (!World->GetPhysicsScene())
+	{
+		PhysicsAssetStatus = "Cannot simulate: the preview physics scene could not be created.";
+		return;
+	}
+	if (!FloorMesh)
+	{
+		PhysicsAssetStatus = "Cannot simulate: the preview floor mesh is missing.";
+		return;
+	}
+	FloorCollision = Cast<UBoxComponent>(PreviewScene.AddComponent(UBoxComponent::StaticClass()));
+	if (!FloorCollision)
+	{
+		PhysicsAssetStatus = "Cannot simulate: the preview floor could not be created.";
+		return;
+	}
+
+	bPhysicsPickPending = false;
+	PreviewStartPose = MeshComponent->GetBoneSpaceTransforms();
+	bPreviousSimulatePhysics = MeshComponent->BodyInstance.bSimulatePhysics;
+	MeshComponent->BodyInstance.bSimulatePhysics = true;
+	MeshComponent->CreatePhysicsState();
+	const auto& Bodies = MeshComponent->GetBodies();
+	if (!MeshComponent->IsRagdollSimulating() || Bodies.Num() != Asset->BodySetups.Num()
+		|| MeshComponent->GetNumConstraints() != Asset->ConstraintSetups.Num())
+	{
+		StopPhysicsPreview();
+		PhysicsAssetStatus = "Cannot simulate: one or more asset bodies or joints could not be created for this mesh.";
+		return;
+	}
+
+	// 표시 중인 평면 바로 아래에 박스를 두어 시각적인 바닥과 충돌 윗면을 일치시킨다.
+	const FBox Bounds = FloorMesh->CalcBounds();
+	const FVector HalfSize = (Bounds.Max - Bounds.Min) * 0.5f;
+	const FVector Center = (Bounds.Min + Bounds.Max) * 0.5f;
+	FloorCollision->BoxExtent = FVector(HalfSize.X, HalfSize.Y, HalfSize.X * 0.05f);
+	FloorCollision->SetWorldLocation(FVector(Center.X, Center.Y, Bounds.Max.Z - FloorCollision->BoxExtent.Z), false);
+	FloorCollision->BodyInstance.bEnablePhysicsCollision = true;
+	FloorCollision->CreatePhysicsState();
+	if (!FloorCollision->BodyInstance.IsValidBodyInstance())
+	{
+		StopPhysicsPreview();
+		PhysicsAssetStatus = "Cannot simulate: the preview floor has no collision body.";
+		return;
+	}
+	PhysicsAssetStatus.clear();
+}
+
+void FSkeletalMeshEditor::StopPhysicsPreview()
+{
+	if (!IsPhysicsPreviewRunning()) return;
+	MeshComponent->DestroyPhysicsState();
+	MeshComponent->BodyInstance.bSimulatePhysics = bPreviousSimulatePhysics;
+	PreviewScene.GetWorld()->DestroyActor(FloorCollision->GetOwner());
+	FloorCollision = nullptr;
+	for (int32 i = 0; i < PreviewStartPose.Num(); ++i)
+		MeshComponent->SetBoneLocalTransform(i, PreviewStartPose[i]);
+	PreviewStartPose.Empty();
+	MeshComponent->RefreshBoneTransformsNow();
 }
 
 void FSkeletalMeshEditor::OnBoneSelected()
@@ -303,7 +415,7 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 		}
 		if (bShowConstraints)
 		{
-			const float Radius = BoneSphereSize * Scale * 7.0f;
+			const float Radius = BoneSphereSize * 7.0f;
 			for (int32 i = 0; i < Asset->ConstraintSetups.Num(); ++i)
 			{
 				const FConstraintSetup& Joint = Asset->ConstraintSetups[i];

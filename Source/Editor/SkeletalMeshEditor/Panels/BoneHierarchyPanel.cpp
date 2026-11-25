@@ -27,7 +27,9 @@ void FBoneHierarchyPanel::DrawContent()
 {
 	if (Editor.IsPhysicsAssetMode())
 	{
+		ImGui::BeginDisabled(Editor.IsPhysicsPreviewRunning());
 		DrawColliderTree();
+		ImGui::EndDisabled();
 		return;
 	}
 	DrawTree(Editor);

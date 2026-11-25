@@ -81,7 +81,9 @@ void FSkeletalMeshDetailsPanel::DrawContent()
 {
 	if (Editor.IsPhysicsAssetMode())
 	{
+		ImGui::BeginDisabled(Editor.IsPhysicsPreviewRunning());
 		DrawPhysicsAssetDetails();
+		ImGui::EndDisabled();
 		return;
 	}
 

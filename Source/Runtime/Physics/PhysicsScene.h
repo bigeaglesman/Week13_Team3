@@ -159,7 +159,7 @@ private:
 
 	// 시뮬레이션 결과(움직인 바디의 위치·회전)를 컴포넌트에 되돌려 쓴다. UE의 SyncComponentsToBodies 자리
 	void SyncActiveBodiesToComponents();
-	void SyncVehiclesToComponents();
+	void SyncVehiclesToComponents(float Alpha);
 
 	// 모아 둔 충돌 이벤트를 컴포넌트에 보낸다. 씬 락 밖에서 부른다 (받는 쪽이 바디를 만들거나 지울 수 있다).
 	// UE의 FPhysScene_PhysX::DispatchPhysNotifications_AssumesLocked 자리

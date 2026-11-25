@@ -26,6 +26,36 @@ namespace
 
 	float MaxAbs(float A, float B) { return std::max(std::fabs(A), std::fabs(B)); }
 	FVector Mul(const FVector& A, const FVector& B) { return FVector(A.X * B.X, A.Y * B.Y, A.Z * B.Z); }
+
+	void DrawCapsuleOutline(FLineBatcher& Lines, const FVector& Center, const FVector& Axis, float HalfLength,
+		float Radius, const FVector& View, const FVector4& Color)
+	{
+		// 시선에 수직인 평면에서 두 끝을 반원으로 감싸고 접선 두 개로 잇는다.
+		FVector Side = View.Cross(Axis);
+		if (Side.SizeSquared() < 1e-8f)
+		{
+			const FVector Reference = std::fabs(View.Z) < 0.9f ? FVector(0, 0, 1) : FVector(0, 1, 0);
+			Side = View.Cross(Reference);
+		}
+		Side = Side.Normalized();
+		const FVector Along = Side.Cross(View);
+		const FVector Offset = Axis * HalfLength;
+		FVector Last = Side * Radius;
+		constexpr int32 Steps = 16;
+		for (int32 i = 1; i <= Steps; ++i)
+		{
+			const float Angle = PI * i / Steps;
+			const FVector Next = (Side * std::cos(Angle) + Along * std::sin(Angle)) * Radius;
+			Lines.AddLine(Center + Offset + Last, Center + Offset + Next, Color);
+			Lines.AddLine(Center - Offset - Last, Center - Offset - Next, Color);
+			Last = Next;
+		}
+		if (HalfLength > 0.0f)
+		{
+			for (const FVector& Edge : { Side * Radius, Side * -Radius })
+				Lines.AddLine(Center + Offset + Edge, Center - Offset + Edge, Color);
+		}
+	}
 }
 
 FKAggregateGeom FKAggregateGeom::GetScaled(const FVector& Scale) const
@@ -77,7 +107,8 @@ FKAggregateGeom FKAggregateGeom::GetScaled(const FVector& Scale) const
 	return Result;
 }
 
-void FKAggregateGeom::DrawDebug(FLineBatcher& LineBatcher, const FVector& Location, const FQuat& Rotation, const FVector4& Color) const
+void FKAggregateGeom::DrawDebug(FLineBatcher& LineBatcher, const FVector& Location, const FQuat& Rotation, const FVector4& Color,
+	const FVector* ViewDirection) const
 {
 	// 바디 로컬 → 월드. 쿼터니언 곱 순서 규칙에 기대지 않도록 벡터를 차례로 돌린다.
 	auto ToWorld = [&](const FVector& Local) { return Location + Rotation.RotateVector(Local); };
@@ -114,6 +145,11 @@ void FKAggregateGeom::DrawDebug(FLineBatcher& LineBatcher, const FVector& Locati
 	{
 		const FVector Center = ToWorld(Elem.Center);
 		auto Dir = [&](const FVector& Local) { return Rotation.RotateVector(Elem.Rotation.RotateVector(Local)); };
+		if (ViewDirection)
+		{
+			DrawCapsuleOutline(LineBatcher, Center, Dir(FVector(0, 0, 1)), 0.5f * Elem.Length, Elem.Radius, *ViewDirection, Color);
+			continue;
+		}
 		const FVector Axis  = Dir(FVector(0.0f, 0.0f, 0.5f * Elem.Length));
 		const FVector SideX = Dir(FVector(Elem.Radius, 0.0f, 0.0f));
 		const FVector SideY = Dir(FVector(0.0f, Elem.Radius, 0.0f));

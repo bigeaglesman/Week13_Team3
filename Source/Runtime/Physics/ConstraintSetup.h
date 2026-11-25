@@ -57,6 +57,14 @@ struct FConstraintSetup
 	float Swing1LimitDeg = 45.0f;
 	float Swing2LimitDeg = 45.0f;
 
+	// D6에 적용하는 실제 회전 반각. 자유축은 180도, 잠긴 축은 0도다.
+	static float AngularExtentDeg(EConstraintMotion Motion, float LimitDeg)
+	{
+		if (Motion == EConstraintMotion::Free) return 180.0f;
+		if (Motion == EConstraintMotion::Locked || LimitDeg <= 0.0f) return 0.0f;
+		return FMath::Clamp(LimitDeg, 1.0f, 179.0f);
+	}
+
 	// ---- 그 밖 ----
 	// 이어진 두 바디끼리 부딪히지 않게 한다. (UE 기본값과 같음)
 	bool bDisableCollision = true;

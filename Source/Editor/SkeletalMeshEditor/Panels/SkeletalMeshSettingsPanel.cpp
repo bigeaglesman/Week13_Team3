@@ -38,6 +38,14 @@ void FSkeletalMeshSettingsPanel::DrawContent()
 			Editor.SetBoneVisualizerVisible(bShowBoneVisualizer);
 		}
 	}
+	else
+	{
+		bool bVisible = Editor.AreConstraintsVisible();
+		if (ImGui::Checkbox("Show Constraints", &bVisible))
+		{
+			Editor.SetConstraintsVisible(bVisible);
+		}
+	}
 
 	if (FEditorViewportClient* Client = Editor.GetViewportClient())
 	{

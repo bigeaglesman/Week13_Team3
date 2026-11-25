@@ -16,6 +16,8 @@ public:
 	void BuildVertexBuffer();
 
 	void BeginFrame();
+	uint32 GetVertexCount() const { return VertexCount; }
+	const FLineBatchVertex* GetVertices() const { return VertexBufferBase; }
 
 
 	void AddLine(const FVector& A, const FVector& B, const FVector4& Color);

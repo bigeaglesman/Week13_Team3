@@ -341,6 +341,31 @@ int32 FSkeletalPreviewEditor::PickBone(const FVector2& MousePosition) const
 	return BestBoneIndex;
 }
 
+// 방금 그린 선분만 화면 좌표에서 검사한다. 같은 픽셀에 겹치면 가까운 깊이가 우선이다.
+float FSkeletalPreviewEditor::PickWireDepth(const FLineBatcher& Lines, uint32 FirstVertex, const FVector2& Mouse) const
+{
+	const FMatrix VP = ViewportClient->GetViewProjectionMatrix();
+	float Best = FLT_MAX;
+	for (uint32 i = FirstVertex; i + 1 < Lines.GetVertexCount(); i += 2)
+	{
+		FVector4 A = FVector4(Lines.GetVertices()[i].Position, 1.0f) * VP;
+		FVector4 B = FVector4(Lines.GetVertices()[i + 1].Position, 1.0f) * VP;
+		if (!ClipBoneSegmentToView(A, B))
+			continue;
+		A = A / A.W;
+		B = B / B.W;
+		const FVector2 Start((A.X + 1) * 0.5f * ViewportWidth, (1 - A.Y) * 0.5f * ViewportHeight);
+		const FVector2 Delta((B.X - A.X) * 0.5f * ViewportWidth, (A.Y - B.Y) * 0.5f * ViewportHeight);
+		const FVector2 Offset = Mouse - Start;
+		const float LengthSq = Delta.X * Delta.X + Delta.Y * Delta.Y;
+		const float T = LengthSq > 1e-6f ? FMath::Clamp((Offset.X * Delta.X + Offset.Y * Delta.Y) / LengthSq, 0.0f, 1.0f) : 0.0f;
+		const FVector2 Error = Offset - Delta * T;
+		if (Error.X * Error.X + Error.Y * Error.Y <= 25.0f)
+			Best = std::min(Best, A.Z + (B.Z - A.Z) * T);
+	}
+	return Best;
+}
+
 void FSkeletalPreviewEditor::OnRenderLine(FLineBatcher& LineBatcher)
 {
 	if (!bShowBoneVisualizer)

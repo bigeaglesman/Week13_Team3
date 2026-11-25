@@ -3,7 +3,22 @@
 #include "Editor/SkeletalMeshEditor/SkeletalMeshEditor.h"
 #include "Math/Transform.h"
 #include "Physics/BodySetup.h"
+#include "Physics/PhysicsAsset.h"
 #include "Render/SkeletalMesh.h"
+
+namespace
+{
+	void DrawAngularExtent(const char* Label, EConstraintMotion Motion, float Degrees)
+	{
+		const float Extent = FConstraintSetup::AngularExtentDeg(Motion, Degrees);
+		if (Motion == EConstraintMotion::Free)
+			ImGui::Text("%s: Free", Label);
+		else if (Extent == 0.0f)
+			ImGui::Text("%s: Locked", Label);
+		else
+			ImGui::Text("%s: -%g to +%g deg", Label, Extent, Extent);
+	}
+}
 
 FSkeletalMeshDetailsPanel::FSkeletalMeshDetailsPanel(FSkeletalMeshEditor& InEditor)
 	: FSkeletalMeshEditorPanel(InEditor, "Details")
@@ -71,11 +86,21 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 		ImGui::TextWrapped("%s", Editor.GetPhysicsAssetStatus().c_str());
 	}
 
+	if (const FConstraintSetup* Joint = Editor.GetSelectedConstraint())
+	{
+		ImGui::SeparatorText("Constraint");
+		ImGui::TextWrapped("%s -> %s", Joint->ParentBoneName.c_str(), Joint->ChildBoneName.c_str());
+		DrawAngularExtent("Twist", Joint->TwistMotion, Joint->TwistLimitDeg);
+		DrawAngularExtent("Swing 1", Joint->Swing1Motion, Joint->Swing1LimitDeg);
+		DrawAngularExtent("Swing 2", Joint->Swing2Motion, Joint->Swing2LimitDeg);
+		return;
+	}
+
 	const int32 BoneIndex = Editor.GetSelectedBoneIndex();
 	const UBodySetup* Setup = Editor.GetSelectedBodySetup();
 	if (!Setup || Setup->AggGeom.IsEmpty())
 	{
-		ImGui::TextDisabled("Select a body in Collider Hierarchy.");
+		ImGui::TextWrapped("Select a body or constraint in the viewport, or a body in Collider Hierarchy.");
 		return;
 	}
 
@@ -83,7 +108,6 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 	if (Setup->AggGeom.SphylElems.IsEmpty())
 	{
 		ImGui::TextDisabled("No capsule on this body.");
-		return;
 	}
 
 	ImGui::PushID(BoneIndex);
@@ -102,4 +126,25 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 		ImGui::PopID();
 	}
 	ImGui::PopID();
+
+	ImGui::SeparatorText("Connected Constraints");
+	bool bHasConnection = false;
+	const auto& Joints = Editor.GetMesh()->GetPhysicsAsset()->ConstraintSetups;
+	for (int32 i = 0; i < Joints.Num(); ++i)
+	{
+		const FConstraintSetup& Joint = Joints[i];
+		if (Joint.ParentBoneName == Setup->BoneName || Joint.ChildBoneName == Setup->BoneName)
+		{
+			const FString Label = Joint.ParentBoneName + " -> " + Joint.ChildBoneName;
+			ImGui::PushID(i);
+			if (ImGui::Selectable(Label.c_str()))
+				Editor.SelectConstraint(i);
+			ImGui::PopID();
+			bHasConnection = true;
+		}
+	}
+	if (!bHasConnection)
+	{
+		ImGui::TextDisabled("None");
+	}
 }

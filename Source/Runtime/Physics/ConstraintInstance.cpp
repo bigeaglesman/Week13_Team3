@@ -31,7 +31,7 @@ namespace
 	// 회전 축: Limited인데 한계가 0이면 잠근다 (자동 생성한 래그돌이 축을 잠그는 방법).
 	PxD6Motion::Enum ToPxAngularMotion(EConstraintMotion Motion, float LimitDeg)
 	{
-		if (Motion == EConstraintMotion::Limited && LimitDeg <= 0.0f)
+		if (FConstraintSetup::AngularExtentDeg(Motion, LimitDeg) == 0.0f)
 		{
 			return PxD6Motion::eLOCKED;
 		}
@@ -41,7 +41,7 @@ namespace
 	// PhysX는 0도나 180도 이상의 한계를 받지 않는다. 잠근 축도 한계 값 자체는 유효해야 한다.
 	float LimitToRadians(float LimitDeg)
 	{
-		return std::clamp(LimitDeg, 1.0f, 179.0f) * (PxPi / 180.0f);
+		return std::max(1.0f, FConstraintSetup::AngularExtentDeg(EConstraintMotion::Limited, LimitDeg)) * (PxPi / 180.0f);
 	}
 }
 

@@ -71,6 +71,7 @@ protected:
 	bool CanProcessViewportInput() const;
 	void UpdateBonePicking();
 	int32 PickBone(const FVector2& MousePosition) const;
+	float PickWireDepth(const FLineBatcher& Lines, uint32 FirstVertex, const FVector2& Mouse) const;
 
 	void RefreshHeatmap();
 	bool bShowWeightHeatmap = false;

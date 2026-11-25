@@ -6,6 +6,7 @@
 #include "Containers/Array.h"
 
 class FLineBatcher;
+struct FRay;
 
 // 바디 하나를 이루는 충돌 도형들. 위치와 회전은 바디(컴포넌트) 기준 로컬이고, 크기에는 스케일이 이미 곱해져 있다.
 // UE 4.27의 FKAggregateGeom / FKSphereElem / FKBoxElem / FKSphylElem 자리다.
@@ -69,7 +70,11 @@ struct FKAggregateGeom
 	// 에셋 단위(스케일 1) 도형에 컴포넌트 스케일을 곱한 사본. 위치·점은 축마다 곱한다.
 	// 구·캡슐은 비균일 스케일을 표현할 수 없어 반지름에 큰 축을 쓴다 (UE와 같은 근사). 음수 스케일이면 삼각형 감기를 뒤집는다.
 	FKAggregateGeom GetScaled(const FVector& Scale) const;
+	// 스케일 적용 후 바디 로컬 공간에서 구·박스·캡슐 표면까지의 거리를 구한다.
+	bool RaycastPrimitives(const FRay& LocalRay, float& OutDistance) const;
 
 	// 바디 로컬 도형을 월드 와이어프레임으로 그린다. 스케일은 이미 곱해져 있어야 한다. (Collision 쇼 플래그)
-	void DrawDebug(FLineBatcher& LineBatcher, const FVector& Location, const FQuat& Rotation, const FVector4& Color) const;
+	// 뷰 방향을 주면 캡슐은 그 방향에서 본 윤곽만 그린다.
+	void DrawDebug(FLineBatcher& LineBatcher, const FVector& Location, const FQuat& Rotation, const FVector4& Color,
+		const FVector* ViewDirection = nullptr) const;
 };

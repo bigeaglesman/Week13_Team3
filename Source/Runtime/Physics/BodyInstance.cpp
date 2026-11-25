@@ -4,6 +4,7 @@
 #include "Physics/PhysicsCore.h"
 #include "Physics/PhysicsScene.h"
 #include "Physics/PhysXConversion.h"
+#include "Collision/Ray.h"
 #include "Physics/PhysicalMaterial.h"
 #include "Physics/PhysicsCooking.h"
 
@@ -16,6 +17,33 @@ namespace
 {
 	// PhysX 캡슐 축은 로컬 X, 엔진 캡슐 축은 로컬 Z. Y축으로 -90도 돌리면 X가 Z로 간다.
 	const PxQuat CapsuleXToZ(-PxHalfPi, PxVec3(0.0f, 1.0f, 0.0f));
+}
+
+bool FKAggregateGeom::RaycastPrimitives(const FRay& LocalRay, float& OutDistance) const
+{
+	float Best = PX_MAX_F32;
+	auto Test = [&](const auto& Geometry, const PxTransform& Pose)
+	{
+		PxRaycastHit Hit;
+		if (Geometry.isValid() && PxGeometryQuery::raycast(ToPx(LocalRay.Origin), ToPx(LocalRay.Direction),
+			Geometry, Pose, Best, PxHitFlag::eDEFAULT, 1, &Hit))
+		{
+			Best = Hit.distance;
+		}
+	};
+	for (const FKSphereElem& S : SphereElems)
+		Test(PxSphereGeometry(S.Radius), PxTransform(ToPx(S.Center)));
+	for (const FKBoxElem& B : BoxElems)
+		Test(PxBoxGeometry(ToPx(B.HalfExtent)), PxTransform(ToPx(B.Center), ToPx(B.Rotation).getNormalized()));
+	for (const FKSphylElem& C : SphylElems)
+	{
+		if (C.Length == 0.0f)
+			Test(PxSphereGeometry(C.Radius), PxTransform(ToPx(C.Center)));
+		else
+			Test(PxCapsuleGeometry(C.Radius, C.Length * 0.5f), PxTransform(ToPx(C.Center), ToPx(C.Rotation).getNormalized() * CapsuleXToZ));
+	}
+	OutDistance = Best;
+	return Best < PX_MAX_F32;
 }
 
 FTransform MatrixToBodyTransform(const FMatrix& Matrix)

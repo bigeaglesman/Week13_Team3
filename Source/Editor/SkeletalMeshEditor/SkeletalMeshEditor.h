@@ -7,6 +7,7 @@
 
 
 class UBodySetup;
+struct FConstraintSetup;
 
 class FSkeletalMeshEditor : public FSkeletalPreviewEditor
 {
@@ -24,6 +25,10 @@ public:
 
 	bool IsPhysicsAssetMode() const { return bPhysicsAssetMode; }
 	void SetPhysicsAssetMode(bool bEnabled);
+	bool AreConstraintsVisible() const { return bShowConstraints; }
+	void SetConstraintsVisible(bool bVisible);
+	void SelectConstraint(int32 Index);
+	const FConstraintSetup* GetSelectedConstraint() const;
 	UBodySetup* GetSelectedBodySetup() const;
 	void SetSelectedCapsuleRadius(int32 CapsuleIndex, float Radius);
 	void SavePhysicsAsset();
@@ -50,11 +55,15 @@ protected:
 
 	void TickAfterWorld(float DeltaTime) override;
 	bool IsViewportInteractionBusy() const override { return BoneGizmo.IsUsing(); }
-	void OnBoneSelected() override { BoneGizmo.EndDrag(); SyncBoneGizmo(); }
+	void OnBoneSelected() override { SelectedConstraintIndex = -1; BoneGizmo.EndDrag(); SyncBoneGizmo(); }
 	void CancelViewportInteraction() override { BoneGizmo.EndDrag(); }
 
 private:
 	bool bPhysicsAssetMode = false;
+	bool bShowConstraints = true;
+	int32 SelectedConstraintIndex = -1;
+	bool bPhysicsPickPending = false;
+	FVector2 PhysicsPickPosition;
 	FString PhysicsAssetStatus;
 
 	void SyncBoneGizmo();

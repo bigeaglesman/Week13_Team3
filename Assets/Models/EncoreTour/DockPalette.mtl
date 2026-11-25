@@ -1,0 +1,75 @@
+newmtl Pavement
+Kd 0.102 0.14 0.19
+
+newmtl Gutter
+Kd 0.26 0.32 0.36
+
+newmtl Yard
+Kd 0.2 0.26 0.275
+
+newmtl Paint
+Kd 0.95 0.84 0.57
+
+newmtl Chalk
+Kd 0.88 0.91 0.84
+
+newmtl Ink
+Kd 0.045 0.063 0.105
+
+newmtl Iron
+Kd 0.15 0.205 0.245
+
+newmtl Metal
+Kd 0.42 0.52 0.55
+
+newmtl BlueGlass
+Kd 0.13 0.36 0.43
+
+newmtl PaneGlow
+Kd 0.94 0.72 0.36
+
+newmtl Brick
+Kd 0.52 0.275 0.26
+
+newmtl WarmWall
+Kd 0.68 0.5 0.4
+
+newmtl Cream
+Kd 0.87 0.78 0.61
+
+newmtl Teal
+Kd 0.135 0.45 0.47
+
+newmtl Mint
+Kd 0.34 0.85 0.71
+
+newmtl Pink
+Kd 0.88 0.18 0.36
+
+newmtl Berry
+Kd 0.48 0.09 0.23
+
+newmtl Yellow
+Kd 0.99 0.69 0.19
+
+newmtl Wood
+Kd 0.48 0.3 0.18
+
+newmtl Pad
+Kd 0.065 0.026 0.075
+
+newmtl FoamA
+Kd 0.26 0.064 0.17
+
+newmtl FoamB
+Kd 0.18 0.043 0.14
+
+newmtl Webbing
+Kd 0.96 0.21 0.46
+
+newmtl Cone
+Kd 0.96 0.31 0.09
+
+newmtl Sign
+Kd 1 1 1
+map_Kd DockSignage.png

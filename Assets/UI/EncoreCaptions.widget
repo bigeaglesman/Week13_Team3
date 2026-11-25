@@ -1,0 +1,126 @@
+{
+  "DesignSize": [
+    1920,
+    1080
+  ],
+  "ParentClass": "UUserWidget",
+  "Root": {
+    "Children": [
+      {
+        "Class": "UImage",
+        "Properties": {
+          "WidgetName": "Blackout",
+          "bAutoSize": false,
+          "AlignmentX": 0,
+          "AlignmentY": 0,
+          "Anchors": { "X": 0, "Y": 0, "Z": 1, "W": 1 },
+          "Offsets": { "X": 0, "Y": 0, "Z": 0, "W": 0 },
+          "ColorAndOpacity": { "R": 0, "G": 0, "B": 0, "A": 1 },
+          "Visibility": 1,
+          "RenderOpacity": 1,
+          "ZOrder": -1
+        }
+      },
+      {
+        "Class": "UImage",
+        "Properties": {
+          "WidgetName": "CaptionPlate",
+          "bAutoSize": false,
+          "AlignmentX": 0,
+          "AlignmentY": 0,
+          "Anchors": { "X": 0.5, "Y": 1, "Z": 0.5, "W": 1 },
+          "Offsets": { "X": -735, "Y": -143, "Z": 1470, "W": 100 },
+          "ColorAndOpacity": { "R": 0.058, "G": 0.043, "B": 0.072, "A": 0.9 },
+          "Visibility": 0,
+          "RenderOpacity": 1,
+          "ZOrder": 0
+        }
+      },
+      {
+        "Class": "UImage",
+        "Properties": {
+          "WidgetName": "Margin",
+          "bAutoSize": false,
+          "AlignmentX": 0,
+          "AlignmentY": 0,
+          "Anchors": { "X": 0.5, "Y": 1, "Z": 0.5, "W": 1 },
+          "Offsets": { "X": -735, "Y": -143, "Z": 6, "W": 100 },
+          "ColorAndOpacity": { "R": 0.98, "G": 0.46, "B": 0.65, "A": 1 },
+          "Visibility": 0,
+          "RenderOpacity": 1,
+          "ZOrder": 1
+        }
+      },
+      {
+        "Class": "UTextBlock",
+        "Properties": {
+          "WidgetName": "Speaker",
+          "bAutoSize": false,
+          "AlignmentX": 0,
+          "AlignmentY": 0,
+          "Anchors": { "X": 0.5, "Y": 1, "Z": 0.5, "W": 1 },
+          "Offsets": { "X": -702, "Y": -136, "Z": 1380, "W": 33 },
+          "ColorAndOpacity": { "R": 1, "G": 0.72, "B": 0.82, "A": 1 },
+          "Visibility": 0,
+          "RenderOpacity": 1,
+          "ZOrder": 1,
+          "FontPath": "Engine/Fonts/Pretendard.json",
+          "FontSize": 25,
+          "Text": "",
+          "Justification": 0
+        }
+      },
+      {
+        "Class": "UTextBlock",
+        "Properties": {
+          "WidgetName": "Subtitle",
+          "bAutoSize": false,
+          "AlignmentX": 0,
+          "AlignmentY": 0,
+          "Anchors": { "X": 0.5, "Y": 1, "Z": 0.5, "W": 1 },
+          "Offsets": { "X": -702, "Y": -104, "Z": 1390, "W": 53 },
+          "ColorAndOpacity": { "R": 1, "G": 0.98, "B": 0.96, "A": 1 },
+          "Visibility": 0,
+          "RenderOpacity": 1,
+          "ZOrder": 1,
+          "FontPath": "Engine/Fonts/Pretendard.json",
+          "FontSize": 42,
+          "Text": "",
+          "Justification": 0
+        }
+      },
+      {
+        "Class": "UTextBlock",
+        "Properties": {
+          "WidgetName": "Hint",
+          "bAutoSize": false,
+          "AlignmentX": 0,
+          "AlignmentY": 0,
+          "Anchors": { "X": 0.5, "Y": 1, "Z": 0.5, "W": 1 },
+          "Offsets": { "X": -800, "Y": -41, "Z": 1600, "W": 38 },
+          "ColorAndOpacity": { "R": 1, "G": 0.94, "B": 0.94, "A": 1 },
+          "Visibility": 0,
+          "RenderOpacity": 1,
+          "ZOrder": 1,
+          "FontPath": "Engine/Fonts/Pretendard.json",
+          "FontSize": 24,
+          "Text": "",
+          "Justification": 1
+        }
+      }
+    ],
+    "Class": "UCanvasPanel",
+    "Properties": {
+      "AlignmentX": 0.0,
+      "AlignmentY": 0.0,
+      "Anchors": { "W": 1.0, "X": 0.0, "Y": 0.0, "Z": 1.0 },
+      "Offsets": { "W": 0.0, "X": 0.0, "Y": 0.0, "Z": 0.0 },
+      "RenderOpacity": 1.0,
+      "Visibility": 0,
+      "WidgetName": "Root",
+      "ZOrder": 0,
+      "bAutoSize": false
+    }
+  },
+  "Version": 2
+}

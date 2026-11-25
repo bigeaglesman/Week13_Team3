@@ -1,0 +1,2475 @@
+{
+  "Version": 4,
+  "World": {
+    "PersistentLevel": {
+      "Actors": [
+        {
+          "Class": "AActor",
+          "Name": "EncoreDirector",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UAudioComponent",
+              "Name": "ConcertTrack",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "bAutoActivate": false,
+                "SoundPath": "Assets/Sounds/EncoreLive.wav",
+                "bLooping": false,
+                "bAllowSpatialization": false,
+                "VolumeMultiplier": 0.7
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "LooseGuitarPick",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "StaticMesh": "Models/EncoreLive/LooseGuitarPick.obj",
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": -100 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bBlockComponent": false,
+                "bGenerateOverlapEvents": false,
+                "BodyInstance": { "bSimulatePhysics": false, "bEnablePhysicsCollision": false }
+              }
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false,
+            "ScriptPath": "Scripts/bocchi_encore.lua"
+          }
+        },
+        {
+          "Class": "AActor",
+          "Name": "BrakeRehearsalStart",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 58, "Y": 36, "Z": 1.82 },
+                  "Rotation": { "Pitch": 0, "Yaw": 90, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Encore_RoadAndLanding",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "RoadAndLanding",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": true,
+                "bCastShadow": false,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": true,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/EncoreTour/RoadAndLanding.obj",
+                "bIsVehicleDrivableSurface": true,
+                "VehicleSurfaceType": "Asphalt"
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Encore_YardFloor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "YardFloor",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": true,
+                "bCastShadow": false,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": true,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/EncoreTour/YardFloor.obj",
+                "bIsVehicleDrivableSurface": true,
+                "VehicleSurfaceType": "Asphalt"
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Encore_CrewRoute",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "CrewRoute",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/EncoreTour/CrewRoute.obj",
+                "bIsVehicleDrivableSurface": false,
+                "VehicleSurfaceType": "Asphalt"
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Encore_LoadingDock",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "LoadingDock",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/EncoreTour/LoadingDock.obj",
+                "bIsVehicleDrivableSurface": false,
+                "VehicleSurfaceType": "Asphalt"
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Encore_StageVenue",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "StageVenue",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/EncoreTour/StageVenue.obj",
+                "bIsVehicleDrivableSurface": false,
+                "VehicleSurfaceType": "Asphalt"
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Encore_BacklotBuildings",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "BacklotBuildings",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/EncoreTour/BacklotBuildings.obj",
+                "bIsVehicleDrivableSurface": false,
+                "VehicleSurfaceType": "Asphalt"
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Nijika",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1.05, "Y": -3.65, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 90, "Roll": 0 },
+                  "Scale": { "X": 0.76, "Y": 0.76, "Z": 0.76 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/Nijika/Nijika.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Ryo",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 3.15, "Y": -3.25, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 66, "Roll": 0 },
+                  "Scale": { "X": 0.76, "Y": 0.76, "Z": 0.76 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/Ryo/Ryo.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AStaticMeshActor",
+          "Name": "Kita",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -1.1, "Y": -3, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "UStaticMeshComponent",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 111, "Roll": 0 },
+                  "Scale": { "X": 0.76, "Y": 0.76, "Z": 0.76 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/Ikuyo/Ikuyo.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "APawn",
+          "Name": "EncoreTruck",
+          "Components": [
+            {
+              "Class": "UBoxComponent",
+              "Name": "VehicleRoot",
+              "Parent": "",
+              "Properties": {
+                "BoxExtent": { "X": 1.95, "Y": 0.95, "Z": 0.42 },
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0.0, "Z": 1.82 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10.0,
+                  "bEnableGravity": true,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": true,
+                  "bSimulatePhysics": false
+                }
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "VehicleBody",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10.0,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/MonsterTruck/MonsterTruckBody.obj"
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "Wheel_FL",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1.58, "Y": -1.28, "Z": -0.92 },
+                  "Rotation": { "Pitch": 0, "Roll": 90, "Yaw": 0 },
+                  "Scale": { "X": 0.82, "Y": 0.82, "Z": 0.56 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10.0,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/MonsterTruck/MonsterTruckWheel.obj"
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "Wheel_FR",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1.58, "Y": 1.28, "Z": -0.92 },
+                  "Rotation": { "Pitch": 0, "Roll": 90, "Yaw": 0 },
+                  "Scale": { "X": 0.82, "Y": 0.82, "Z": 0.56 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10.0,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/MonsterTruck/MonsterTruckWheel.obj"
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "Wheel_RL",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -1.58, "Y": -1.28, "Z": -0.92 },
+                  "Rotation": { "Pitch": 0, "Roll": 90, "Yaw": 0 },
+                  "Scale": { "X": 0.82, "Y": 0.82, "Z": 0.56 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10.0,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/MonsterTruck/MonsterTruckWheel.obj"
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "Wheel_RR",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -1.58, "Y": 1.28, "Z": -0.92 },
+                  "Rotation": { "Pitch": 0, "Roll": 90, "Yaw": 0 },
+                  "Scale": { "X": 0.82, "Y": 0.82, "Z": 0.56 }
+                },
+                "bAutoActivate": true,
+                "bBlockComponent": false,
+                "bCastShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bHiddenInGame": false,
+                "bReceiveShadow": true,
+                "bVisible": true,
+                "BodyInstance": {
+                  "MassInKg": 10.0,
+                  "bEnableGravity": false,
+                  "bEnablePhysicsCollision": false,
+                  "bNotifyRigidBodyCollision": false,
+                  "bSimulatePhysics": false
+                },
+                "StaticMesh": "Models/MonsterTruck/MonsterTruckWheel.obj"
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "USpringArmComponent",
+              "Name": "VehicleSpringArm",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "CameraLagMaxDistance": 0.0,
+                "CameraLagSpeed": 11,
+                "CameraRotationLagSpeed": 13,
+                "ProbeSize": 0.3,
+                "SocketOffset": { "X": 0, "Y": 0, "Z": 0 },
+                "TargetArmLength": 9.1,
+                "TargetOffset": { "X": 0, "Y": 0, "Z": 1.9 },
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 12, "Roll": 0, "Yaw": 22 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bDoCollisionTest": false,
+                "bDrawDebug": false,
+                "bDrawOnlyIfSelected": false,
+                "bEnableCameraLag": true,
+                "bEnableCameraRotationLag": true,
+                "bHiddenInGame": false,
+                "bInheritPitch": false,
+                "bInheritRoll": false,
+                "bInheritYaw": true,
+                "bUsePawnControlRotation": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "VehicleTestCamera",
+              "Parent": "VehicleSpringArm",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bExternalInputManaged": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UVehicleMovementComponent",
+              "Name": "VehicleMovementComponent",
+              "Parent": "",
+              "Properties": {
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "bMonsterTruckSetup": true,
+                "bShowVehicleHUD": false
+              }
+            },
+            {
+              "Class": "UAudioComponent",
+              "Name": "VehicleEngineAudio",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "bAutoActivate": false,
+                "SoundPath": "Assets/Sounds/EncoreTruckEngine.wav",
+                "bLooping": true,
+                "bAllowSpatialization": false,
+                "PitchMultiplier": 0.64,
+                "VolumeMultiplier": 0
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "MangoCarton",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/MangoCarton/OpenMangoCarton.obj",
+                "Transform": {
+                  "Location": { "X": -1.55, "Y": 0, "Z": 1.84 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1.34, "Y": 1.55, "Z": 1.12 }
+                },
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": true,
+                  "MassInKg": 1,
+                  "bNotifyRigidBodyCollision": false
+                },
+                "bCastShadow": true,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UBoxComponent",
+              "Name": "MangoLidBody",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "BoxExtent": { "X": 0.69, "Y": 0.79, "Z": 0.028 },
+                "Transform": {
+                  "Location": { "X": -1.55, "Y": 0, "Z": 2.43 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": true,
+                  "bEnableGravity": true,
+                  "MassInKg": 0.48,
+                  "bNotifyRigidBodyCollision": false
+                },
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "bDrawOnlyIfSelected": true
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "MangoFlap",
+              "Parent": "MangoLidBody",
+              "Properties": {
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/MangoCarton/MangoFlap.obj",
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1.38, "Y": 1.58, "Z": 0.056 }
+                },
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": true,
+                  "MassInKg": 1,
+                  "bNotifyRigidBodyCollision": false
+                },
+                "bCastShadow": true,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "HitoriInCarton",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/Hiroti_Seated/Hitori_Seated.obj",
+                "Transform": {
+                  "Location": { "X": -1.34, "Y": 0, "Z": 1.34 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 0.9, "Y": 0.9, "Z": 0.9 }
+                },
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": true,
+                  "MassInKg": 1,
+                  "bNotifyRigidBodyCollision": false
+                },
+                "bCastShadow": true,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "USkeletalMeshComponent",
+              "Name": "DivingMannequin",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "SkeletalMesh": "FBX/UAL1_Standard/UAL1_Standard.fbx.bin",
+                "Transform": {
+                  "Location": { "X": 0.65, "Y": 0, "Z": 1.64 },
+                  "Rotation": { "Pitch": 0, "Yaw": 180, "Roll": 0 },
+                  "Scale": { "X": 0.0105, "Y": 0.0105, "Z": 0.0105 }
+                },
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": true,
+                  "MassInKg": 1,
+                  "bNotifyRigidBodyCollision": false
+                },
+                "bCastShadow": true,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false
+              },
+              "BonePose": [],
+              "OverrideMaterials": [],
+              "SingleAnimation": {
+                "Asset": "FBX/UAL1_Standard/UAL1_Standard_Armature_Driving_Loop.anim.bin",
+                "Looping": true,
+                "PlayRate": 1
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "MannequinWig",
+              "Parent": "DivingMannequin",
+              "Properties": {
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/MangoCarton/EncoreWig.obj",
+                "Transform": {
+                  "Location": { "X": 33.0474, "Y": 0.2497, "Z": 119.3642 },
+                  "Rotation": {
+                    "Roll": -14.8677,
+                    "Pitch": -85.7506,
+                    "Yaw": 3.8462
+                  },
+                  "Scale": { "X": 100, "Y": 100, "Z": 100 }
+                },
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": true,
+                  "MassInKg": 1,
+                  "bNotifyRigidBodyCollision": false
+                },
+                "bCastShadow": true,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UEncoreCargoComponent",
+              "Name": "EncoreCargo",
+              "Parent": "",
+              "Properties": {
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "MerchRack",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreRig/MerchRack.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "USceneComponent",
+              "Name": "ShirtCarrier",
+              "Parent": "VehicleRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -2.56, "Y": -0.71, "Z": 3.7 },
+                  "Rotation": { "Pitch": 0, "Yaw": 32, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "ShoulderClips",
+              "Parent": "ShirtCarrier",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreRig/ShoulderClips.obj",
+                "bCastShadow": true,
+                "bReceiveShadow": true
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "USkeletalMeshComponent",
+              "Name": "StaffShirt",
+              "Parent": "ShirtCarrier",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 0.014, "Y": 0.014, "Z": 0.014 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "SkeletalMesh": "Assets/FBX/EncoreShirt/EncoreShirt.fbx.bin",
+                "ClothSectionIndex": 0,
+                "ClothPinHeightRatio": 0.08,
+                "bCastShadow": true,
+                "bReceiveShadow": true,
+                "ClothConfig": {
+                  "LinearDrag": 0.12,
+                  "AngularDrag": 0.12,
+                  "Damping": 0.08,
+                  "LinearInertiaScale": 1.0,
+                  "AngularInertiaScale": 1.0,
+                  "WindDragCoefficient": 0.28
+                }
+              },
+              "BonePose": [],
+              "OverrideMaterials": []
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "Scripts/encore_shirt.lua",
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "ADirectionalLightActor",
+          "Name": "MonsterTruck_Sun",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UDirectionalLightComponent",
+              "Name": "UDirectionalLightComponent",
+              "Parent": "",
+              "Properties": {
+                "AngularRadiusDegrees": 0.75,
+                "Intensity": 1.35,
+                "LightColor": 4294967295,
+                "ShadowBias": 0.45,
+                "ShadowResolutionScale": 1.0,
+                "ShadowSharpen": 0.0,
+                "ShadowSlopeBias": 0.45,
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 12 },
+                  "Rotation": { "Pitch": 48, "Roll": 0, "Yaw": 28 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bCastShadows": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "ASkyLightActor",
+          "Name": "MonsterTruck_Sky",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "USkyLightComponent",
+              "Name": "USkyLightComponent",
+              "Parent": "",
+              "Properties": {
+                "Intensity": 0.55,
+                "LightColor": 4294967295,
+                "ShadowBias": 0.01,
+                "ShadowResolutionScale": 1.0,
+                "ShadowSharpen": 0.0,
+                "ShadowSlopeBias": 0.01,
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Roll": 0, "Yaw": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bCastShadows": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": true
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1.0,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "bOverride_DepthOfFieldMinFstop": true,
+                "bOverride_DepthOfFieldBladeCount": true,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "bOverride_DepthOfFieldDepthBlurAmount": false,
+                "bOverride_DepthOfFieldDepthBlurRadius": false,
+                "DepthOfFieldFstop": 1.05,
+                "DepthOfFieldMinFstop": 0.9,
+                "DepthOfFieldBladeCount": 5,
+                "DepthOfFieldSensorWidth": 140,
+                "DepthOfFieldFocalDistance": 4.7,
+                "DepthOfFieldDepthBlurAmount": 1.0,
+                "DepthOfFieldDepthBlurRadius": 0.0
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1, "Y": -8.4, "Z": 1.9 },
+                  "Rotation": { "Pitch": -1.7419101078123471, "Yaw": 98.74616226255522, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Name": "BandCamera",
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1.0,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "bOverride_DepthOfFieldMinFstop": true,
+                "bOverride_DepthOfFieldBladeCount": true,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "bOverride_DepthOfFieldDepthBlurAmount": false,
+                "bOverride_DepthOfFieldDepthBlurRadius": false,
+                "DepthOfFieldFstop": 1.05,
+                "DepthOfFieldMinFstop": 0.9,
+                "DepthOfFieldBladeCount": 5,
+                "DepthOfFieldSensorWidth": 140,
+                "DepthOfFieldFocalDistance": 8.8,
+                "DepthOfFieldDepthBlurAmount": 1.0,
+                "DepthOfFieldDepthBlurRadius": 0.0
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1, "Y": -8.4, "Z": 1.9 },
+                  "Rotation": { "Pitch": -1.7419101078123471, "Yaw": 98.74616226255522, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Name": "CargoCamera",
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1.0,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "bOverride_DepthOfFieldMinFstop": true,
+                "bOverride_DepthOfFieldBladeCount": true,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "bOverride_DepthOfFieldDepthBlurAmount": false,
+                "bOverride_DepthOfFieldDepthBlurRadius": false,
+                "DepthOfFieldFstop": 2.2,
+                "DepthOfFieldMinFstop": 0.9,
+                "DepthOfFieldBladeCount": 5,
+                "DepthOfFieldSensorWidth": 48,
+                "DepthOfFieldFocalDistance": 6.8,
+                "DepthOfFieldDepthBlurAmount": 1.0,
+                "DepthOfFieldDepthBlurRadius": 0.0
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1, "Y": -8.4, "Z": 1.9 },
+                  "Rotation": { "Pitch": -1.7419101078123471, "Yaw": 98.74616226255522, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Name": "StuntCamera",
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1.0,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "bOverride_DepthOfFieldMinFstop": true,
+                "bOverride_DepthOfFieldBladeCount": true,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "bOverride_DepthOfFieldDepthBlurAmount": false,
+                "bOverride_DepthOfFieldDepthBlurRadius": false,
+                "DepthOfFieldFstop": 2.2,
+                "DepthOfFieldMinFstop": 0.9,
+                "DepthOfFieldBladeCount": 5,
+                "DepthOfFieldSensorWidth": 48,
+                "DepthOfFieldFocalDistance": 4.9,
+                "DepthOfFieldDepthBlurAmount": 1.0,
+                "DepthOfFieldDepthBlurRadius": 0.0
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1, "Y": -8.4, "Z": 1.9 },
+                  "Rotation": { "Pitch": -1.7419101078123471, "Yaw": 98.74616226255522, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Name": "RevealCamera",
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0, "Y": 0.0, "Z": 0.0 },
+                  "Rotation": { "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0 },
+                  "Scale": { "X": 1.0, "Y": 1.0, "Z": 1.0 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1.0,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "bOverride_DepthOfFieldMinFstop": true,
+                "bOverride_DepthOfFieldBladeCount": true,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "bOverride_DepthOfFieldDepthBlurAmount": false,
+                "bOverride_DepthOfFieldDepthBlurRadius": false,
+                "DepthOfFieldFstop": 2.2,
+                "DepthOfFieldMinFstop": 0.9,
+                "DepthOfFieldBladeCount": 5,
+                "DepthOfFieldSensorWidth": 48,
+                "DepthOfFieldFocalDistance": 3.4,
+                "DepthOfFieldDepthBlurAmount": 1.0,
+                "DepthOfFieldDepthBlurRadius": 0.0
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1, "Y": -8.4, "Z": 1.9 },
+                  "Rotation": { "Pitch": -1.7419101078123471, "Yaw": 98.74616226255522, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bHiddenInGame": false,
+                "bVisible": true,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Name": "ShirtCamera",
+          "Properties": {
+            "ScriptPath": "",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "AActor",
+          "Name": "EncoreLiveBand",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 300, "Y": 320, "Z": -35 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "LiveRoom",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/LiveRoom.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "USceneComponent",
+              "Name": "HitoriPose",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": -2.05, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": -7, "Roll": 0 },
+                  "Scale": { "X": 0.92, "Y": 0.92, "Z": 0.92 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "HitoriBody",
+              "Parent": "HitoriPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/HitoriBody.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "HitoriPick",
+              "Parent": "HitoriPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.03, "Y": -0.37, "Z": 1.5 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/HitoriPick.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "HitoriFretUpper",
+              "Parent": "HitoriPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.0293, "Y": 0.2828, "Z": 1.7061 },
+                  "Rotation": { "Pitch": 76.9339, "Yaw": 55.9018, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/HitoriFretUpper.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "HitoriFretFore",
+              "Parent": "HitoriPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.067322, "Y": 0.338962, "Z": 1.41387 },
+                  "Rotation": { "Pitch": 22.7602, "Yaw": 176.694, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/HitoriFretFore.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "HitoriFretHand",
+              "Parent": "HitoriPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.21346, "Y": 0.35518, "Z": 1.29587 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/HitoriFretHand.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "HitoriInstrument",
+              "Parent": "HitoriPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/Lead.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "USceneComponent",
+              "Name": "IkuyoPose",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.48, "Y": -0.32, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 4, "Roll": 0 },
+                  "Scale": { "X": 0.89, "Y": 0.89, "Z": 0.89 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "IkuyoBody",
+              "Parent": "IkuyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/IkuyoBody.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "IkuyoPick",
+              "Parent": "IkuyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.03, "Y": -0.37, "Z": 1.5 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/IkuyoPick.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "IkuyoFretUpper",
+              "Parent": "IkuyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.028, "Y": 0.262, "Z": 1.783 },
+                  "Rotation": { "Pitch": 75.9183, "Yaw": 58.8788, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/IkuyoFretUpper.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "IkuyoFretFore",
+              "Parent": "IkuyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.065726, "Y": 0.324486, "Z": 1.49202 },
+                  "Rotation": { "Pitch": 36.5333, "Yaw": -173.599, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/IkuyoFretFore.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "IkuyoFretHand",
+              "Parent": "IkuyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.177817, "Y": 0.297165, "Z": 1.31045 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/IkuyoFretHand.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "IkuyoInstrument",
+              "Parent": "IkuyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/Rhythm.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "USceneComponent",
+              "Name": "RyoPose",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.12, "Y": 2.18, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 5, "Roll": 0 },
+                  "Scale": { "X": 0.93, "Y": 0.93, "Z": 0.93 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "RyoBody",
+              "Parent": "RyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/RyoBody.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "RyoPick",
+              "Parent": "RyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.03, "Y": -0.37, "Z": 1.5 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/RyoPick.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "RyoFretUpper",
+              "Parent": "RyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.028, "Y": 0.262, "Z": 1.783 },
+                  "Rotation": { "Pitch": 79.0166, "Yaw": 84.6651, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/RyoFretUpper.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "RyoFretFore",
+              "Parent": "RyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.033314, "Y": 0.31891, "Z": 1.48849 },
+                  "Rotation": { "Pitch": 34.419, "Yaw": 157.31, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/RyoFretFore.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "RyoFretHand",
+              "Parent": "RyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.198816, "Y": 0.415964, "Z": 1.3161 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/RyoFretHand.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "RyoInstrument",
+              "Parent": "RyoPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/Bass.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "ClubKit",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "StaticMesh": "Models/EncoreLive/ClubKit.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "CrashCymbal",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1.28, "Y": 1.82, "Z": 1.816 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "StaticMesh": "Models/EncoreLive/CrashCymbal.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              }
+            },
+            {
+              "Class": "USceneComponent",
+              "Name": "NijikaPose",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 1.83, "Y": 0.81, "Z": 0.41 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 0.89, "Y": 0.89, "Z": 0.89 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "NijikaBody",
+              "Parent": "NijikaPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/NijikaBody.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "NijikaSnare",
+              "Parent": "NijikaPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.03, "Y": 0.4, "Z": 1.51 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/NijikaSnare.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "NijikaPick",
+              "Parent": "NijikaPose",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.03, "Y": -0.4, "Z": 1.51 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/NijikaPick.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "StickLeft",
+              "Parent": "NijikaPick",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/StickLeft.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UStaticMeshComponent",
+              "Name": "StickRight",
+              "Parent": "NijikaSnare",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "StaticMesh": "Models/EncoreLive/StickRight.obj",
+                "bCastShadow": false,
+                "bReceiveShadow": true,
+                "bGenerateOverlapEvents": false,
+                "bBlockComponent": false,
+                "BodyInstance": {
+                  "bSimulatePhysics": false,
+                  "bEnablePhysicsCollision": false,
+                  "bEnableGravity": false
+                }
+              },
+              "OverrideMaterials": []
+            },
+            {
+              "Class": "UPointLightComponent",
+              "Name": "LeftWash",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -0.2, "Y": -2.8, "Z": 3.42 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "Intensity": 3.4,
+                "LightColor": 4288314879,
+                "AttenuationRadius": 4.1,
+                "LightFalloffExponent": 2,
+                "bCastShadows": false
+              }
+            },
+            {
+              "Class": "UPointLightComponent",
+              "Name": "RightWash",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0.4, "Y": 2.88, "Z": 3.39 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "Intensity": 3.2,
+                "LightColor": 4294950524,
+                "AttenuationRadius": 3.9,
+                "LightFalloffExponent": 2,
+                "bCastShadows": false
+              }
+            },
+            {
+              "Class": "UPointLightComponent",
+              "Name": "DrumWash",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 2.28, "Y": 1.01, "Z": 3.65 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "Intensity": 3.7,
+                "LightColor": 4285841919,
+                "AttenuationRadius": 3.15,
+                "LightFalloffExponent": 2,
+                "bCastShadows": false
+              }
+            },
+            {
+              "Class": "UPointLightComponent",
+              "Name": "FrontFill",
+              "Parent": "DefaultSceneRoot",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": -2, "Y": -0.23, "Z": 3.12 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "Intensity": 2.2,
+                "LightColor": 4291486975,
+                "AttenuationRadius": 3.65,
+                "LightFalloffExponent": 2,
+                "bCastShadows": false
+              }
+            }
+          ],
+          "Properties": {
+            "ScriptPath": "Scripts/encore_live.lua",
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Name": "EncoreLiveWide",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "DepthOfFieldFstop": 8,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "DepthOfFieldFocalDistance": 4.26634503996102,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "DepthOfFieldSensorWidth": 24
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 296.1, "Y": 319.91, "Z": -33.58 },
+                  "Rotation": { "Pitch": -2.821379320937536, "Yaw": 1.3447243887023312, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Name": "EncoreLiveGuitars",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "DepthOfFieldFstop": 8,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "DepthOfFieldFocalDistance": 2.6993702969396405,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "DepthOfFieldSensorWidth": 24
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 297.38, "Y": 317.69, "Z": -33.44 },
+                  "Rotation": { "Pitch": 1.4859592319742214, "Yaw": 22.66886360728677, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Name": "EncoreLiveRhythm",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "DepthOfFieldFstop": 8,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "DepthOfFieldFocalDistance": 2.8635816733594313,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "DepthOfFieldSensorWidth": 24
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 298.13, "Y": 320.68, "Z": -33.12 },
+                  "Rotation": { "Pitch": 5.812409655680195, "Yaw": 15.890144443108912, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        },
+        {
+          "Class": "ACameraActor",
+          "Name": "EncoreLiveHero",
+          "Components": [
+            {
+              "Class": "USceneComponent",
+              "Name": "DefaultSceneRoot",
+              "Parent": "",
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 0, "Y": 0, "Z": 0 },
+                  "Rotation": { "Pitch": 0, "Yaw": 0, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false
+              }
+            },
+            {
+              "Class": "UCameraComponent",
+              "Name": "CameraComponent",
+              "Parent": "",
+              "PostProcessBlendWeight": 1,
+              "PostProcessSettings": {
+                "bOverride_DepthOfFieldFstop": true,
+                "DepthOfFieldFstop": 8,
+                "bOverride_DepthOfFieldFocalDistance": true,
+                "DepthOfFieldFocalDistance": 4.005371393516461,
+                "bOverride_DepthOfFieldSensorWidth": true,
+                "DepthOfFieldSensorWidth": 24
+              },
+              "Properties": {
+                "Transform": {
+                  "Location": { "X": 296.44, "Y": 320.43, "Z": -34.06 },
+                  "Rotation": { "Pitch": -9.049562484559782, "Yaw": -5.076401604868891, "Roll": 0 },
+                  "Scale": { "X": 1, "Y": 1, "Z": 1 }
+                },
+                "bAutoActivate": true,
+                "bVisible": true,
+                "bHiddenInGame": false,
+                "bExternalInputManaged": true
+              }
+            }
+          ],
+          "Properties": {
+            "bActorEnableCollision": false
+          }
+        }
+      ],
+      "Properties": {}
+    },
+    "Properties": {}
+  }
+}

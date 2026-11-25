@@ -1,0 +1,10 @@
+newmtl Steel
+Kd .36 .39 .43
+Ks .3 .3 .3
+Ns 50
+
+newmtl Tape
+Kd .98 .62 .23
+
+newmtl Clip
+Kd .87 .91 .91

@@ -1,0 +1,19 @@
+newmtl Rose
+Kd 1.00 0.32 0.57
+Ks 0.08 0.04 0.04
+
+newmtl RoseLight
+Kd 1.00 0.51 0.70
+Ks 0.08 0.04 0.04
+
+newmtl RoseShade
+Kd 0.79 0.18 0.43
+Ks 0.06 0.03 0.03
+
+newmtl SkyClip
+Kd 0.14 0.68 0.97
+Ks 0.12 0.12 0.12
+
+newmtl LemonClip
+Kd 1.00 0.80 0.08
+Ks 0.12 0.12 0.12

@@ -207,6 +207,12 @@ void UCameraComponent::Serialize(FStructuredArchive::FRecord Record)
 {
     Super::Serialize(Record);
 
+    // 렌즈 화각 (세로 FOV, 도). 예전 씬에는 없으므로 읽을 때는 있을 때만 적용된다.
+    if (TOptional<FStructuredArchive::FSlot> FOVSlot = Record.TryEnterField("FieldOfView", true); FOVSlot.IsSet())
+    {
+        FOVSlot.GetValue() << FieldOfView;
+    }
+
     if (TOptional<FStructuredArchive::FSlot> BlendWeightSlot = Record.TryEnterField("PostProcessBlendWeight", true); BlendWeightSlot.IsSet())
     {
         BlendWeightSlot.GetValue() << PostProcessBlendWeight;

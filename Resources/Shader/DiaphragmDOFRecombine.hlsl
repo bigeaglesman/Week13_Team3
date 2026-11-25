@@ -92,6 +92,19 @@ float4 mainPS(VSOutput Input) : SV_Target
     float FarBlend = smoothstep(0.25, 2.0, CoCPx) * saturate(FarSample.a);
     float3 ResultLinear = lerp(SharpLinear, FarColor, FarBlend);
 
+    // 흐린 전경 물체 내부: 그 뒤의 배경은 가려져 있어 알 수 없으므로, 바탕을 선명한 원본 대신 흐린 전경 색으로 바꾼다.
+    // (커버리지가 실루엣 근처에서 0.5까지 내려가도 선명한 체커가 비쳐 보이지 않게)
+    // 바꾸는 정도는 픽셀 자신의 CoC로 넓은 구간에 걸쳐 서서히 올린다.
+    // 좁은 구간(1.5px)이면 초점면을 가로지르는 바닥 같은 연속면에서, 초점면 바로 앞 픽셀부터 바탕이
+    // 주변 전경의 번짐 색으로 한꺼번에 바뀌어 가로선이 생긴다 (초점 거리를 바꾸면 선이 위아래로 이동).
+    float NearInsideRampPx = max(MaxCoCRadiusPx * 0.25, 2.0);
+    float NearInside = smoothstep(0.5, 0.5 + NearInsideRampPx, -CoCPx);
+    if (NearSample.a > 1e-3)
+    {
+        float3 NearUnpremul = NearSample.rgb / NearSample.a;
+        ResultLinear = lerp(ResultLinear, NearUnpremul, NearInside);
+    }
+
     // 전경 합성(premultiplied over): 전경 레이어를 최상단에 덮어 실루엣 바깥 번짐 표현
     float NearBlend = saturate(NearSample.a);
     ResultLinear = ResultLinear * (1.0 - NearBlend) + NearSample.rgb;

@@ -21,5 +21,7 @@ public:
 private:
 	UCameraComponent* CameraComponent = nullptr;
 	UStaticMeshComponent* StaticMeshComponent = nullptr;
+	// 씬마다 이동 속도를 정할 수 있게 노출 (언리얼 UFloatingPawnMovement::MaxSpeed 역할)
+	UPROPERTY(EditAnywhere)
 	float MoveSpeed = 20.0f;
 };

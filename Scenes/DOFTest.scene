@@ -56,7 +56,7 @@
                     ],
                     "Name": "CamDOF_Main",
                     "Properties": {
-                        "ScriptPath": "",
+                        "ScriptPath": "Scripts/dof_camera_switch.lua",
                         "bActorEnableCollision": false
                     }
                 },

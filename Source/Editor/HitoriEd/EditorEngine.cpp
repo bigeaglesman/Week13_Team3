@@ -1139,7 +1139,7 @@ void UEditorEngine::OpenScene()
 {
 	if (IsPlaying())
 	{
-		HTR_LOG(Warning, "Cannot open a scene during PIE. Stop the play session first.");
+		HTR_LOG(Warning, "Cannot open a scene during PIE. Stop the  play session first.");
 		return;
 	}
 	if (!FEditorFileUtils::LoadScene(EditorWorld))

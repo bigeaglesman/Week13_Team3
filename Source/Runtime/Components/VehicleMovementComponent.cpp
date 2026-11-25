@@ -341,6 +341,9 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         Telemetry.TireFriction = WheelState.TireFriction;
         Telemetry.SuspensionJounce = WheelState.SuspensionJounce;
         Telemetry.SuspensionSpringForce = WheelState.SuspensionSpringForce;
+        Telemetry.SuspensionJounceVelocity = WheelState.SuspensionJounceVelocity;
+        Telemetry.SuspensionSpringComponent = WheelState.SuspensionSpringComponent;
+        Telemetry.SuspensionDamperComponent = WheelState.SuspensionDamperComponent;
         Telemetry.TireSurfaceType = WheelState.TireSurfaceType;
 
         if (WheelContactStates[i])

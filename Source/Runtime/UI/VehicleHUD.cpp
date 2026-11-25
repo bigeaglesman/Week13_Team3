@@ -57,6 +57,13 @@ void UVehicleHUD::NativeConstruct()
     WheelTelemetryText[1] = GetWidget<UTextBlock>("WheelFRTelemetryText");
     WheelTelemetryText[2] = GetWidget<UTextBlock>("WheelRLTelemetryText");
     WheelTelemetryText[3] = GetWidget<UTextBlock>("WheelRRTelemetryText");
+
+    WheelSuspensionTitleText = GetWidget<UTextBlock>("WheelSuspensionTitleText");
+
+    WheelSuspensionText[0] = GetWidget<UTextBlock>("WheelFLSuspensionText");
+    WheelSuspensionText[1] = GetWidget<UTextBlock>("WheelFRSuspensionText");
+    WheelSuspensionText[2] = GetWidget<UTextBlock>("WheelRLSuspensionText");
+    WheelSuspensionText[3] = GetWidget<UTextBlock>("WheelRRSuspensionText");
 }
 
 void UVehicleHUD::NativeTick(float DeltaTime)
@@ -200,6 +207,32 @@ void UVehicleHUD::NativeTick(float DeltaTime)
 
         WheelTelemetryText[i]->SetText(Stream.str());
     }
+
+    for (int32 i = 0; i < 4; ++i)
+    {
+        if (!WheelSuspensionText[i])
+        {
+            continue;
+        }
+
+        const FVehicleWheelTelemetry* Telemetry = VehicleMovement->GetWheelTelemetry(i);
+
+        if (!Telemetry)
+        {
+            WheelSuspensionText[i]->SetText("SUSPENSION TELEMETRY UNAVAILABLE");
+            continue;
+        }
+
+        std::ostringstream Stream;
+        Stream << std::fixed << std::showpos << std::setprecision(3)
+            << WheelNames[i]
+            << " | JDOT " << Telemetry->SuspensionJounceVelocity << " m/s"
+            << " | SPR " << std::setprecision(0) << Telemetry->SuspensionSpringComponent << " N"
+            << " | DMP " << Telemetry->SuspensionDamperComponent << " N"
+            << std::noshowpos << " | TOTAL " << Telemetry->SuspensionSpringForce << " N";
+
+        WheelSuspensionText[i]->SetText(Stream.str());
+    }
 }
 
 void UVehicleHUD::NativeDestruct()
@@ -217,9 +250,12 @@ void UVehicleHUD::NativeDestruct()
     LocalAngularVelocityText = nullptr;
     WheelTelemetryTitleText = nullptr;
 
+    WheelSuspensionTitleText = nullptr;
+
     for (int32 i = 0; i < 4; ++i)
     {
         WheelTelemetryText[i] = nullptr;
+        WheelSuspensionText[i] = nullptr;
     }
 
     Super::NativeDestruct();

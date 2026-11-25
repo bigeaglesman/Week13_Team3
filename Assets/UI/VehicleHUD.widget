@@ -10,30 +10,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 36.0,
+                    "FontSize": 36,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 44.0,
-                        "X": 48.0,
-                        "Y": 40.0,
-                        "Z": 900.0
+                        "W": 44,
+                        "X": 48,
+                        "Y": 40,
+                        "Z": 900
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "SPEED 0 km/h",
                     "Visibility": 0,
                     "WidgetName": "SpeedText",
@@ -44,30 +44,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 32.0,
+                    "FontSize": 32,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 40.0,
-                        "X": 48.0,
-                        "Y": 92.0,
-                        "Z": 900.0
+                        "W": 40,
+                        "X": 48,
+                        "Y": 92,
+                        "Z": 900
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "GEAR 1 | AUTO",
                     "Visibility": 0,
                     "WidgetName": "GearText",
@@ -78,30 +78,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 32.0,
+                    "FontSize": 32,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 40.0,
-                        "X": 48.0,
-                        "Y": 140.0,
-                        "Z": 900.0
+                        "W": 40,
+                        "X": 48,
+                        "Y": 140,
+                        "Z": 900
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "RPM 0",
                     "Visibility": 0,
                     "WidgetName": "RPMText",
@@ -112,30 +112,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 24.0,
+                    "FontSize": 24,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 32.0,
-                        "X": 48.0,
-                        "Y": 192.0,
-                        "Z": 900.0
+                        "W": 32,
+                        "X": 48,
+                        "Y": 192,
+                        "Z": 900
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "THROTTLE 0.00 | BRAKE 0.00 | STEER 0.00",
                     "Visibility": 0,
                     "WidgetName": "InputText",
@@ -146,30 +146,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 22.0,
+                    "FontSize": 22,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 30.0,
-                        "X": 48.0,
-                        "Y": 236.0,
-                        "Z": 900.0
+                        "W": 30,
+                        "X": 48,
+                        "Y": 236,
+                        "Z": 900
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "WHEELS FL:OFF FR:OFF RL:OFF RR:OFF | CONTACT 0/4",
                     "Visibility": 0,
                     "WidgetName": "WheelText",
@@ -180,30 +180,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 24.0,
+                    "FontSize": 24,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 32.0,
-                        "X": 48.0,
-                        "Y": 284.0,
-                        "Z": 900.0
+                        "W": 32,
+                        "X": 48,
+                        "Y": 284,
+                        "Z": 900
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "DRIVE MODE [V] AWD + LSD",
                     "Visibility": 0,
                     "WidgetName": "DriveModeText",
@@ -214,30 +214,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 22.0,
+                    "FontSize": 22,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 30.0,
-                        "X": 1030.0,
-                        "Y": 40.0,
-                        "Z": 850.0
+                        "W": 30,
+                        "X": 1030,
+                        "Y": 40,
+                        "Z": 850
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "LOCAL VELOCITY X(FWD): +0.000 | Y(RIGHT): +0.000 | Z(UP): +0.000 m/s",
                     "Visibility": 0,
                     "WidgetName": "LocalVelocityText",
@@ -248,30 +248,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 22.0,
+                    "FontSize": 22,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 30.0,
-                        "X": 1030.0,
-                        "Y": 78.0,
-                        "Z": 850.0
+                        "W": 30,
+                        "X": 1030,
+                        "Y": 78,
+                        "Z": 850
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "LOCAL ANGULAR VELOCITY X: +0.000 | Y: +0.000 | Z: +0.000 rad/s",
                     "Visibility": 0,
                     "WidgetName": "LocalAngularVelocityText",
@@ -282,30 +282,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 24.0,
+                    "FontSize": 24,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 32.0,
-                        "X": 1030.0,
-                        "Y": 132.0,
-                        "Z": 850.0
+                        "W": 32,
+                        "X": 1030,
+                        "Y": 132,
+                        "Z": 850
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "WHEEL TELEMETRY",
                     "Visibility": 0,
                     "WidgetName": "WheelTelemetryTitleText",
@@ -316,30 +316,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 18.0,
+                    "FontSize": 18,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 28.0,
-                        "X": 1030.0,
-                        "Y": 178.0,
-                        "Z": 850.0
+                        "W": 28,
+                        "X": 1030,
+                        "Y": 178,
+                        "Z": 850
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "FL CONTACT | LONG +0.000 | LAT +0.0 deg | MU 1.30 | J 0.000 m | F 0 N | ASPHALT",
                     "Visibility": 0,
                     "WidgetName": "WheelFLTelemetryText",
@@ -350,30 +350,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 18.0,
+                    "FontSize": 18,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 28.0,
-                        "X": 1030.0,
-                        "Y": 222.0,
-                        "Z": 850.0
+                        "W": 28,
+                        "X": 1030,
+                        "Y": 222,
+                        "Z": 850
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "FR CONTACT | LONG +0.000 | LAT +0.0 deg | MU 1.30 | J 0.000 m | F 0 N | ASPHALT",
                     "Visibility": 0,
                     "WidgetName": "WheelFRTelemetryText",
@@ -384,30 +384,30 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 18.0,
+                    "FontSize": 18,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 28.0,
-                        "X": 1030.0,
-                        "Y": 266.0,
-                        "Z": 850.0
+                        "W": 28,
+                        "X": 1030,
+                        "Y": 266,
+                        "Z": 850
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "RL CONTACT | LONG +0.000 | LAT +0.0 deg | MU 1.30 | J 0.000 m | F 0 N | ASPHALT",
                     "Visibility": 0,
                     "WidgetName": "WheelRLTelemetryText",
@@ -418,33 +418,203 @@
             {
                 "Class": "UTextBlock",
                 "Properties": {
-                    "AlignmentX": 0.0,
-                    "AlignmentY": 0.0,
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
                     "Anchors": {
-                        "W": 0.0,
-                        "X": 0.0,
-                        "Y": 0.0,
-                        "Z": 0.0
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
                     },
                     "ColorAndOpacity": {
-                        "A": 1.0,
-                        "B": 1.0,
-                        "G": 1.0,
-                        "R": 1.0
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
                     },
                     "FontPath": "Assets/Fonts/atlas.json",
-                    "FontSize": 18.0,
+                    "FontSize": 18,
                     "Justification": 0,
                     "Offsets": {
-                        "W": 28.0,
-                        "X": 1030.0,
-                        "Y": 310.0,
-                        "Z": 850.0
+                        "W": 28,
+                        "X": 1030,
+                        "Y": 310,
+                        "Z": 850
                     },
-                    "RenderOpacity": 1.0,
+                    "RenderOpacity": 1,
                     "Text": "RR CONTACT | LONG +0.000 | LAT +0.0 deg | MU 1.30 | J 0.000 m | F 0 N | ASPHALT",
                     "Visibility": 0,
                     "WidgetName": "WheelRRTelemetryText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
+                    "Anchors": {
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 22,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 30,
+                        "X": 1030,
+                        "Y": 356,
+                        "Z": 850
+                    },
+                    "RenderOpacity": 1,
+                    "Text": "SUSPENSION TELEMETRY",
+                    "Visibility": 0,
+                    "WidgetName": "WheelSuspensionTitleText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
+                    "Anchors": {
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 18,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 28,
+                        "X": 1030,
+                        "Y": 396,
+                        "Z": 850
+                    },
+                    "RenderOpacity": 1,
+                    "Text": "FL | JDOT +0.000 m/s | SPR +0 N | DMP +0 N | TOTAL 0 N",
+                    "Visibility": 0,
+                    "WidgetName": "WheelFLSuspensionText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
+                    "Anchors": {
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 18,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 28,
+                        "X": 1030,
+                        "Y": 434,
+                        "Z": 850
+                    },
+                    "RenderOpacity": 1,
+                    "Text": "FR | JDOT +0.000 m/s | SPR +0 N | DMP +0 N | TOTAL 0 N",
+                    "Visibility": 0,
+                    "WidgetName": "WheelFRSuspensionText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
+                    "Anchors": {
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 18,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 28,
+                        "X": 1030,
+                        "Y": 472,
+                        "Z": 850
+                    },
+                    "RenderOpacity": 1,
+                    "Text": "RL | JDOT +0.000 m/s | SPR +0 N | DMP +0 N | TOTAL 0 N",
+                    "Visibility": 0,
+                    "WidgetName": "WheelRLSuspensionText",
+                    "ZOrder": 0,
+                    "bAutoSize": true
+                }
+            },
+            {
+                "Class": "UTextBlock",
+                "Properties": {
+                    "AlignmentX": 0,
+                    "AlignmentY": 0,
+                    "Anchors": {
+                        "W": 0,
+                        "X": 0,
+                        "Y": 0,
+                        "Z": 0
+                    },
+                    "ColorAndOpacity": {
+                        "A": 1,
+                        "B": 1,
+                        "G": 1,
+                        "R": 1
+                    },
+                    "FontPath": "Assets/Fonts/atlas.json",
+                    "FontSize": 18,
+                    "Justification": 0,
+                    "Offsets": {
+                        "W": 28,
+                        "X": 1030,
+                        "Y": 510,
+                        "Z": 850
+                    },
+                    "RenderOpacity": 1,
+                    "Text": "RR | JDOT +0.000 m/s | SPR +0 N | DMP +0 N | TOTAL 0 N",
+                    "Visibility": 0,
+                    "WidgetName": "WheelRRSuspensionText",
                     "ZOrder": 0,
                     "bAutoSize": true
                 }
@@ -452,21 +622,21 @@
         ],
         "Class": "UCanvasPanel",
         "Properties": {
-            "AlignmentX": 0.0,
-            "AlignmentY": 0.0,
+            "AlignmentX": 0,
+            "AlignmentY": 0,
             "Anchors": {
-                "W": 1.0,
-                "X": 0.0,
-                "Y": 0.0,
-                "Z": 1.0
+                "W": 1,
+                "X": 0,
+                "Y": 0,
+                "Z": 1
             },
             "Offsets": {
-                "W": 0.0,
-                "X": 0.0,
-                "Y": 0.0,
-                "Z": 0.0
+                "W": 0,
+                "X": 0,
+                "Y": 0,
+                "Z": 0
             },
-            "RenderOpacity": 1.0,
+            "RenderOpacity": 1,
             "Visibility": 3,
             "WidgetName": "Root",
             "ZOrder": 0,

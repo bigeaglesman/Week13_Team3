@@ -38,5 +38,8 @@ private:
     UTextBlock* WheelTelemetryTitleText = nullptr;
     UTextBlock* WheelTelemetryText[4] = {};
 
+    UTextBlock* WheelSuspensionTitleText = nullptr;
+    UTextBlock* WheelSuspensionText[4] = {};
+
     UTextBlock* DriveModeText = nullptr;
 };

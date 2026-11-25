@@ -41,6 +41,8 @@ public:
 
     bool IsVehicleInAir() const { return bIsVehicleInAir; }
     float GetVehicleSpeed() const { return VehicleSpeed; }
+    physx::PxVehicleWheels* GetPhysicsVehicle() const { return VehicleInstance.GetVehicle(); }
+    void SetDriverInputEnabled(bool bEnabled) { bDriverInputEnabled = bEnabled; }
     float GetEngineRPM() const { return EngineRPM; }
     const FVector& GetLocalLinearVelocity() const { return LocalLinearVelocity; }
     const FVector& GetLocalAngularVelocity() const { return LocalAngularVelocity; }
@@ -60,8 +62,15 @@ protected:
     virtual void OnUnregister() override;
 
 private:
+    void UpdateEngineAudio(float DeltaTime);
+
     UPROPERTY(EditAnywhere)
     bool bMonsterTruckSetup = false;
+
+    UPROPERTY(EditAnywhere)
+    bool bShowVehicleHUD = true;
+
+    bool bDriverInputEnabled = true;
 
     UStaticMeshComponent* WheelVisuals[4] = {};
     UCameraComponent* VehicleCamera = nullptr;

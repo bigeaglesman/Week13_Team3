@@ -4,6 +4,7 @@
 #include <sol/sol.hpp>
 
 #include "Components/MovementComponent.h"
+#include "Components/VehicleMovementComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/ParticleSubUVComponent.h"
@@ -231,6 +232,26 @@ namespace
 
 	void RegisterActor(sol::state& Lua)
 	{
+		Lua.set_function("SetVehicleDriverInputEnabled", [](const FLuaActorRef& Ref, bool bEnabled)
+		{
+			for (UActorComponent* Component : Deref(Ref).GetComponents())
+			{
+				if (auto* Movement = Cast<UVehicleMovementComponent>(Component))
+				{
+					Movement->SetDriverInputEnabled(bEnabled);
+					return;
+				}
+			}
+			throw sol::error("SetVehicleDriverInputEnabled needs a vehicle movement component.");
+		});
+		Lua.set_function("GetBoneWorldLocation", [](const FLuaActorRef& Ref, const FString& ComponentName, const FString& BoneName) -> sol::optional<FVector>
+		{
+			const auto* Mesh = Cast<USkeletalMeshComponent>(Deref(Ref).FindComponentByName(FName(ComponentName)));
+			if (!Mesh) return sol::nullopt;
+			const int32 Index = Mesh->FindBoneIndex(BoneName);
+			if (Index < 0) return sol::nullopt;
+			return Mesh->GetBoneWorldMatrix(Index).TransformPosition(FVector::ZeroVector);
+		});
 		Lua.new_usertype<FLuaActorRef>("Actor",
 			sol::no_constructor, // 액터는 Lua에서 생성할 수 없음
 

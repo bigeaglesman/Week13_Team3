@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Physics/PhysicsScene.h"
+#include "Components/AudioComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -97,7 +98,7 @@ void UVehicleMovementComponent::BeginPlay()
         return;
     }
 
-    if (GetWorld()->GetPlayerPawn() == GetPawnOwner())
+    if (bShowVehicleHUD && GetWorld()->GetPlayerPawn() == GetPawnOwner())
     {
         VehicleHUD = Cast<UVehicleHUD>(CreateWidget(GetWorld(), "Assets/UI/VehicleHUD.widget"));
 
@@ -126,7 +127,9 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
 
     APlayerController* Controller = GetPawnOwner() ? GetPawnOwner()->GetController() : nullptr;
-    const auto IsKeyDown = [Controller](EKeyCode Key) { return Controller && Controller->IsKeyDown(static_cast<int32>(Key)); };
+    const auto IsKeyDown = [this, Controller](EKeyCode Key) {
+        return bDriverInputEnabled && Controller && Controller->IsKeyDown(static_cast<int32>(Key));
+    };
 
     const float ForwardInput = static_cast<float>(IsKeyDown(EKeyCode::W)) - static_cast<float>(IsKeyDown(EKeyCode::S));
     const float RightInput = static_cast<float>(IsKeyDown(EKeyCode::D)) - static_cast<float>(IsKeyDown(EKeyCode::A));
@@ -248,7 +251,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
 
     bool bAccelerate = false;
-    bool bBrake = false;
+    bool bBrake = !bDriverInputEnabled;
 
     const bool bForwardCommand = ForwardInput > KINDA_SMALL_NUMBER;
     const bool bReverseCommand = ForwardInput < -KINDA_SMALL_NUMBER;
@@ -318,8 +321,9 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     ThrottleInput = bAccelerate ? 1.0f : 0.0f;
     BrakeInput = bBrake ? 1.0f : 0.0f;
     SteeringInput = FMath::Clamp(RightInput, -1.0f, 1.0f);
+    UpdateEngineAudio(DeltaTime);
 
-    const bool bHandbrakeDown = IsKeyDown(EKeyCode::Space);
+    const bool bHandbrakeDown = !bDriverInputEnabled || IsKeyDown(EKeyCode::Space);
 
     if (bHandbrakeDown != bPreviousHandbrakeDown)
     {
@@ -391,8 +395,36 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
 }
 
+void UVehicleMovementComponent::UpdateEngineAudio(float DeltaTime)
+{
+    static const FName EngineAudioName("VehicleEngineAudio");
+    auto* EngineAudio = Cast<UAudioComponent>(GetOwner()->FindComponentByName(EngineAudioName));
+    if (!EngineAudio) return;
+
+    const float Rolling = FMath::Clamp((std::abs(LocalLinearVelocity.X) - 0.15f) / 3.0f, 0.0f, 1.0f);
+    const float TargetVolume = bDriverInputEnabled ? 0.18f * Rolling + 0.20f * ThrottleInput : 0.0f;
+    const float Response = 1.0f - std::exp(-8.0f * DeltaTime);
+    const float Volume = EngineAudio->VolumeMultiplier + (TargetVolume - EngineAudio->VolumeMultiplier) * Response;
+    if (TargetVolume == 0.0f && Volume < 0.002f)
+    {
+        if (EngineAudio->IsPlaying()) EngineAudio->Stop();
+        return;
+    }
+
+    // The reference loop represents 1,680 RPM. Keep the low end audible on small speakers.
+    const float TargetPitch = FMath::Clamp(EngineRPM / 1680.0f, 0.64f, 2.85f);
+    EngineAudio->SetPitchMultiplier(EngineAudio->PitchMultiplier + (TargetPitch - EngineAudio->PitchMultiplier) * Response);
+    EngineAudio->SetVolumeMultiplier(Volume);
+    if (!EngineAudio->IsPlaying()) EngineAudio->Play();
+}
+
 void UVehicleMovementComponent::OnUnregister()
 {
+    if (AActor* Owner = GetOwner())
+    {
+        if (auto* Audio = Cast<UAudioComponent>(Owner->FindComponentByName(FName("VehicleEngineAudio"))))
+            Audio->Stop();
+    }
     if (VehicleHUD)
     {
         UVehicleHUD* HUD = VehicleHUD;

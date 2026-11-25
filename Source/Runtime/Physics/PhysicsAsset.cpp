@@ -105,6 +105,24 @@ int32 UPhysicsAsset::FindBodyIndex(const FString& BoneName) const
 	return -1;
 }
 
+bool UPhysicsAsset::RemoveBody(const FString& BoneName)
+{
+	const int32 BodyIndex = FindBodyIndex(BoneName);
+	if (BodyIndex < 0) return false;
+
+	for (int32 i = ConstraintSetups.Num() - 1; i >= 0; --i)
+	{
+		const FConstraintSetup& Joint = ConstraintSetups[i];
+		if (Joint.ParentBoneName == BoneName || Joint.ChildBoneName == BoneName)
+			ConstraintSetups.RemoveAt(i);
+	}
+
+	UBodySetup* Setup = BodySetups[BodyIndex];
+	BodySetups.RemoveAt(BodyIndex);
+	delete Setup;
+	return true;
+}
+
 void UPhysicsAsset::Serialize(FStructuredArchive::FRecord Record)
 {
 	Super::Serialize(Record);

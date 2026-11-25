@@ -241,6 +241,23 @@ void FSkeletalMeshDetailsPanel::DrawBodyShapes(UBodySetup& Setup, int32 BoneInde
 	ImGui::EndDisabled();
 	if (!bCanRemove && !Editor.IsPhysicsPreviewRunning() && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 		ImGui::SetTooltip("%s", Editor.GetSelectedShapeType() == EColliderShape::None
-			? "Select a shape to remove." : "Keep at least one saved collision shape on this body.");
+			? "Select a shape to remove." : "Use Remove Body to delete the last shape and its body.");
+
+	ImGui::Separator();
+	if (ImGui::Button("Remove Body..."))
+		ImGui::OpenPopup("RemoveBody");
+	if (ImGui::BeginPopup("RemoveBody"))
+	{
+		ImGui::Text("Remove %s, its shapes and connected joints?", Setup.BoneName.c_str());
+		if (ImGui::Button("Remove Body"))
+		{
+			ImGui::CloseCurrentPopup();
+			Editor.RemoveSelectedBody();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel"))
+			ImGui::CloseCurrentPopup();
+		ImGui::EndPopup();
+	}
 	ImGui::PopID();
 }

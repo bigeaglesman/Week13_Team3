@@ -371,6 +371,21 @@ void FSkeletalMeshEditor::AddBody(int32 BoneIndex)
 	MarkPhysicsAssetDirty();
 }
 
+void FSkeletalMeshEditor::RemoveSelectedBody()
+{
+	UBodySetup* Setup = GetSelectedBodySetup();
+	if (!bPhysicsAssetMode || IsPhysicsPreviewRunning() || !Setup) return;
+
+	if (Mesh->GetPhysicsAsset()->RemoveBody(Setup->BoneName))
+	{
+		if (GraphFocusBone == SelectedBoneIndex)
+			SelectBone(-1);
+		else
+			SelectBodyFromGraph(-1);
+		MarkPhysicsAssetDirty();
+	}
+}
+
 void FSkeletalMeshEditor::AddShapeToSelectedBody(EColliderShape Type)
 {
 	UBodySetup* Setup = GetSelectedBodySetup();

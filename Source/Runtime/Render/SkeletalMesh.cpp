@@ -3,10 +3,50 @@
 #include "Render/RenderCommand.h"
 #include "Asset/AssetManager.h"
 #include "Physics/PhysicsAsset.h"
+#include "ClothingSystem/ClothingAssetCommon.h"
 
 USkeletalMesh::~USkeletalMesh()
 {
 	SetPhysicsAsset(nullptr);
+
+	// 천 에셋의 소멸자가 OnClothingAssetDestroyed로 다시 들어오지 않도록 연결부터 끊고 지운다.
+	TArray<UClothingAssetCommon*> Assets = std::move(MeshClothingAssets);
+	MeshClothingAssets.Reset();
+	for (UClothingAssetCommon* Asset : Assets)
+	{
+		Asset->OwningMesh = nullptr;
+		delete Asset;
+	}
+}
+
+void USkeletalMesh::AddClothingAsset(UClothingAssetCommon* Asset)
+{
+	if (Asset && MeshClothingAssets.Find(Asset) < 0)
+	{
+		Asset->OwningMesh = this;
+		MeshClothingAssets.Add(Asset);
+	}
+}
+
+UClothingAssetCommon* USkeletalMesh::GetSectionClothingAsset(int32 SectionIndex) const
+{
+	for (UClothingAssetCommon* Asset : MeshClothingAssets)
+	{
+		if (Asset->BoundSectionIndex == SectionIndex)
+		{
+			return Asset;
+		}
+	}
+	return nullptr;
+}
+
+void USkeletalMesh::OnClothingAssetDestroyed(UClothingAssetCommon* Asset)
+{
+	const int32 Index = MeshClothingAssets.Find(Asset);
+	if (Index >= 0)
+	{
+		MeshClothingAssets.RemoveAt(Index);
+	}
 }
 
 void USkeletalMesh::SetPhysicsAsset(UPhysicsAsset* InPhysicsAsset)

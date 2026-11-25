@@ -12,6 +12,7 @@
 #include "SkeletalMesh.generated.h"
 
 class UPhysicsAsset;
+class UClothingAssetCommon;
 
 struct FSkeletalMeshLODRenderData
 {
@@ -50,6 +51,15 @@ public:
 	// UPhysicsAsset 소멸자가 부른다 (엔진 종료 때 일괄 삭제에서 에셋이 메시보다 먼저 지워지는 경우).
 	void OnPhysicsAssetDestroyed(UPhysicsAsset* Asset);
 
+	// 섹션으로 만든 천 에셋들. 메시가 소유한다. (UE의 USkeletalMesh::MeshClothingAssets)
+	const TArray<UClothingAssetCommon*>& GetMeshClothingAssets() const { return MeshClothingAssets; }
+	// 소유권을 넘겨받는다. (UE의 AddClothingAsset)
+	void AddClothingAsset(UClothingAssetCommon* Asset);
+	// 이 섹션에 연결된 천 에셋. 없으면 nullptr (UE의 GetSectionClothingAsset, LOD 0만)
+	UClothingAssetCommon* GetSectionClothingAsset(int32 SectionIndex) const;
+	// UClothingAssetCommon 소멸자가 부른다 (엔진 종료 때 일괄 삭제에서 에셋이 메시보다 먼저 지워지는 경우).
+	void OnClothingAssetDestroyed(UClothingAssetCommon* Asset);
+
 	const TArray<FBoneInfo>& GetRefSkeleton() const { return RefSkeleton; }
 	int32 GetNumBones() const { return RefSkeleton.Num(); }
 	int32 FindBoneIndex(const FString& Name) const;
@@ -70,6 +80,7 @@ private:
 	TArray<UMaterial*> Materials;
 	FSkeletalMeshRenderData RenderData;
 	UPhysicsAsset* PhysicsAsset = nullptr;
+	TArray<UClothingAssetCommon*> MeshClothingAssets;
 	// UStaticMesh와 같은 캐시: 같은 머티리얼 조합의 컴포넌트끼리 섹션 목록 공유
 	TMap<TArray<UMaterial*>, TWeakPtr<const FMeshRenderState>, FMaterialSlotsHash> RenderStates;
 };

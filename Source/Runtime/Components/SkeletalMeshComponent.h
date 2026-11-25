@@ -15,6 +15,7 @@ class FConstraintInstance;
 class USkeletalMeshComponent;
 class FClothingSimulationNv;
 struct FClothingSimulationContextNv;
+class UClothingAssetCommon;
 
 // 물리 이후에 도는 두 번째 틱. 래그돌이 시뮬레이션 중일 때만 등록해서 물리 결과를 뼈에 반영한다.
 // UE의 FSkeletalMeshComponentEndPhysicsTickFunction 자리다.
@@ -109,6 +110,19 @@ public:
 	// ---- 천 (NvCloth) ----
 	FClothingSimulationNv* GetClothingSimulation() const { return ClothingSimulation; }
 
+	// 천으로 쓸 섹션 번호 (LOD 0). -1이면 천 없음.
+	// UE는 에디터에서 섹션을 골라 천 에셋을 메시에 미리 만들어 두지만, 여기서는 이 값으로 처음 쓸 때 만든다.
+	UPROPERTY(EditAnywhere)
+	int32 ClothSectionIndex = -1;
+
+	// 섹션 위쪽 몇 %를 고정할지 (어깨에 붙는 부분). 천 에셋을 처음 만들 때만 쓴다.
+	UPROPERTY(EditAnywhere)
+	float ClothPinHeightRatio = 0.1f;
+
+	// ClothSectionIndex 섹션의 천 에셋. 메시에 아직 없으면 FClothingAssetFactory로 만들어 메시에 붙인다.
+	// 섹션이 없거나 만들 수 없으면 nullptr
+	UClothingAssetCommon* GetOrCreateClothingAsset() const;
+
 protected:
 	// 천 시뮬레이션을 만들고 지운다. UE의 OnRegister / OnUnregister 안의 천 처리 + ReleaseAllClothingResources
 	virtual void OnRegister() override;
@@ -165,4 +179,7 @@ private:
 	// 컴포넌트마다 하나인 천 시뮬레이션과 매 프레임 입력. UE의 ClothingSimulation / ClothingSimulationContext
 	FClothingSimulationNv*        ClothingSimulation = nullptr;
 	FClothingSimulationContextNv* ClothingSimulationContext = nullptr;
+
+	// 천 에셋 만들기에 실패한 섹션 번호. 같은 번호로 매 프레임 다시 시도하지 않게 한다.
+	mutable int32 FailedClothSectionIndex = -1;
 };

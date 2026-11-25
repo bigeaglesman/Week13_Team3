@@ -27,6 +27,39 @@
 #include "Physics/PhysicsAssetUtils.h"
 #include "Physics/PhysicsAssetFile.h"
 #include "ClothingSystem/ClothingSimulationNv.h"
+#include "ClothingSystem/ClothingAssetCommon.h"
+#include "ClothingSystem/ClothingAssetFactory.h"
+
+UClothingAssetCommon* USkeletalMeshComponent::GetOrCreateClothingAsset() const
+{
+	USkeletalMesh* Mesh = GetSkeletalMesh();
+	if (!Mesh || ClothSectionIndex < 0)
+	{
+		return nullptr;
+	}
+
+	// 메시가 소유하므로 같은 메시를 쓰는 다른 컴포넌트와 공유하고, 다음부터는 재사용된다. (GetOrCreatePhysicsAsset과 같은 방식)
+	if (UClothingAssetCommon* Existing = Mesh->GetSectionClothingAsset(ClothSectionIndex))
+	{
+		return Existing;
+	}
+
+	// 실패한 섹션은 다시 시도하지 않는다 (매 프레임 경고가 쌓이지 않게). 번호를 바꾸면 다시 시도한다.
+	if (ClothSectionIndex == FailedClothSectionIndex)
+	{
+		return nullptr;
+	}
+
+	FSkeletalMeshClothBuildParams Params;
+	Params.SourceSection = ClothSectionIndex;
+	Params.PinHeightRatio = ClothPinHeightRatio;
+	UClothingAssetCommon* Asset = FClothingAssetFactory::CreateFromSkeletalMesh(Mesh, Params);
+	if (!Asset)
+	{
+		FailedClothSectionIndex = ClothSectionIndex;
+	}
+	return Asset;
+}
 
 void USkeletalMeshComponent::OnRegister()
 {
@@ -61,6 +94,9 @@ void USkeletalMeshComponent::TickClothing(float DeltaTime)
 	{
 		return;
 	}
+
+	// 3단계 확인용: 천 에셋만 만들어 둔다. 4단계에서 이 에셋으로 FClothingActorNv를 만들어 Solver에 넣는다.
+	GetOrCreateClothingAsset();
 
 	ClothingSimulation->FillContext(this, DeltaTime, *ClothingSimulationContext);
 	ClothingSimulation->Simulate(*ClothingSimulationContext);

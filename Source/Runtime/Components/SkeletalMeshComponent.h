@@ -91,22 +91,22 @@ public:
 	const TArray<FBodyInstance*>& GetBodies() const { return Bodies; }
 	int32 GetNumConstraints() const { return Constraints.Num(); }
 
-	// 메시의 Physics Asset. 아직 없으면 메시 옆의 .physicsasset을 읽거나, 없으면 뼈 모양으로 자동 생성해 메시에 붙인다.
+	// 메시의 Physics Asset. 아직 없으면 메시 옆의 .physicsasset을 읽고, 허용된 경우에만 자동 생성한다.
 	// 메시가 없거나 뼈가 없으면 nullptr
-	UPhysicsAsset* GetOrCreatePhysicsAsset() const;
+	UPhysicsAsset* GetOrCreatePhysicsAsset(bool bGenerateIfMissing = true) const;
 
 	// Physics Asset 도형(메시 원본 단위)에 곱할 배율. 캡슐·구는 비균일 스케일을 못 하므로 가장 큰 축
 	float GetPhysicsAssetScale() const;
 
-	// BodyInstance.bSimulatePhysics가 켜진 채로 바디가 만들어졌으면 true. 이때는 애니메이션 대신 물리가 뼈를 움직인다.
+	// 현재 PhysX로 시뮬레이션하는 뼈 바디가 하나라도 있으면 true.
 	bool IsRagdollSimulating() const { return bRagdollSimulating; }
 
-	// 물리 결과를 뼈에 반영한다. 바디가 있는 뼈는 바디 포즈를 쓰고, 없는 뼈는 마지막 로컬 포즈 그대로 부모를 따라간다.
+	// 시뮬레이션 바디는 물리 포즈, 키네마틱 바디는 애니메이션 포즈를 쓴다. 바디가 없는 뼈는 부모를 따른다.
 	// ComponentSpaceTransforms를 덮어쓰므로 RefreshBoneTransforms 안에서 부른다. UE의 BlendPhysicsBones
 	void BlendPhysicsBones();
 
 protected:
-	// BodyInstance의 bEnablePhysicsCollision 또는 bSimulatePhysics가 켜져 있으면 바디 하나 대신 Physics Asset대로 뼈마다 바디를 만든다.
+	// 컴포넌트가 물리를 요청하거나 에셋에 명시적인 PhysicsType이 있으면 뼈마다 바디를 만든다.
 	// 메시에 Physics Asset이 없으면 뼈 모양으로 자동 생성해 붙인다.
 	virtual bool ShouldCreatePhysicsState() const override;
 	virtual void OnCreatePhysicsState() override;
@@ -150,4 +150,5 @@ private:
 
 	FSkeletalMeshComponentEndPhysicsTickFunction EndPhysicsTickFunction;
 	bool bRagdollSimulating = false;
+	bool bHasKinematicBodies = false;
 };

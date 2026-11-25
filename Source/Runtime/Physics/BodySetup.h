@@ -8,6 +8,14 @@
 
 class UPhysicalMaterial;
 
+UENUM()
+enum class EPhysicsType : uint8
+{
+	Default,
+	Kinematic,
+	Simulated,
+};
+
 // 바디 하나의 설계도: 어느 뼈에, 어떤 도형을, 어떤 설정으로 붙일지. UE 4.27의 UBodySetup 자리다.
 // 에셋 데이터라서 PhysX 객체는 없다. 런타임에 DefaultInstance를 복사해 FBodyInstance를 만들고 InitBody에 AggGeom을 넘긴다.
 UCLASS()
@@ -21,6 +29,10 @@ public:
 	// 이 바디가 붙는 뼈. 스태틱 메시용이면 비어 있다.
 	UPROPERTY(EditAnywhere)
 	FString BoneName;
+
+	// 스켈레탈 바디의 구동 방식. 기존 에셋은 Default로 컴포넌트 설정을 따른다.
+	UPROPERTY(EditAnywhere)
+	EPhysicsType PhysicsType = EPhysicsType::Default;
 
 	// 런타임 바디가 복사해 갈 기본 설정 (질량, 중력 등)
 	UPROPERTY(EditAnywhere)

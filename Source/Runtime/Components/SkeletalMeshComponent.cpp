@@ -27,7 +27,7 @@
 #include "Physics/PhysicsAssetUtils.h"
 #include "Physics/PhysicsAssetFile.h"
 
-UPhysicsAsset* USkeletalMeshComponent::GetOrCreatePhysicsAsset() const
+UPhysicsAsset* USkeletalMeshComponent::GetOrCreatePhysicsAsset(bool bGenerateIfMissing) const
 {
 	USkeletalMesh* Mesh = GetSkeletalMesh();
 	if (!Mesh)
@@ -40,7 +40,9 @@ UPhysicsAsset* USkeletalMeshComponent::GetOrCreatePhysicsAsset() const
 	if (!Mesh->GetPhysicsAsset())
 	{
 		UPhysicsAsset* Loaded = FPhysicsAssetFile::LoadForMesh(*Mesh);
-		Mesh->SetPhysicsAsset(Loaded ? Loaded : FPhysicsAssetUtils::CreateFromSkeletalMesh(Mesh));
+		if (!Loaded && bGenerateIfMissing)
+			Loaded = FPhysicsAssetUtils::CreateFromSkeletalMesh(Mesh);
+		Mesh->SetPhysicsAsset(Loaded);
 	}
 	return Mesh->GetPhysicsAsset();
 }
@@ -53,7 +55,16 @@ float USkeletalMeshComponent::GetPhysicsAssetScale() const
 
 bool USkeletalMeshComponent::ShouldCreatePhysicsState() const
 {
-	return Super::ShouldCreatePhysicsState() && GetSkeletalMesh();
+	if (!GetSkeletalMesh()) return false;
+	if (Super::ShouldCreatePhysicsState()) return true;
+
+	// 컴포넌트가 물리를 요청하지 않아도 명시적으로 구동 방식을 지정한 바디가 있을 수 있다.
+	if (const UPhysicsAsset* Asset = GetOrCreatePhysicsAsset(false))
+	{
+		for (const UBodySetup* Setup : Asset->BodySetups)
+			if (Setup && Setup->PhysicsType != EPhysicsType::Default) return true;
+	}
+	return false;
 }
 
 void USkeletalMeshComponent::OnCreatePhysicsState()
@@ -100,9 +111,6 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 
 	const float Scale = GetPhysicsAssetScale();
 
-	// 컴포넌트의 BodyInstance 설정이 뼈 바디 전체에 적용된다. 켜져 있으면 래그돌, 꺼져 있으면 애니메이션을 따라가는 키네마틱
-	const bool bSimulate = BodyInstance.bSimulatePhysics;
-
 	for (UBodySetup* Setup : PhysicsAsset->BodySetups)
 	{
 		if (!Setup)
@@ -120,7 +128,8 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 		FBodyInstance* Body = new FBodyInstance(Setup->DefaultInstance);
 		Body->InstanceBoneIndex = BoneIndex;
 
-		Body->bSimulatePhysics = bSimulate;
+		Body->bSimulatePhysics = Setup->PhysicsType == EPhysicsType::Simulated
+			|| (Setup->PhysicsType == EPhysicsType::Default && BodyInstance.bSimulatePhysics);
 		Body->bEnablePhysicsCollision = true;
 		Body->SelfCollisionGroup = GetUUID();   // 겹쳐 있는 뼈 캡슐끼리는 부딪히지 않게 한다
 		Body->bNotifyRigidBodyCollision |= BodyInstance.bNotifyRigidBodyCollision;   // 컴포넌트에서 켜면 뼈 바디 전체에 적용
@@ -130,6 +139,10 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 		if (Body->IsValidBodyInstance())
 		{
 			Bodies.Add(Body);
+			if (Body->IsSimulating())
+				bRagdollSimulating = true;
+			else
+				bHasKinematicBodies = true;
 		}
 		else
 		{
@@ -171,8 +184,6 @@ void USkeletalMeshComponent::InitArticulated(FPhysicsScene* PhysicsScene, UPhysi
 			delete Constraint;
 		}
 	}
-
-	bRagdollSimulating = bSimulate && !Bodies.IsEmpty();
 }
 
 void USkeletalMeshComponent::TermArticulated()
@@ -192,13 +203,15 @@ void USkeletalMeshComponent::TermArticulated()
 	Bodies.Empty();
 
 	bRagdollSimulating = false;
+	bHasKinematicBodies = false;
 }
 
 void USkeletalMeshComponent::UpdateKinematicBonesToAnim()
 {
 	for (FBodyInstance* Body : Bodies)
 	{
-		Body->SetBodyTransform(MatrixToBodyTransform(GetBoneWorldMatrix(Body->InstanceBoneIndex)));
+		if (!Body->IsSimulating())
+			Body->SetBodyTransform(MatrixToBodyTransform(GetBoneWorldMatrix(Body->InstanceBoneIndex)));
 	}
 }
 
@@ -214,7 +227,7 @@ void USkeletalMeshComponent::BlendPhysicsBones()
 	BoneBodies.Init(nullptr, Bones.Num());
 	for (FBodyInstance* Body : Bodies)
 	{
-		if (Body->IsSimulating() && Body->InstanceBoneIndex < Bones.Num())
+		if (Bones.IsValidIndex(Body->InstanceBoneIndex))
 		{
 			BoneBodies[Body->InstanceBoneIndex] = Body;
 		}
@@ -228,6 +241,8 @@ void USkeletalMeshComponent::BlendPhysicsBones()
 	{
 		if (FBodyInstance* Body = BoneBodies[i])
 		{
+			// 키네마틱 자식은 부모가 시뮬레이션돼도 애니메이션의 컴포넌트 공간 포즈를 유지한다.
+			if (!Body->IsSimulating()) continue;
 			// 바디 포즈에는 스케일이 없다. 애니메이션 포즈의 뼈 스케일(행 길이)을 다시 붙인다.
 			const FMatrix AnimWorld = ComponentSpaceTransforms[i] * ComponentToWorld;
 			const FVector BoneScale(
@@ -303,8 +318,8 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
         ReloadAnimBlueprint();
     }
 
-	// 래그돌 중에는 물리가 뼈를 움직이므로 애니메이션을 평가하지 않는다. 바디 없는 뼈는 마지막 로컬 포즈를 유지한다.
-	if (AnimInstance && GetSkeletalMesh() && !bRagdollSimulating)
+	// 혼합 래그돌에서는 키네마틱 바디에 보낼 애니메이션을 계속 평가한다.
+	if (AnimInstance && GetSkeletalMesh() && (!bRagdollSimulating || bHasKinematicBodies))
 	{
         bUpdatingAnimation = true;
 		if (auto* Instance = Cast<UAnimSingleNodeInstance>(AnimInstance))
@@ -332,7 +347,7 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
 	Super::TickComponent(DeltaTime);
 
 	// 뼈 행렬이 갱신된 뒤에 바디를 옮긴다. PrePhysics 틱이라 이번 프레임 simulate에 반영된다.
-	if (!bRagdollSimulating)
+	if (bHasKinematicBodies)
 	{
 		UpdateKinematicBonesToAnim();
 	}

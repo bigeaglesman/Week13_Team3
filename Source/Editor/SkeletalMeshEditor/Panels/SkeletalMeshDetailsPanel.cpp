@@ -143,6 +143,20 @@ void FSkeletalMeshDetailsPanel::DrawBodyShapes(UBodySetup& Setup, int32 BoneInde
 		{ EColliderShape::Capsule, "Capsule", Geom.SphylElems.Num() }
 	};
 	ImGui::PushID(BoneIndex);
+	int Type = static_cast<int>(Setup.PhysicsType);
+	if (ImGui::Combo("Physics Type", &Type, "Default\0Kinematic\0Simulated\0"))
+	{
+		Setup.PhysicsType = static_cast<EPhysicsType>(Type);
+		Editor.MarkPhysicsAssetDirty();
+	}
+	float Mass = Setup.DefaultInstance.MassInKg;
+	if (ImGui::DragFloat("Mass (kg)", &Mass, 0.05f, 0.001f, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp)
+		&& std::isfinite(Mass) && Mass != Setup.DefaultInstance.MassInKg)
+	{
+		Setup.DefaultInstance.MassInKg = Mass;
+		Editor.MarkPhysicsAssetDirty();
+	}
+	ImGui::SeparatorText("Shapes");
 	if (Geom.IsEmpty())
 	{
 		ImGui::TextDisabled("No shapes on this body.");

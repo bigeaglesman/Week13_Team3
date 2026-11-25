@@ -249,7 +249,7 @@ void FSkeletalMeshEditor::StartPhysicsPreview()
 	MeshComponent->BodyInstance.bSimulatePhysics = true;
 	MeshComponent->CreatePhysicsState();
 	const auto& Bodies = MeshComponent->GetBodies();
-	if (!MeshComponent->IsRagdollSimulating() || Bodies.Num() != Asset->BodySetups.Num()
+	if (Bodies.Num() != Asset->BodySetups.Num()
 		|| MeshComponent->GetNumConstraints() != Asset->ConstraintSetups.Num())
 	{
 		StopPhysicsPreview();

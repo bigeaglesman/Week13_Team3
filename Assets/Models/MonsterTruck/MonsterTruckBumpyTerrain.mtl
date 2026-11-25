@@ -1,0 +1,6 @@
+# Dirt and compacted rock track
+newmtl DirtTop
+Kd 0.30 0.22 0.13
+
+newmtl DirtSide
+Kd 0.16 0.115 0.07

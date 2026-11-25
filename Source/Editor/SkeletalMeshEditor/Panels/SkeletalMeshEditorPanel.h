@@ -25,6 +25,7 @@ public:
 
 	const char* GetPanelName() const override { return PanelName.c_str(); }
 	virtual const char* GetWindowName() const { return WindowName.c_str(); }
+	virtual bool IsAvailableInCurrentMode() const { return true; }
 	void SetDockClass(ImGuiID InClassId) { DockClassId = InClassId; }
 
 	// 현재 패널이 소속 탭의 도킹 영역 밖에 있는지 확인합니다.

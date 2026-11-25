@@ -6,6 +6,7 @@
 #include "Panels/SkeletalMeshDetailsPanel.h"
 #include "Panels/SkeletalMeshSettingsPanel.h"
 #include "Panels/BoneHierarchyPanel.h"
+#include "Panels/ConstraintGraphPanel.h"
 
 FSkeletalMeshEditorTab::FSkeletalMeshEditorTab(FSkeletalMeshEditor& InEditor)
 	: FAssetEditorTab(InEditor)
@@ -21,6 +22,7 @@ FSkeletalMeshEditorTab::FSkeletalMeshEditorTab(FSkeletalMeshEditor& InEditor)
 	Panels.Add(MakeUnique<FBoneHierarchyPanel>(InEditor));
 	Panels.Add(MakeUnique<FSkeletalMeshDetailsPanel>(InEditor));
 	Panels.Add(MakeUnique<FSkeletalMeshSettingsPanel>(InEditor));
+	Panels.Add(MakeUnique<FConstraintGraphPanel>(InEditor));
 	for (auto& Panel : Panels)
 	{
 		Panel->SetDockClass(PanelClassId);
@@ -53,6 +55,7 @@ void FSkeletalMeshEditorTab::DrawMenuBar()
 	{
 		for (auto& Panel : Panels)
 		{
+			if (!Panel->IsAvailableInCurrentMode()) continue;
 			if (ImGui::MenuItem(Panel->GetPanelName(), nullptr, Panel->IsOpen()))
 			{
 				Panel->SetOpen(!Panel->IsOpen());
@@ -80,6 +83,7 @@ void FSkeletalMeshEditorTab::BuildDefaultLayout(ImGuiID InDockSpaceId, const ImV
 	ImGui::DockBuilderDockWindow(Panels[2]->GetWindowName(), HierarchyId);
 	ImGui::DockBuilderDockWindow(Panels[3]->GetWindowName(), DetailsId);
 	ImGui::DockBuilderDockWindow(Panels[4]->GetWindowName(), SettingsId);
+	ImGui::DockBuilderDockWindow(Panels[5]->GetWindowName(), HierarchyId);
 	ImGui::DockBuilderFinish(InDockSpaceId);
 }
 
@@ -116,7 +120,7 @@ void FSkeletalMeshEditorTab::OnRender(bool bActive)
 	for (auto& Panel : Panels)
 	{
 		// 분리된 패널은 부모 탭이 가려져도 독립적으로 표시합니다.
-		if (Panel->IsOpen() && (bActive || Panel->IsDetached(DockSpaceId)))
+		if (Panel->IsAvailableInCurrentMode() && Panel->IsOpen() && (bActive || Panel->IsDetached(DockSpaceId)))
 		{
 			Panel->OnRender();
 		}

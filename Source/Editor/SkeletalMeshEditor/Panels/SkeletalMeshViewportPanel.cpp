@@ -2,6 +2,7 @@
 #include "Editor/Viewports/EditorViewportToolbar.h"
 #include "SkeletalMeshViewportPanel.h"
 #include "Editor/SkeletalMeshEditor/SkeletalMeshEditor.h"
+#include "Render/SkeletalMesh.h"
 
 FSkeletalMeshViewportPanel::FSkeletalMeshViewportPanel(FSkeletalMeshEditor& InEditor)
 	: FSkeletalMeshEditorPanel(InEditor, "Viewport")
@@ -16,10 +17,12 @@ void FSkeletalMeshViewportPanel::DrawContent()
 	FEditorViewportClient* Client = Editor.GetViewportClient();
 	const float RowStart = ImGui::GetCursorPosX();
 	const float RowWidth = ImGui::GetContentRegionAvail().x;
+	const float RowRight = ImGui::GetCursorScreenPos().x + RowWidth;
 	const ImGuiStyle& Style = ImGui::GetStyle();
 	const float ModeWidth = 2.0f * (ImGui::GetFrameHeight() + Style.ItemInnerSpacing.x)
 		+ ImGui::CalcTextSize("Mesh").x + ImGui::CalcTextSize("Physics Asset").x + Style.ItemSpacing.x;
 	ImGui::SetCursorPosX(RowStart + std::max(0.0f, RowWidth - ModeWidth));
+	const float ModeLeft = ImGui::GetCursorScreenPos().x;
 	const bool bWasPhysics = Editor.IsPhysicsAssetMode();
 	ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.5f);
 	ImGui::PushStyleColor(ImGuiCol_Border, Style.Colors[ImGuiCol_TextDisabled]);
@@ -33,8 +36,11 @@ void FSkeletalMeshViewportPanel::DrawContent()
 	if (Editor.IsPhysicsAssetMode())
 	{
 		const bool bPlaying = Editor.IsPhysicsPreviewRunning();
+		const float SaveWidth = ImGui::CalcTextSize("Save Physics Asset").x + 2.0f * Style.FramePadding.x;
 		const float ActionWidth = ImGui::CalcTextSize("Simulate").x + 2.0f * Style.FramePadding.x;
-		if (RowWidth >= ActionWidth + Style.ItemSpacing.x + ModeWidth)
+		const float ActionsWidth = SaveWidth + Style.ItemSpacing.x + ActionWidth;
+		const bool bSharedRow = RowWidth >= ActionsWidth + Style.ItemSpacing.x + ModeWidth;
+		if (bSharedRow)
 		{
 			ImGui::SameLine();
 			ImGui::SetCursorPosX(RowStart);
@@ -43,6 +49,31 @@ void FSkeletalMeshViewportPanel::DrawContent()
 		{
 			if (bPlaying) Editor.StopPhysicsPreview();
 			else Editor.StartPhysicsPreview();
+		}
+		const bool bSimulateHovered = ImGui::IsItemHovered();
+		if (RowWidth >= ActionsWidth)
+			ImGui::SameLine();
+		ImGui::BeginDisabled(Editor.IsPhysicsPreviewRunning() || !Editor.GetMesh()->GetPhysicsAsset());
+		if (ImGui::Button("Save Physics Asset"))
+			Editor.SavePhysicsAsset();
+		ImGui::EndDisabled();
+		const FString& Status = Editor.GetPhysicsAssetStatus();
+		if (!Status.empty())
+		{
+			const ImVec2 ButtonMax = ImGui::GetItemRectMax();
+			const ImVec2 TextMin(ButtonMax.x + Style.ItemSpacing.x, ImGui::GetItemRectMin().y + Style.FramePadding.y);
+			const float RightEdge = bSharedRow ? ModeLeft - Style.ItemSpacing.x : RowRight;
+			const ImVec2 TextSize = ImGui::CalcTextSize(Status.c_str());
+			const ImVec2 TextMax(std::min(RightEdge, TextMin.x + TextSize.x), ButtonMax.y);
+			bool bStatusHovered = false;
+			if (TextMax.x > TextMin.x)
+			{
+				ImGui::RenderTextEllipsis(ImGui::GetWindowDrawList(), TextMin, TextMax, TextMax.x,
+					Status.data(), Status.data() + Status.size(), &TextSize);
+				bStatusHovered = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(TextMin, TextMax);
+			}
+			if (bStatusHovered || ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) || (TextMax.x <= TextMin.x && bSimulateHovered))
+				ImGui::SetTooltip("%s", Status.c_str());
 		}
 	}
 

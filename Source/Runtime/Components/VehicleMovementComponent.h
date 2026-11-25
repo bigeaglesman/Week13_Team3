@@ -60,6 +60,9 @@ protected:
     virtual void OnUnregister() override;
 
 private:
+    UPROPERTY(EditAnywhere)
+    bool bMonsterTruckSetup = false;
+
     UStaticMeshComponent* WheelVisuals[4] = {};
     UCameraComponent* VehicleCamera = nullptr;
     USpringArmComponent* VehicleSpringArm = nullptr;

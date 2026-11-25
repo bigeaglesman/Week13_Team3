@@ -84,7 +84,7 @@ void UVehicleMovementComponent::BeginPlay()
     UPrimitiveComponent* VehiclePrimitive = Cast<UPrimitiveComponent>(UpdatedComponent);
     const bool bNotifyRigidBodyCollision = VehiclePrimitive && VehiclePrimitive->BodyInstance.bNotifyRigidBodyCollision;
 
-    if (!VehicleInstance.InitVehicle(PhysicsScene, VehicleTransform, bNotifyRigidBodyCollision))
+    if (!VehicleInstance.InitVehicle(PhysicsScene, VehicleTransform, bNotifyRigidBodyCollision, bMonsterTruckSetup))
     {
         HTR_LOG(Error, "[Vehicle] Failed to initialize vehicle instance.");
         return;

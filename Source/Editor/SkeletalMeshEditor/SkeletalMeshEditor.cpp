@@ -165,7 +165,10 @@ void FSkeletalMeshEditor::TickAfterWorld(float DeltaTime)
 {
 	if (IsPhysicsPreviewRunning())
 	{
-		PreviewScene.GetWorld()->GetPhysicsScene()->Tick(DeltaTime);
+		FPhysicsScene* Physics = PreviewScene.GetWorld()->GetPhysicsScene();
+		if (ViewportClient->GetEngineShowFlags().Collision)
+			Physics->RequestDebugVisualization(FPhysicsScene::EDebugVisualization::Shapes);
+		Physics->Tick(DeltaTime);
 		MeshComponent->RefreshBoneTransformsNow();
 		return;
 	}
@@ -195,6 +198,7 @@ void FSkeletalMeshEditor::SetPhysicsAssetMode(bool bEnabled)
 	if (bEnabled) MeshGizmoMode = GetGizmoMode();
 	ModeTools.SetWidgetMode(bEnabled ? UE::Widget::WM_Translate : MeshGizmoMode);
 	bPhysicsAssetMode = bEnabled;
+	std::swap(ViewportClient->GetEngineShowFlags().Collision, bOtherModeShowCollision);
 	bPhysicsPickPending = false;
 	if (bEnabled && !MeshComponent->GetOrCreatePhysicsAsset())
 	{
@@ -526,6 +530,13 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 		FSkeletalPreviewEditor::OnRenderLine(LineBatcher);
 		return;
 	}
+	const bool bShowCollision = ViewportClient->GetEngineShowFlags().Collision;
+	if (IsPhysicsPreviewRunning())
+	{
+		if (bShowCollision)
+			PreviewScene.GetWorld()->GetPhysicsScene()->DrawDebug(LineBatcher);
+		return;
+	}
 
 	const UPhysicsAsset* Asset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
 	if (Asset && MeshComponent)
@@ -566,6 +577,7 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 			{
 				BodyPoses.Add(Setup->BoneName, Bone);
 			}
+			if (!bShowCollision) continue;
 			FKAggregateGeom Geom = Setup->AggGeom.GetScaled(FVector(Scale, Scale, Scale));
 			const FVector ViewDirection = ViewportClient->IsPerspective()
 				? (Bone.Location - ViewportClient->GetViewLocation()).GetSafeNormal(SMALL_NUMBER, ViewForward)

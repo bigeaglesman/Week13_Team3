@@ -44,11 +44,15 @@ void FSkeletalMeshSettingsPanel::DrawContent()
 	}
 	if (bPhysics && ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		bool bVisible = Editor.AreConstraintsVisible();
-		if (ImGui::Checkbox("Show Constraints", &bVisible))
+		if (!Editor.IsPhysicsPreviewRunning())
 		{
-			Editor.SetConstraintsVisible(bVisible);
+			bool bVisible = Editor.AreConstraintsVisible();
+			if (ImGui::Checkbox("Show Constraints", &bVisible))
+				Editor.SetConstraintsVisible(bVisible);
 		}
+		bool bCounts = Editor.ArePhysicsCountsVisible();
+		if (ImGui::Checkbox("Show Body / Joint Counts", &bCounts))
+			Editor.SetPhysicsCountsVisible(bCounts);
 	}
 
 	if (ImGui::CollapsingHeader("Display", ImGuiTreeNodeFlags_DefaultOpen))

@@ -34,6 +34,8 @@ public:
 	float GetPreviewScale() const;
 	void SetPreviewScale(float Scale);
 	bool IsPhysicsPreviewRunning() const { return FloorCollision != nullptr; }
+	bool ArePhysicsCountsVisible() const { return bShowPhysicsCounts; }
+	void SetPhysicsCountsVisible(bool bVisible) { bShowPhysicsCounts = bVisible; }
 	bool AreConstraintsVisible() const { return bShowConstraints; }
 	void SetConstraintsVisible(bool bVisible);
 	void SelectConstraint(int32 Index);
@@ -82,6 +84,8 @@ protected:
 
 private:
 	bool bPhysicsAssetMode = false;
+	bool bOtherModeShowCollision = true; // 모드를 오갈 때 각 모드의 뷰포트 표시 선택을 보존한다.
+	bool bShowPhysicsCounts = true;
 	UE::Widget::EWidgetMode MeshGizmoMode = UE::Widget::WM_Translate;
 	bool bShowConstraints = true;
 	int32 SelectedConstraintIndex = -1;

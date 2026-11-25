@@ -2,7 +2,10 @@
 #include "Editor/Viewports/EditorViewportToolbar.h"
 #include "SkeletalMeshViewportPanel.h"
 #include "Editor/SkeletalMeshEditor/SkeletalMeshEditor.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Physics/PhysicsAsset.h"
 #include "Render/SkeletalMesh.h"
+#include <cstdio>
 
 FSkeletalMeshViewportPanel::FSkeletalMeshViewportPanel(FSkeletalMeshEditor& InEditor)
 	: FSkeletalMeshEditorPanel(InEditor, "Viewport")
@@ -93,6 +96,36 @@ void FSkeletalMeshViewportPanel::DrawContent()
 	const unsigned GizmoModes = Editor.GetGizmoModeMask();
 	const bool bToolbarBusy = EditorViewportUI::DrawAssetViewportToolbar(Client, Origin, ViewMax, Editor.GetGizmoMode(),
 		[this](UE::Widget::EWidgetMode Mode) { Editor.SetGizmoMode(Mode); }, GizmoModes);
+
+	if (Editor.IsPhysicsAssetMode() && Editor.ArePhysicsCountsVisible())
+	{
+		const bool bSimulating = Editor.IsPhysicsPreviewRunning();
+		int32 BodyCount = 0;
+		int32 JointCount = 0;
+		if (bSimulating)
+		{
+			const USkeletalMeshComponent* Component = Editor.GetMeshComponent();
+			BodyCount = Component->GetBodies().Num();
+			JointCount = Component->GetNumConstraints();
+		}
+		else if (const UPhysicsAsset* Asset = Editor.GetMesh()->GetPhysicsAsset())
+		{
+			for (const UBodySetup* Setup : Asset->BodySetups)
+				if (Setup) ++BodyCount;
+			JointCount = Asset->ConstraintSetups.Num();
+		}
+		char Counts[64];
+		std::snprintf(Counts, sizeof(Counts), "%s | Bodies %d   Joints %d", bSimulating ? "PhysX" : "Asset", BodyCount, JointCount);
+		const ImVec2 TextSize = ImGui::CalcTextSize(Counts);
+		const ImVec2 Max(ViewMax.x - Style.ItemSpacing.x, ViewMax.y - Style.ItemSpacing.y);
+		const ImVec2 Min(Max.x - TextSize.x - 2 * Style.FramePadding.x, Max.y - TextSize.y - 2 * Style.FramePadding.y);
+		if (Min.x >= Origin.x && Min.y >= Origin.y + EditorViewportUI::GetToolbarHeight())
+		{
+			ImDrawList* Draw = ImGui::GetWindowDrawList();
+			Draw->AddRectFilled(Min, Max, ImGui::GetColorU32(ImGuiCol_PopupBg), Style.FrameRounding);
+			Draw->AddText(ImVec2(Min.x + Style.FramePadding.x, Min.y + Style.FramePadding.y), ImGui::GetColorU32(ImGuiCol_Text), Counts);
+		}
+	}
 
 	// 이미지 영역을 입력 항목으로 등록하여 드래그 중에도 카메라 조작을 유지한다.
 	ImGui::SetCursorScreenPos(Origin);

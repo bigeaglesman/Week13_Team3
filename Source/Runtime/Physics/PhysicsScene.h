@@ -47,7 +47,11 @@ public:
 	// 디버깅용 Physic Body 렌더링. Collision 쇼 플래그가 켜진 뷰포트가 매 프레임 요청하고 DrawDebug로 그린다.
 	// 여러 뷰포트(PIE 게임 뷰포트, 레벨 에디터 뷰포트)가 같은 씬을 보므로, 한 곳이라도 요청하면 다음 스텝에 PhysX가 선을 채운다.
 	// 아무도 요청하지 않으면 다음 Tick에 꺼서 비용을 없앤다.
-	void RequestDebugVisualization() { bDebugVisualizationRequested = true; }
+	enum class EDebugVisualization { Off, Shapes, ShapesAndJoints };
+	void RequestDebugVisualization(EDebugVisualization Mode = EDebugVisualization::ShapesAndJoints)
+	{
+		if (Mode > RequestedVisualization) RequestedVisualization = Mode;
+	}
 	void DrawDebug(FLineBatcher& LineBatcher) const;
 
 	physx::PxScene* GetPxScene() const { return Scene; }
@@ -63,7 +67,7 @@ public:
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다
 
 private:
-	void SetDebugVisualization(bool bEnable);
+	void SetDebugVisualization(EDebugVisualization Mode);
 	void StepOnce(float Step);
 
 	// 시뮬레이션 결과(움직인 바디의 위치·회전)를 컴포넌트에 되돌려 쓴다. UE의 SyncComponentsToBodies 자리
@@ -76,8 +80,8 @@ private:
 	UWorld*         Owner = nullptr;
 	physx::PxScene* Scene = nullptr;
 	float           Accumulator = 0.0f;
-	bool            bDebugVisualization = false;
-	bool            bDebugVisualizationRequested = false;
+	EDebugVisualization DebugVisualization = EDebugVisualization::Off;
+	EDebugVisualization RequestedVisualization = EDebugVisualization::Off;
 
 	FPhysicsSimulationEventCallback* EventCallback = nullptr;
 	TArray<FCollisionNotifyInfo>     PendingCollisionNotifies;

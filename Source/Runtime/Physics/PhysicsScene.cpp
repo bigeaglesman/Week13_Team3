@@ -163,8 +163,8 @@ void FPhysicsScene::Tick(float DeltaTime)
 	}
 
 	// 지난 프레임에 그리겠다고 요청한 뷰포트가 있으면 이번 스텝부터 PhysX가 시각화 선을 채운다.
-	SetDebugVisualization(bDebugVisualizationRequested);
-	bDebugVisualizationRequested = false;
+	SetDebugVisualization(RequestedVisualization);
+	RequestedVisualization = EDebugVisualization::Off;
 
 	Accumulator += DeltaTime;
 
@@ -282,26 +282,27 @@ void FPhysicsScene::DispatchPhysNotifications()
 	PendingCollisionNotifies.Empty();
 }
 
-void FPhysicsScene::SetDebugVisualization(bool bEnable)
+void FPhysicsScene::SetDebugVisualization(EDebugVisualization Mode)
 {
-	if (!Scene || bDebugVisualization == bEnable)
+	if (!Scene || DebugVisualization == Mode)
 	{
 		return;
 	}
-	bDebugVisualization = bEnable;
+	DebugVisualization = Mode;
 
 	// eSCALE이 0이면 PhysX가 렌더 버퍼를 아예 채우지 않는다. 꺼 두면 비용이 없다.
-	const float On = bEnable ? 1.0f : 0.0f;
+	const float On = Mode != EDebugVisualization::Off ? 1.0f : 0.0f;
+	const float Joints = Mode == EDebugVisualization::ShapesAndJoints ? 1.0f : 0.0f;
 	SCOPED_SCENE_WRITE_LOCK(Scene);
 	Scene->setVisualizationParameter(PxVisualizationParameter::eSCALE, On);
 	Scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, On);
-	Scene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, On);
-	Scene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, On);
+	Scene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, Joints);
+	Scene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, Joints);
 }
 
 void FPhysicsScene::DrawDebug(FLineBatcher& LineBatcher) const
 {
-	if (!Scene || !bDebugVisualization)
+	if (!Scene || DebugVisualization == EDebugVisualization::Off)
 	{
 		return;
 	}

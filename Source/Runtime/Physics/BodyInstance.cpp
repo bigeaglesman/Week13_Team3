@@ -56,6 +56,11 @@ void FBodyInstance::InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom
 		return;
 	}
 
+	if (!bSimulatePhysics)
+	{
+		Dynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	}
+
 	// 필터 셰이더가 읽는 값. word0 = SelfCollisionGroup, word1 = 이벤트 플래그
 	const PxFilterData FilterData(SelfCollisionGroup, bNotifyRigidBodyCollision ? FilterFlag_NotifyHit : 0u, 0, 0);
 
@@ -110,19 +115,18 @@ void FBodyInstance::InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom
 
 	if (Dynamic->getNbShapes() == 0)
 	{
+		HTR_LOG(Error, "[PhysX] No collision shapes created for component '{}'.", InOwner->GetName());
 		Dynamic->release();
 		return;
 	}
+
+	HTR_LOG(Info, "[PhysX] Collision body created | Component={} | Shapes={} | Kinematic={}", InOwner->GetName(), Dynamic->getNbShapes(), !bSimulatePhysics);
 
 	if (bSimulatePhysics)
 	{
 		// 질량을 주면 도형 모양으로 관성 텐서와 질량 중심을 계산한다.
 		PxRigidBodyExt::setMassAndUpdateInertia(*Dynamic, std::max(MassInKg, 0.001f));
 		Dynamic->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, !bEnableGravity);
-	}
-	else
-	{
-		Dynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	}
 
 	// PxActor → FBodyInstance 역참조. 동기화와 충돌 이벤트에서 이걸로 컴포넌트를 찾는다.

@@ -55,8 +55,8 @@ struct FVehicleWheelState
 	float WheelWidth = 0.0f;
 
 	float SuspensionJounce = 0.0f;
-	float SuspensionSpringForce = 0.0f;
-	float SuspensionJounceVelocity = 0.0f;
+	float SuspensionTotalForce = 0.0f;
+	float SuspensionJounceVelocityEstimate = 0.0f;
 	float SuspensionSpringComponent = 0.0f;
 	float SuspensionDamperComponent = 0.0f;
 

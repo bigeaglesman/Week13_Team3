@@ -96,6 +96,10 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
 
     WheelsSimData->setChassisMass(ChassisData.mMass);
 
+    // PhysX 4.1 기본값을 명시한다. 저속 3회, 고속 1회이며 기존 기본 동작과 동일하다.
+    WheelsSimData->setSubStepCount(5.0f, 3, 1);
+    WheelsSimData->setMinLongSlipDenominator(4.0f);
+
     PxReal SprungMasses[VehicleWheelCount] = {};
     PxVehicleComputeSprungMasses(VehicleWheelCount, WheelCenterActorOffsets, ChassisData.mCMOffset, ChassisData.mMass, 2, SprungMasses);
 
@@ -130,6 +134,12 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
         HTR_LOG(Info, "[VehicleSuspension] Wheel={} Mass={}kg Frequency={}Hz Damping={} Spring={} Damper={} Droop={}", i, SuspensionData.mSprungMass, RideFrequency, DampingRatio, SuspensionData.mSpringStrength, SuspensionData.mSpringDamperRate, SuspensionData.mMaxDroop);
 
         PxVehicleTireData TireData;
+
+        // 현재 PhysX 4.1 기본 타이어 강성값을 명시한다.
+        TireData.mLatStiffX = 2.0f;
+        TireData.mLatStiffY = 0.3125f * (180.0f / 3.1415926535f);
+        TireData.mLongitudinalStiffnessPerUnitGravity = 1000.0f;
+        TireData.mCamberStiffnessPerUnitGravity = 0.1f * (180.0f / 3.1415926535f);
 
         TireData.mFrictionVsSlipGraph[0][0] = 0.0f;
         TireData.mFrictionVsSlipGraph[0][1] = 1.0f;
@@ -267,30 +277,35 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
 
 void FVehicleInstance::TermVehicle()
 {
-    // PhysX SDK 샘플의 차량 해제 순서에 맞춰 Actor를 먼저 해제한다.
-    if (ChassisActor)
+    PxScene* Scene = ChassisActor ? ChassisActor->getScene() : nullptr;
+
+    if (Scene)
     {
-        PxScene* Scene = ChassisActor->getScene();
+        SCOPED_SCENE_WRITE_LOCK(Scene);
 
-        if (Scene)
+        if (Vehicle)
         {
-            SCOPED_SCENE_WRITE_LOCK(Scene);
-            ChassisActor->userData = nullptr;
-            ChassisActor->release();
-        }
-        else
-        {
-            ChassisActor->userData = nullptr;
-            ChassisActor->release();
+            Vehicle->free();
+            Vehicle = nullptr;
         }
 
+        ChassisActor->userData = nullptr;
+        ChassisActor->release();
         ChassisActor = nullptr;
+        return;
     }
 
     if (Vehicle)
     {
         Vehicle->free();
         Vehicle = nullptr;
+    }
+
+    if (ChassisActor)
+    {
+        ChassisActor->userData = nullptr;
+        ChassisActor->release();
+        ChassisActor = nullptr;
     }
 }
 

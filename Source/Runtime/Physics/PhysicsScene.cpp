@@ -31,11 +31,12 @@ namespace
 	}
 }
 
-struct FVehicleSuspensionTelemetrySample
+struct FVehicleWheelQuerySnapshot
 {
-	PxReal PreviousJounce = 0.0f;
-	PxReal JounceVelocity = 0.0f;
-	bool bHasPreviousJounce = false;
+	PxTransform ChassisPose = PxTransform(PxIdentity);
+	PxVec3 ChassisCMOffset = PxVec3(0.0f, 0.0f, 0.0f);
+	PxVec3 Gravity = PxVec3(0.0f, 0.0f, -9.81f);
+	bool bValid = false;
 };
 
 struct FVehicleSceneQueryData
@@ -48,7 +49,7 @@ struct FVehicleSceneQueryData
 	std::vector<PxRaycastQueryResult> RaycastResults;
 	std::vector<PxVehicleDrive4WRawInputData> RawInputs;
 	std::vector<std::vector<PxWheelQueryResult>> WheelQueryResults;
-	std::vector<std::vector<FVehicleSuspensionTelemetrySample>> SuspensionTelemetry;
+	std::vector<FVehicleWheelQuerySnapshot> WheelQuerySnapshots;
 	std::vector<PxVehicleWheelQueryResult> VehicleWheelQueryResults;
 
 	PxU32 TotalWheelCount = 0;
@@ -452,7 +453,6 @@ void FPhysicsScene::SyncVehiclesToComponents()
 
 void FPhysicsScene::StepOnce(float Step)
 {
-	// simulate ~ fetchResults 동안 엔진 쪽에서 씬을 건드리지 않도록 쓰기 락. onContact도 이 안에서 불린다.
 	SCOPED_SCENE_WRITE_LOCK(Scene);
 
 	if (VehicleSceneQueryData && !VehicleSceneQueryData->Vehicles.empty())
@@ -484,36 +484,37 @@ void FPhysicsScene::StepOnce(float Step)
 			PxVehicleDrive4WSmoothDigitalRawInputsAndSetAnalogInputs(KeySmoothingData, SteerVsForwardSpeedTable, QueryData.RawInputs[i], Step, bVehicleInAir, *DriveVehicle);
 		}
 
-		PxVehicleSuspensionRaycasts(QueryData.BatchQuery, VehicleCount, QueryData.Vehicles.data(), QueryData.TotalWheelCount, QueryData.RaycastResults.data());
+		const PxVec3 Gravity = Scene->getGravity();
 
-		PxVehicleUpdates(Step, Scene->getGravity(), *QueryData.FrictionPairs, VehicleCount, QueryData.Vehicles.data(), QueryData.VehicleWheelQueryResults.data());
-
+		// Raycast와 WheelQueryResult가 생성되는 시점의 차체 상태를 저장한다.
 		for (PxU32 VehicleIndex = 0; VehicleIndex < VehicleCount; ++VehicleIndex)
 		{
-			const PxVehicleWheelQueryResult& VehicleResults = QueryData.VehicleWheelQueryResults[VehicleIndex];
-			std::vector<FVehicleSuspensionTelemetrySample>& Samples = QueryData.SuspensionTelemetry[VehicleIndex];
+			FVehicleWheelQuerySnapshot& Snapshot = QueryData.WheelQuerySnapshots[VehicleIndex];
+			PxVehicleWheels* Vehicle = QueryData.Vehicles[VehicleIndex];
+			PxRigidDynamic* ChassisActor = Vehicle ? Vehicle->getRigidDynamicActor() : nullptr;
 
-			if (!VehicleResults.wheelQueryResults)
+			if (!ChassisActor)
 			{
+				Snapshot.bValid = false;
 				continue;
 			}
 
-			for (PxU32 WheelIndex = 0; WheelIndex < VehicleResults.nbWheelQueryResults; ++WheelIndex)
-			{
-				FVehicleSuspensionTelemetrySample& Sample = Samples[WheelIndex];
-				const PxReal CurrentJounce = VehicleResults.wheelQueryResults[WheelIndex].suspJounce;
-
-				Sample.JounceVelocity = Sample.bHasPreviousJounce && Step > 0.0f ? (CurrentJounce - Sample.PreviousJounce) / Step : 0.0f;
-				Sample.PreviousJounce = CurrentJounce;
-				Sample.bHasPreviousJounce = true;
-			}
+			Snapshot.ChassisPose = ChassisActor->getGlobalPose();
+			Snapshot.ChassisCMOffset = ChassisActor->getCMassLocalPose().p;
+			Snapshot.Gravity = Gravity;
+			Snapshot.bValid = true;
 		}
+
+		PxVehicleSuspensionRaycasts(QueryData.BatchQuery, VehicleCount, QueryData.Vehicles.data(), QueryData.TotalWheelCount, QueryData.RaycastResults.data());
+
+		PxVehicleUpdates(Step, Gravity, *QueryData.FrictionPairs, VehicleCount, QueryData.Vehicles.data(), QueryData.VehicleWheelQueryResults.data());
 	}
 
 	{
 		SCOPE_CYCLE_COUNTER(STAT_PhysicsSimulate);
 		Scene->simulate(Step);
 	}
+
 	{
 		SCOPE_CYCLE_COUNTER(STAT_PhysicsFetchResults);
 		Scene->fetchResults(true);
@@ -631,7 +632,7 @@ bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle, USceneComponent* SyncCo
 	QueryData.RawInputs.emplace_back();
 
 	QueryData.WheelQueryResults.emplace_back(WheelCount);
-	QueryData.SuspensionTelemetry.emplace_back(WheelCount);
+	QueryData.WheelQuerySnapshots.emplace_back();
 
 	PxVehicleWheelQueryResult& WheelQuery = QueryData.VehicleWheelQueryResults.emplace_back();
 	WheelQuery.wheelQueryResults = QueryData.WheelQueryResults.back().data();
@@ -681,7 +682,7 @@ void FPhysicsScene::RemoveVehicle(PxVehicleWheels* Vehicle)
 	QueryData.RawInputs.erase(QueryData.RawInputs.begin() + VehicleIndex);
 	QueryData.SyncComponents.erase(QueryData.SyncComponents.begin() + VehicleIndex);
 	QueryData.WheelQueryResults.erase(QueryData.WheelQueryResults.begin() + VehicleIndex);
-	QueryData.SuspensionTelemetry.erase(QueryData.SuspensionTelemetry.begin() + VehicleIndex);
+	QueryData.WheelQuerySnapshots.erase(QueryData.WheelQuerySnapshots.begin() + VehicleIndex);
 	QueryData.VehicleWheelQueryResults.erase(QueryData.VehicleWheelQueryResults.begin() + VehicleIndex);
 
 	for (size_t i = 0; i < QueryData.VehicleWheelQueryResults.size(); ++i)
@@ -716,10 +717,12 @@ UPrimitiveComponent* FPhysicsScene::FindVehicleComponent(const PxRigidActor* Act
 
 void FPhysicsScene::SetVehicleInput(PxVehicleWheels* Vehicle, bool bAccelerate, bool bBrake, bool bHandbrake, bool bSteerLeft, bool bSteerRight)
 {
-	if (!Vehicle || !VehicleSceneQueryData)
+	if (!Scene || !Vehicle || !VehicleSceneQueryData)
 	{
 		return;
 	}
+
+	SCOPED_SCENE_WRITE_LOCK(Scene);
 
 	auto& QueryData = *VehicleSceneQueryData;
 	auto It = std::find(QueryData.Vehicles.begin(), QueryData.Vehicles.end(), Vehicle);
@@ -730,6 +733,12 @@ void FPhysicsScene::SetVehicleInput(PxVehicleWheels* Vehicle, bool bAccelerate, 
 	}
 
 	const size_t VehicleIndex = static_cast<size_t>(It - QueryData.Vehicles.begin());
+
+	if (VehicleIndex >= QueryData.RawInputs.size())
+	{
+		return;
+	}
+
 	PxVehicleDrive4WRawInputData& RawInput = QueryData.RawInputs[VehicleIndex];
 
 	RawInput.setDigitalAccel(bAccelerate);
@@ -739,7 +748,7 @@ void FPhysicsScene::SetVehicleInput(PxVehicleWheels* Vehicle, bool bAccelerate, 
 	RawInput.setDigitalSteerRight(bSteerRight);
 }
 
-bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehicleWheelState* OutWheelStates, int32 MaxWheelCount, bool& OutIsInAir) const
+bool FPhysicsScene::GetVehicleWheelStates(PxVehicleWheels* Vehicle, FVehicleWheelState* OutWheelStates, int32 MaxWheelCount, bool& OutIsInAir) const
 {
 	OutIsInAir = true;
 
@@ -760,7 +769,7 @@ bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehi
 
 	const size_t VehicleIndex = static_cast<size_t>(It - QueryData.Vehicles.begin());
 
-	if (VehicleIndex >= QueryData.VehicleWheelQueryResults.size() || VehicleIndex >= QueryData.SuspensionTelemetry.size())
+	if (VehicleIndex >= QueryData.VehicleWheelQueryResults.size() || VehicleIndex >= QueryData.WheelQuerySnapshots.size())
 	{
 		return false;
 	}
@@ -779,25 +788,24 @@ bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehi
 		return false;
 	}
 
-	OutIsInAir = PxVehicleIsInAir(VehicleResults);
+	const FVehicleWheelQuerySnapshot& Snapshot = QueryData.WheelQuerySnapshots[VehicleIndex];
 
-	const PxRigidDynamic* ChassisActor = Vehicle->getRigidDynamicActor();
-
-	if (!ChassisActor)
+	if (!Snapshot.bValid)
 	{
 		return false;
 	}
 
-	const PxTransform ChassisPose = ChassisActor->getGlobalPose();
-	const PxVec3 ChassisCMOffset = ChassisActor->getCMassLocalPose().p;
-	const PxVec3 Gravity = Scene->getGravity();
+	OutIsInAir = PxVehicleIsInAir(VehicleResults);
+
+	const PxTransform& ChassisPose = Snapshot.ChassisPose;
+	const PxVec3& ChassisCMOffset = Snapshot.ChassisCMOffset;
+	const PxVec3& Gravity = Snapshot.Gravity;
 
 	for (PxU32 i = 0; i < WheelCount; ++i)
 	{
 		const PxWheelQueryResult& WheelResult = VehicleResults.wheelQueryResults[i];
 		const PxVehicleWheelData& WheelData = Vehicle->mWheelsSimData.getWheelData(i);
 		const PxVehicleSuspensionData& SuspensionData = Vehicle->mWheelsSimData.getSuspensionData(i);
-		const FVehicleSuspensionTelemetrySample& SuspensionSample = QueryData.SuspensionTelemetry[VehicleIndex][i];
 
 		FVehicleWheelState& State = OutWheelStates[i];
 
@@ -820,7 +828,7 @@ bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehi
 		State.WheelWidth = WheelData.mWidth;
 
 		State.SuspensionJounce = WheelResult.suspJounce;
-		State.SuspensionSpringForce = WheelResult.suspSpringForce;
+		State.SuspensionTotalForce = WheelResult.suspSpringForce;
 
 		const PxVec3 SuspensionDirectionWorld = ChassisPose.q.rotate(Vehicle->mWheelsSimData.getSuspTravelDirection(i));
 		const PxReal GravityAlongSuspension = PxMax(0.0f, Gravity.dot(SuspensionDirectionWorld));
@@ -830,8 +838,8 @@ bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehi
 		State.SuspensionSpringComponent = WheelResult.tireContactNormal.dot(-SuspensionDirectionWorld * SpringForceAlongSuspension - GravityPerpendicular * SuspensionData.mSprungMass);
 
 		const PxReal DamperProjection = WheelResult.tireContactNormal.dot(-SuspensionDirectionWorld);
-		State.SuspensionDamperComponent = WheelResult.suspSpringForce - State.SuspensionSpringComponent;
-		State.SuspensionJounceVelocity = SuspensionData.mSpringDamperRate > 0.0f && PxAbs(DamperProjection) > 1e-4f ? State.SuspensionDamperComponent / (SuspensionData.mSpringDamperRate * DamperProjection) : 0.0f;
+		State.SuspensionDamperComponent = State.SuspensionTotalForce - State.SuspensionSpringComponent;
+		State.SuspensionJounceVelocityEstimate = SuspensionData.mSpringDamperRate > 0.0f && PxAbs(DamperProjection) > 1e-4f ? State.SuspensionDamperComponent / (SuspensionData.mSpringDamperRate * DamperProjection) : 0.0f;
 
 		State.TireFriction = WheelResult.tireFriction;
 		State.LongitudinalSlip = WheelResult.longitudinalSlip;

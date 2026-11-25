@@ -164,6 +164,25 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     }
 
     VehicleSpeed = DriveState.LinearSpeed;
+    EngineRPM = DriveState.EngineRPM;
+    CurrentGear = DriveState.CurrentGear;
+
+    const bool bVehicleInReverse =
+        DriveState.CurrentGear == physx::PxVehicleGearsData::eREVERSE ||
+        DriveState.TargetGear == physx::PxVehicleGearsData::eREVERSE;
+
+    const bool bVehicleInNeutral =
+        DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL &&
+        DriveState.TargetGear == physx::PxVehicleGearsData::eNEUTRAL;
+
+    const bool bTransmissionTemporarilyManual = bVehicleInReverse || bVehicleInNeutral;
+
+    // 전진 기어 상태에서는 PhysX의 실제 자동 변속 상태와 사용자의 선택을 동기화한다.
+    // 중립과 후진은 PhysX에서 자동 변속이 일시적으로 꺼지므로 사용자의 선택값을 유지한다.
+    if (!bTransmissionTemporarilyManual)
+    {
+        bAutomaticTransmissionRequested = DriveState.bUseAutoGears;
+    }
 
     if (bDriveModePressed)
     {
@@ -179,7 +198,6 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
             if (PhysicsScene->SetVehicleDriveMode(Vehicle, NextMode))
             {
                 VehicleDriveModeIndex = NextModeIndex;
-
                 HTR_LOG(Info, "[Vehicle] Drive Mode Changed | Mode={}", VehicleDriveModeIndex);
             }
         }
@@ -214,16 +232,17 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         VehicleSpringArm->CameraLagSpeed = CurrentCameraLagSpeed;
     }
 
-    EngineRPM = DriveState.EngineRPM;
-    CurrentGear = DriveState.CurrentGear;
-
     if (bAutomaticTogglePressed)
     {
-        bAutomaticTransmission = !bAutomaticTransmission;
+        bAutomaticTransmissionRequested = !bAutomaticTransmissionRequested;
 
-        PhysicsScene->SetVehicleAutomaticGears(Vehicle, bAutomaticTransmission);
+        // 중립/후진에서는 선택값만 바꾸고, 전진 기어로 복귀할 때 실제 PhysX 설정을 적용한다.
+        if (!bTransmissionTemporarilyManual)
+        {
+            PhysicsScene->SetVehicleAutomaticGears(Vehicle, bAutomaticTransmissionRequested);
+        }
 
-        HTR_LOG(Info, "[Vehicle] Transmission Mode | Automatic={}", bAutomaticTransmission);
+        HTR_LOG(Info, "[Vehicle] Transmission Mode | Automatic={}", bAutomaticTransmissionRequested);
     }
 
     bool bAccelerate = false;
@@ -231,14 +250,6 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
     const bool bForwardCommand = ForwardInput > KINDA_SMALL_NUMBER;
     const bool bReverseCommand = ForwardInput < -KINDA_SMALL_NUMBER;
-
-    const bool bVehicleInReverse =
-        DriveState.CurrentGear == physx::PxVehicleGearsData::eREVERSE ||
-        DriveState.TargetGear == physx::PxVehicleGearsData::eREVERSE;
-
-    const bool bVehicleInNeutral =
-        DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL &&
-        DriveState.TargetGear == physx::PxVehicleGearsData::eNEUTRAL;
 
     if (bNeutralPressed)
     {
@@ -258,7 +269,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         {
             if (bVehicleInReverse || bVehicleInNeutral)
             {
-                PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eFIRST, bAutomaticTransmission, true);
+                PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eFIRST, bAutomaticTransmissionRequested, true);
             }
 
             bAccelerate = true;
@@ -283,7 +294,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         }
     }
 
-    if (!bAutomaticTransmission && !bNeutralPressed && !bReverseCommand)
+    if (!bAutomaticTransmissionRequested && !bVehicleInReverse && !bVehicleInNeutral && !bNeutralPressed && !bReverseCommand)
     {
         int32 GearToShift = DriveState.TargetGear;
 
@@ -307,8 +318,6 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
     SteeringInput = FMath::Clamp(RightInput, -1.0f, 1.0f);
 
     const bool bHandbrakeDown = IsKeyDown(EKeyCode::Space);
-
-    static bool bPreviousHandbrakeDown = false;
 
     if (bHandbrakeDown != bPreviousHandbrakeDown)
     {
@@ -340,8 +349,8 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         Telemetry.LateralSlip = WheelState.LateralSlip;
         Telemetry.TireFriction = WheelState.TireFriction;
         Telemetry.SuspensionJounce = WheelState.SuspensionJounce;
-        Telemetry.SuspensionSpringForce = WheelState.SuspensionSpringForce;
-        Telemetry.SuspensionJounceVelocity = WheelState.SuspensionJounceVelocity;
+        Telemetry.SuspensionTotalForce = WheelState.SuspensionTotalForce;
+        Telemetry.SuspensionJounceVelocityEstimate = WheelState.SuspensionJounceVelocityEstimate;
         Telemetry.SuspensionSpringComponent = WheelState.SuspensionSpringComponent;
         Telemetry.SuspensionDamperComponent = WheelState.SuspensionDamperComponent;
         Telemetry.TireSurfaceType = WheelState.TireSurfaceType;
@@ -378,7 +387,6 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
         WheelComponent->SetTransform(FTransform(WheelRotation, WheelLocation, WheelScale));
     }
-
 }
 
 void UVehicleMovementComponent::OnUnregister()

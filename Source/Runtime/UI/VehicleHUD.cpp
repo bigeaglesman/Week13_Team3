@@ -202,7 +202,7 @@ void UVehicleHUD::NativeTick(float DeltaTime)
             << " | LAT " << std::showpos << std::setprecision(1) << LateralSlipDegrees << " deg"
             << " | MU " << std::noshowpos << std::setprecision(2) << Telemetry->TireFriction
             << " | J " << std::setprecision(3) << Telemetry->SuspensionJounce << " m"
-            << " | F " << std::setprecision(0) << Telemetry->SuspensionSpringForce << " N"
+            << " | TOTAL " << std::setprecision(0) << Telemetry->SuspensionTotalForce << " N"
             << " | " << SurfaceName;
 
         WheelTelemetryText[i]->SetText(Stream.str());
@@ -226,10 +226,10 @@ void UVehicleHUD::NativeTick(float DeltaTime)
         std::ostringstream Stream;
         Stream << std::fixed << std::showpos << std::setprecision(3)
             << WheelNames[i]
-            << " | JDOT " << Telemetry->SuspensionJounceVelocity << " m/s"
+            << " | JDOT_EST " << Telemetry->SuspensionJounceVelocityEstimate << " m/s"
             << " | SPR " << std::setprecision(0) << Telemetry->SuspensionSpringComponent << " N"
             << " | DMP " << Telemetry->SuspensionDamperComponent << " N"
-            << std::noshowpos << " | TOTAL " << Telemetry->SuspensionSpringForce << " N";
+            << std::noshowpos << " | TOTAL " << Telemetry->SuspensionTotalForce << " N";
 
         WheelSuspensionText[i]->SetText(Stream.str());
     }

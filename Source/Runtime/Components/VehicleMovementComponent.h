@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "PawnMovementComponent.h"
@@ -22,9 +21,9 @@ struct FVehicleWheelTelemetry
     float TireFriction = 0.0f;
 
     float SuspensionJounce = 0.0f;
-    float SuspensionSpringForce = 0.0f;
+    float SuspensionTotalForce = 0.0f;
 
-    float SuspensionJounceVelocity = 0.0f;
+    float SuspensionJounceVelocityEstimate = 0.0f;
     float SuspensionSpringComponent = 0.0f;
     float SuspensionDamperComponent = 0.0f;
 
@@ -47,7 +46,7 @@ public:
     const FVector& GetLocalAngularVelocity() const { return LocalAngularVelocity; }
     const FVehicleWheelTelemetry* GetWheelTelemetry(int32 Index) const { return Index >= 0 && Index < 4 ? &WheelTelemetry[Index] : nullptr; }
     int32 GetCurrentGear() const { return CurrentGear; }
-    bool IsAutomaticTransmission() const { return bAutomaticTransmission; }
+    bool IsAutomaticTransmission() const { return bAutomaticTransmissionRequested; }
 
     float GetThrottleInput() const { return ThrottleInput; }
     float GetBrakeInput() const { return BrakeInput; }
@@ -64,16 +63,22 @@ private:
     UStaticMeshComponent* WheelVisuals[4] = {};
     UCameraComponent* VehicleCamera = nullptr;
     USpringArmComponent* VehicleSpringArm = nullptr;
+
     float BaseCameraFOV = 60.0f;
     float CurrentCameraFOV = 60.0f;
+
     float BaseSpringArmLength = 13.5f;
     float CurrentSpringArmLength = 13.5f;
+
     float BaseCameraLagSpeed = 14.0f;
     float CurrentCameraLagSpeed = 14.0f;
+
     FVehicleInstance VehicleInstance;
 
     bool bIsVehicleInAir = true;
-    bool bAutomaticTransmission = true;
+
+    // 사용자가 선택한 변속 모드. 중립/후진 중 PhysX가 자동 변속을 잠시 끄더라도 선택값은 유지한다.
+    bool bAutomaticTransmissionRequested = true;
 
     float VehicleSpeed = 0.0f;
     float EngineRPM = 0.0f;
@@ -81,12 +86,15 @@ private:
 
     FVector LocalLinearVelocity = FVector(0.0f, 0.0f, 0.0f);
     FVector LocalAngularVelocity = FVector(0.0f, 0.0f, 0.0f);
+
     FVehicleWheelTelemetry WheelTelemetry[4] = {};
 
     bool bPreviousNeutralKeyDown = false;
     bool bPreviousAutomaticToggleKeyDown = false;
     bool bPreviousGearUpKeyDown = false;
     bool bPreviousGearDownKeyDown = false;
+    bool bPreviousHandbrakeDown = false;
+    bool bPreviousDriveModeKeyDown = false;
 
     float ThrottleInput = 0.0f;
     float BrakeInput = 0.0f;
@@ -98,5 +106,4 @@ private:
     UVehicleHUD* VehicleHUD = nullptr;
 
     int32 VehicleDriveModeIndex = 0;
-    bool bPreviousDriveModeKeyDown = false;
 };

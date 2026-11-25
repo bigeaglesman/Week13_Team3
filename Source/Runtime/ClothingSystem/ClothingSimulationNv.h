@@ -8,6 +8,7 @@
 class USkeletalMeshComponent;
 class USkeletalMesh;
 class UClothingAssetCommon;
+class UPhysicsAsset;
 
 namespace nv
 {
@@ -41,7 +42,12 @@ public:
 	void FillContext(const USkeletalMeshComponent* Component, float DeltaTime, FClothingSimulationContextNv& OutContext) const;
 
 	// 천 에셋으로 NvCloth 천을 만들어 Solver에 넣는다. 지금 포즈(Context)에서 시작한다. UE의 CreateActor
-	bool CreateActor(const UClothingAssetCommon* Asset, const FClothingSimulationContextNv& Context);
+	// PhysicsAsset이 있으면 그 구·캡슐 중 천 근처의 것을 충돌체로 쓴다.
+	bool CreateActor(const UClothingAssetCommon* Asset, const UPhysicsAsset* PhysicsAsset, const FClothingSimulationContextNv& Context);
+
+	// NvCloth가 천 하나에 허용하는 충돌체 최대 개수
+	static constexpr int32 MaxCollisionSpheres = 32;
+	static constexpr int32 MaxCollisionCapsules = 32;
 
 	// 모든 천을 Solver에서 빼고 지운다. UE의 DestroyActors
 	void DestroyActors();
@@ -76,6 +82,13 @@ private:
 
 	// 고정 입자를 스키닝 위치로 옮기고, 나머지 입자는 Max Distance 구 안에 있게 한다
 	void UpdateConstraints(FClothingActorNv& Actor, const FClothingSimulationContextNv& Context) const;
+
+	// Physics Asset의 구·캡슐을 충돌체로 뽑는다. 천에서 가까운 것부터 NvCloth 한도까지만 넣는다.
+	// UE의 ExtractPhysicsAssetCollisions 자리
+	void ExtractPhysicsAssetCollisions(FClothingActorNv& Actor, const UPhysicsAsset* PhysicsAsset, const FClothingSimulationContextNv& Context) const;
+
+	// 충돌체를 이번 프레임 뼈 위치로 옮겨 NvCloth에 넣는다
+	void UpdateCollisions(FClothingActorNv& Actor, const FClothingSimulationContextNv& Context) const;
 
 	// 시뮬레이션 결과를 컴포넌트 공간 위치·노멀로 꺼낸다. UE의 GetSimulationData
 	void ReadSimulationResults(FClothingActorNv& Actor, const FClothingSimulationContextNv& Context) const;

@@ -4,6 +4,11 @@
 #include "ClothingSystem/ClothingAssetCommon.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Physics/PhysXConversion.h"
+#include "Physics/PhysicsAsset.h"
+#include "Physics/BodySetup.h"
+#include "Physics/AggregateGeom.h"
+#include "Render/SkeletalMesh.h"
+#include <algorithm>
 
 #include <NvCloth/Factory.h>
 #include <NvCloth/Solver.h>
@@ -93,7 +98,7 @@ void FClothingSimulationNv::FillContext(const USkeletalMeshComponent* Component,
 	}
 }
 
-bool FClothingSimulationNv::CreateActor(const UClothingAssetCommon* Asset, const FClothingSimulationContextNv& Context)
+bool FClothingSimulationNv::CreateActor(const UClothingAssetCommon* Asset, const UPhysicsAsset* PhysicsAsset, const FClothingSimulationContextNv& Context)
 {
 	nv::cloth::Factory* Factory = FClothingSystemRuntimeModuleNv::Get().GetSoftwareFactory();
 	if (!Solver || !Factory || !Asset)
@@ -174,7 +179,11 @@ bool FClothingSimulationNv::CreateActor(const UClothingAssetCommon* Asset, const
 	ApplyConfig(Actor, Context);
 	Solver->addCloth(Actor.Cloth);
 
-	HTR_LOG(Info, "[Cloth] Actor created: {} particles, {} phases", NumVerts, Actor.PhaseTypes.Num());
+	// 5) 충돌체: Physics Asset의 구·캡슐 중 천 근처의 것
+	ExtractPhysicsAssetCollisions(Actor, PhysicsAsset, Context);
+
+	HTR_LOG(Info, "[Cloth] Actor created: {} particles, {} phases, {} collision spheres, {} capsules",
+		NumVerts, Actor.PhaseTypes.Num(), Actor.Collisions.Spheres.Num(), Actor.Collisions.SphereConnections.Num());
 	Actors.Add(std::move(Actor));
 	bFirstFrame = true;
 	return true;
@@ -281,9 +290,11 @@ void FClothingSimulationNv::ApplyConfig(FClothingActorNv& Actor, const FClothing
 
 	// 중력·바람은 NvCloth가 월드 좌표로 받는다 (로컬 프레임 회전은 NvCloth가 알아서 반영)
 	Cloth->setGravity(PxVec3(0.0f, 0.0f, WorldGravityZ * Config.GravityScale));
-	Cloth->setWindVelocity(ToPx(Context.WindVelocity));
+	Cloth->setWindVelocity(ToPx(Context.WindVelocity + Config.WindVelocity));   // 컨텍스트(게임 쪽 바람) + 설정값
 	Cloth->setDragCoefficient(Config.WindDragCoefficient);
 	Cloth->setLiftCoefficient(Config.WindLiftCoefficient);
+
+	Cloth->setFriction(Config.Friction);
 }
 
 void FClothingSimulationNv::UpdateConstraints(FClothingActorNv& Actor, const FClothingSimulationContextNv& Context) const
@@ -338,7 +349,6 @@ void FClothingSimulationNv::Simulate(const FClothingSimulationContextNv& Context
 					Current[V] = Previous[V] = PxVec4(ToPx(Actor.SkinnedPositions[V]), InverseMasses[V]);
 				}
 			}
-			Actor.Cloth->clearInterpolation();
 		}
 		else
 		{
@@ -348,6 +358,14 @@ void FClothingSimulationNv::Simulate(const FClothingSimulationContextNv& Context
 		}
 
 		UpdateConstraints(Actor, Context);
+		UpdateCollisions(Actor, Context);
+
+		// NvCloth는 Max Distance 구와 충돌체를 지난 프레임 → 이번 프레임으로 보간하며 푼다.
+		// 순간이동이면 지난 프레임 값이 엉뚱한 자리라서, 방금 넣은 값으로 시작과 끝을 맞춘다.
+		if (Context.bTeleport)
+		{
+			Actor.Cloth->clearInterpolation();
+		}
 	}
 
 	// NvCloth는 일을 chunk로 나눠 준다. 지금은 한 스레드에서 차례로 돌린다.
@@ -368,6 +386,149 @@ void FClothingSimulationNv::Simulate(const FClothingSimulationContextNv& Context
 	}
 
 	bFirstFrame = false;
+}
+
+void FClothingSimulationNv::ExtractPhysicsAssetCollisions(FClothingActorNv& Actor, const UPhysicsAsset* PhysicsAsset, const FClothingSimulationContextNv& Context) const
+{
+	Actor.Collisions.Reset();
+	const USkeletalMesh* Mesh = Actor.AssetCreatedFrom->OwningMesh;
+	if (!PhysicsAsset || !Mesh || Actor.SkinnedPositions.IsEmpty())
+	{
+		return;
+	}
+
+	// 천의 지금 자리(시뮬레이션 공간) 바운드. 여기서 가까운 충돌체부터 고른다.
+	FVector BoundsMin(FLT_MAX, FLT_MAX, FLT_MAX), BoundsMax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	for (const FVector& P : Actor.SkinnedPositions)
+	{
+		for (int32 Axis = 0; Axis < 3; ++Axis)
+		{
+			BoundsMin[Axis] = std::min(BoundsMin[Axis], P[Axis]);
+			BoundsMax[Axis] = std::max(BoundsMax[Axis], P[Axis]);
+		}
+	}
+
+	const float MaxScale = GetMaxScale(Context.ComponentScale);
+	auto DistanceToCloth = [&](const FClothCollisionPrim_Sphere& Sphere)
+	{
+		const FVector Center = Context.BoneTransforms[Sphere.BoneIndex].TransformPosition(Sphere.LocalPosition) * Context.ComponentScale;
+		float DistSq = 0.0f;
+		for (int32 Axis = 0; Axis < 3; ++Axis)
+		{
+			const float D = std::max({ BoundsMin[Axis] - Center[Axis], 0.0f, Center[Axis] - BoundsMax[Axis] });
+			DistSq += D * D;
+		}
+		return std::max(0.0f, std::sqrt(DistSq) - Sphere.Radius * MaxScale);
+	};
+
+	// 후보: 구는 구 1개, 캡슐(Sphyl)은 양 끝 구 2개 + 연결 1개
+	struct FCandidate
+	{
+		float Distance = 0.0f;
+		int32 NumSpheres = 1;
+		FClothCollisionPrim_Sphere Spheres[2];
+	};
+	TArray<FCandidate> Candidates;
+
+	for (const UBodySetup* Setup : PhysicsAsset->BodySetups)
+	{
+		const int32 BoneIndex = Setup ? Mesh->FindBoneIndex(Setup->BoneName) : -1;
+		if (BoneIndex < 0 || BoneIndex >= Context.BoneTransforms.Num())
+		{
+			continue;
+		}
+
+		for (const FKSphereElem& Elem : Setup->AggGeom.SphereElems)
+		{
+			FCandidate C;
+			C.Spheres[0] = { BoneIndex, Elem.Radius, Elem.Center };
+			C.Distance = DistanceToCloth(C.Spheres[0]);
+			Candidates.Add(C);
+		}
+
+		for (const FKSphylElem& Elem : Setup->AggGeom.SphylElems)
+		{
+			// 캡슐 축은 로컬 Z. 원기둥 길이의 절반만큼 양쪽으로 간 곳이 양 끝 구의 중심이다.
+			const FVector HalfAxis = Elem.Rotation.RotateVector(FVector(0.0f, 0.0f, 1.0f)) * (Elem.Length * 0.5f);
+			FCandidate C;
+			C.NumSpheres = 2;
+			C.Spheres[0] = { BoneIndex, Elem.Radius, Elem.Center + HalfAxis };
+			C.Spheres[1] = { BoneIndex, Elem.Radius, Elem.Center - HalfAxis };
+			C.Distance = std::min(DistanceToCloth(C.Spheres[0]), DistanceToCloth(C.Spheres[1]));
+			Candidates.Add(C);
+		}
+	}
+
+	// NvCloth 한도(구 32, 캡슐 32) 안에서 천에 가까운 것부터 넣는다.
+	std::sort(Candidates.begin(), Candidates.end(), [](const FCandidate& A, const FCandidate& B) { return A.Distance < B.Distance; });
+	for (const FCandidate& C : Candidates)
+	{
+		if (Actor.Collisions.Spheres.Num() + C.NumSpheres > MaxCollisionSpheres)
+		{
+			continue;
+		}
+		if (C.NumSpheres == 2 && Actor.Collisions.SphereConnections.Num() >= MaxCollisionCapsules)
+		{
+			continue;
+		}
+
+		const int32 First = Actor.Collisions.Spheres.Num();
+		for (int32 I = 0; I < C.NumSpheres; ++I)
+		{
+			Actor.Collisions.Spheres.Add(C.Spheres[I]);
+		}
+		if (C.NumSpheres == 2)
+		{
+			FClothCollisionPrim_SphereConnection Connection;
+			Connection.SphereIndices[0] = First;
+			Connection.SphereIndices[1] = First + 1;
+			Actor.Collisions.SphereConnections.Add(Connection);
+		}
+	}
+}
+
+void FClothingSimulationNv::UpdateCollisions(FClothingActorNv& Actor, const FClothingSimulationContextNv& Context) const
+{
+	nv::cloth::Cloth* Cloth = Actor.Cloth;
+	const FClothCollisionData& Collisions = Actor.Collisions;
+
+	// 끄면 넣어 둔 충돌체를 모두 뺀다.
+	if (!Config.bEnableCollision || Collisions.Spheres.IsEmpty())
+	{
+		if (Cloth->getNumCapsules() > 0)
+		{
+			Cloth->setCapsules(nv::cloth::Range<const uint32_t>(), 0, Cloth->getNumCapsules());
+		}
+		if (Cloth->getNumSpheres() > 0)
+		{
+			Cloth->setSpheres(nv::cloth::Range<const PxVec4>(), 0, Cloth->getNumSpheres());
+		}
+		return;
+	}
+
+	// 구: 뼈의 이번 프레임 행렬로 중심을 옮기고, 시뮬레이션 공간(스케일 적용)으로 바꾼다.
+	const float MaxScale = GetMaxScale(Context.ComponentScale);
+	TArray<PxVec4> Spheres;
+	Spheres.SetNum(Collisions.Spheres.Num());
+	for (int32 I = 0; I < Collisions.Spheres.Num(); ++I)
+	{
+		const FClothCollisionPrim_Sphere& Sphere = Collisions.Spheres[I];
+		const FVector Center = Sphere.BoneIndex < Context.BoneTransforms.Num()
+			? Context.BoneTransforms[Sphere.BoneIndex].TransformPosition(Sphere.LocalPosition)
+			: Sphere.LocalPosition;
+		Spheres[I] = PxVec4(ToPx(Center * Context.ComponentScale), Sphere.Radius * MaxScale + Config.CollisionThickness);
+	}
+	// 기존 구 [0, 이전 개수)를 새 목록으로 바꾼다. NvCloth가 지난 프레임 자리 → 이번 자리로 보간한다.
+	Cloth->setSpheres(nv::cloth::Range<const PxVec4>(Spheres.GetData(), Spheres.GetData() + Spheres.Num()), 0, Cloth->getNumSpheres());
+
+	// 캡슐: 구 번호 두 개씩
+	TArray<uint32_t> Capsules;
+	for (const FClothCollisionPrim_SphereConnection& Connection : Collisions.SphereConnections)
+	{
+		Capsules.Add(static_cast<uint32_t>(Connection.SphereIndices[0]));
+		Capsules.Add(static_cast<uint32_t>(Connection.SphereIndices[1]));
+	}
+	Cloth->setCapsules(nv::cloth::Range<const uint32_t>(Capsules.GetData(), Capsules.GetData() + Capsules.Num()), 0, Cloth->getNumCapsules());
 }
 
 void FClothingSimulationNv::GetSimulationData(TArray<FClothSimulData>& OutData, const USkeletalMesh* Mesh) const

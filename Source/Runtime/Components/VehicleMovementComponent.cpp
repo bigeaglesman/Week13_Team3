@@ -184,7 +184,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
     // 전진 기어 상태에서는 PhysX의 실제 자동 변속 상태와 사용자의 선택을 동기화한다.
     // 중립과 후진은 PhysX에서 자동 변속이 일시적으로 꺼지므로 사용자의 선택값을 유지한다.
-    if (!bTransmissionTemporarilyManual)
+    if (!bTransmissionTemporarilyManual && !bIsVehicleInAir && !bAirborneAutoShiftSuspended)
     {
         bAutomaticTransmissionRequested = DriveState.bUseAutoGears;
     }
@@ -244,7 +244,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         // 중립/후진에서는 선택값만 바꾸고, 전진 기어로 복귀할 때 실제 PhysX 설정을 적용한다.
         if (!bTransmissionTemporarilyManual)
         {
-            PhysicsScene->SetVehicleAutomaticGears(Vehicle, bAutomaticTransmissionRequested);
+            PhysicsScene->SetVehicleAutomaticGears(Vehicle, bAutomaticTransmissionRequested && !bIsVehicleInAir);
         }
 
         HTR_LOG(Info, "[Vehicle] Transmission Mode | Automatic={}", bAutomaticTransmissionRequested);
@@ -274,7 +274,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         {
             if (bVehicleInReverse || bVehicleInNeutral)
             {
-                PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eFIRST, bAutomaticTransmissionRequested, true);
+                PhysicsScene->SetVehicleGear(Vehicle, physx::PxVehicleGearsData::eFIRST, bAutomaticTransmissionRequested && !bIsVehicleInAir, true);
             }
 
             bAccelerate = true;
@@ -340,6 +340,25 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         return;
     }
 
+    if (bAutomaticTransmissionRequested && bIsVehicleInAir)
+    {
+        if (!bAirborneAutoShiftSuspended && PhysicsScene->SetVehicleAutomaticGears(Vehicle, false))
+        {
+            bAirborneAutoShiftSuspended = true;
+            HTR_LOG(Info, "[VehicleTransmission] Auto shift suspended | CurrentGear={} TargetGear={}", DriveState.CurrentGear, DriveState.TargetGear);
+        }
+    }
+    else if (bAirborneAutoShiftSuspended && !bIsVehicleInAir)
+    {
+        const bool bShouldUseAutomaticGears = bAutomaticTransmissionRequested && !bTransmissionTemporarilyManual;
+
+        if (PhysicsScene->SetVehicleAutomaticGears(Vehicle, bShouldUseAutomaticGears))
+        {
+            bAirborneAutoShiftSuspended = false;
+            HTR_LOG(Info, "[VehicleTransmission] Auto shift restored | Automatic={}", bShouldUseAutomaticGears);
+        }
+    }
+
     WheelContactCount = 0;
 
     for (int32 i = 0; i < 4; ++i)
@@ -364,6 +383,43 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         if (WheelContactStates[i])
         {
             ++WheelContactCount;
+        }
+    }
+
+    if (bAutomaticTransmissionRequested && bIsVehicleInAir)
+    {
+        AirborneAutoShiftRecoveryTimer = 0.0f;
+
+        if (!bAirborneAutoShiftSuspended && PhysicsScene->SetVehicleAutomaticGears(Vehicle, false))
+        {
+            bAirborneAutoShiftSuspended = true;
+            HTR_LOG(Info, "[VehicleTransmission] Auto shift suspended | CurrentGear={} TargetGear={}", DriveState.CurrentGear, DriveState.TargetGear);
+        }
+    }
+    else if (bAirborneAutoShiftSuspended)
+    {
+        if (!bAutomaticTransmissionRequested || bTransmissionTemporarilyManual)
+        {
+            if (PhysicsScene->SetVehicleAutomaticGears(Vehicle, false))
+            {
+                bAirborneAutoShiftSuspended = false;
+                AirborneAutoShiftRecoveryTimer = 0.0f;
+            }
+        }
+        else if (WheelContactCount >= 2)
+        {
+            AirborneAutoShiftRecoveryTimer += DeltaTime;
+
+            if (AirborneAutoShiftRecoveryTimer >= 0.5f && PhysicsScene->SetVehicleAutomaticGears(Vehicle, true))
+            {
+                bAirborneAutoShiftSuspended = false;
+                AirborneAutoShiftRecoveryTimer = 0.0f;
+                HTR_LOG(Info, "[VehicleTransmission] Auto shift restored | Automatic=true");
+            }
+        }
+        else
+        {
+            AirborneAutoShiftRecoveryTimer = 0.0f;
         }
     }
 

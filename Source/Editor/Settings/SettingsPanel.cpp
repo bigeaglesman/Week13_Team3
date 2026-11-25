@@ -140,7 +140,66 @@ void FSettingsPanel::OnRender()
 	{
 		FDOFDebug& D = GDOFDebug;
 		ImGui::Checkbox("Override (All Views)", &D.bOverride);
-		ImGui::Checkbox("Visualize CoC (Green=Near, Black=Focus, Red=Far)", &D.bVisualizeCoC);
+
+		static const char* VisualizeModeNames[] = { "Off", "Layers (Overlay)", "CoC Only" };
+		int32 ModeIndex = static_cast<int32>(D.VisualizeMode);
+		if (ImGui::Combo("Visualize", &ModeIndex, VisualizeModeNames, IM_ARRAYSIZE(VisualizeModeNames)))
+		{
+			D.VisualizeMode = static_cast<EDOFVisualizeMode>(ModeIndex);
+		}
+		ImGui::DragFloat("In-Focus CoC (px)", &D.InFocusCoCPx, 0.05f, 0.05f, 16.0f, "%.2f");
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("CoC radius at or below this is treated as sharp (DoF range).");
+		}
+		ImGui::Checkbox("Distance Grid (1m thin / 5m thick)", &D.bDistanceGrid);
+
+		ImGui::SeparatorText("Bokeh Highlight (LDR)");
+		ImGui::SliderFloat("Highlight Threshold", &D.HighlightThreshold, 0.0f, 0.99f, "%.2f");
+		ImGui::DragFloat("Highlight Boost", &D.HighlightBoost, 0.5f, 0.0f, 500.0f, "%.1f");
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("Weight = 1 + Boost * (Luma - Threshold). Higher makes small bright lights fill the bokeh disk.");
+		}
+
+		if (D.VisualizeMode != EDOFVisualizeMode::Off)
+		{
+			auto LegendItem = [](const char* Id, float R, float G, float B, const char* Text)
+			{
+				ImGui::ColorButton(Id, ImVec4(R, G, B, 1.0f), ImGuiColorEditFlags_NoTooltip, ImVec2(12.0f, 12.0f));
+				ImGui::SameLine();
+				ImGui::TextUnformatted(Text);
+			};
+			LegendItem("##LegendNear", 0.10f, 0.95f, 0.20f, "Near blur (foreground)");
+			LegendItem("##LegendDoF", 0.55f, 0.55f, 0.55f, "DoF range (sharp, original color)");
+			if (D.VisualizeMode == EDOFVisualizeMode::Layers)
+			{
+				LegendItem("##LegendFocal", 1.00f, 0.90f, 0.00f, "Focal plane line");
+				LegendItem("##LegendEdge", 0.00f, 1.00f, 1.00f, "DoF near / far limit lines");
+			}
+			LegendItem("##LegendFar", 0.15f, 0.45f, 1.00f, "Far blur (background)");
+		}
+
+		const FDOFDebugStats& S = D.Stats;
+		if (S.bValid)
+		{
+			ImGui::SeparatorText("Last DoF View");
+			ImGui::Text("View %.0f px, VFOV %.1f deg", S.ViewWidthPx, S.FieldOfViewDeg);
+			ImGui::Text("Focal Length %.1f mm, f/%.2f (aperture %.1f mm)", S.FocalLengthMm, S.Fstop, S.ApertureMm);
+			ImGui::Text("Blades %d, roundness %.2f", S.BladeCount, S.BladeRoundness);
+			ImGui::Text("Focus %.2f m", S.FocalDistanceM);
+			if (S.DoFFarM < 0.0f)
+				ImGui::Text("DoF range %.2f m ~ infinity", S.DoFNearM);
+			else
+				ImGui::Text("DoF range %.2f m ~ %.2f m", S.DoFNearM, S.DoFFarM);
+			ImGui::Text("CoC at infinity %.1f px (max %.1f px)", S.CoCInfinityPx, S.MaxCoCPx);
+			if (S.CoCInfinityPx < 4.0f)
+			{
+				ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "Blur is tiny: narrow FOV, lower f-stop, or closer focus.");
+			}
+		}
+
+		ImGui::SeparatorText("Override Values");
 		ImGui::BeginDisabled(!D.bOverride);
 		ImGui::DragFloat("Focal Distance (m)", &D.FocalDistance, 0.1f, 0.0f, 1000.0f, "%.2f");
 		ImGui::DragFloat("Aperture (F-stop)", &D.Fstop, 0.05f, 0.7f, 32.0f, "%.2f");

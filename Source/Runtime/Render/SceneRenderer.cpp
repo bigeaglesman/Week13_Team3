@@ -1067,7 +1067,7 @@ bool FSceneRenderer::AddPostProcessingPasses(FRenderGraphBuilder& Graph, FRender
 			FTexture2D* ColorTargetForDOF = Targets.SceneColor.get();
 			FTexture2D* DepthTarget = Targets.Depth.get();
 			FRenderGraphRasterPassDesc Pass = MakeViewportPass(
-				GDOFDebug.bVisualizeCoC ? "DepthOfField_VisualizeCoC" : "DepthOfField",
+				GDOFDebug.VisualizeMode != EDOFVisualizeMode::Off ? "DepthOfField_Visualize" : "DepthOfField",
 				SceneColor);
 			Pass.ReadTextures = { Depth };
 			if (!Graph.AddRasterPass(std::move(Pass),

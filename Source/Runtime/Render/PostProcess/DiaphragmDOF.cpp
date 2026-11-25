@@ -193,17 +193,46 @@ FDOFData FDiaphragmDOFRenderer::BuildConstants(const FSceneView& View, const FSc
 
 	Data.BladeCount = std::clamp(PP.DepthOfFieldBladeCount, 4, 16);
 	Data.BladeRoundness = BladeRoundness;
-	Data.HighlightThreshold = 0.75f;
-	Data.HighlightBoost = 5.0f;
+	Data.HighlightThreshold = std::clamp(GDOFDebug.HighlightThreshold, 0.0f, 0.99f);
+	Data.HighlightBoost = std::max(GDOFDebug.HighlightBoost, 0.0f);
+
+	Data.VisualizeMode = static_cast<int32>(GDOFDebug.VisualizeMode);
+	Data.InFocusCoCPx = std::max(GDOFDebug.InFocusCoCPx, 0.05f);
+	Data.GridSpacingM = GDOFDebug.bDistanceGrid ? 1.0f : 0.0f;
+	Data.VisualizePad = 0.0f;
+
+	// Settings 패널에 보여줄 렌즈 계산 결과.
+	// CoC(d) = CoCScale * (1 - F/d) 이므로 |CoC| <= T 인 거리 범위는 F/(1 + T/S) ~ F/(1 - T/S).
+	FDOFDebugStats& Stats = GDOFDebug.Stats;
+	Stats.bValid = true;
+	Stats.ViewWidthPx = WidthF;
+	Stats.FieldOfViewDeg = View.FieldOfView;
+	Stats.FocalLengthMm = FocalLenMm;
+	Stats.Fstop = Fstop;
+	Stats.ApertureMm = ApertureMm;
+	Stats.FocalDistanceM = Data.FocalDistance;
+	Stats.CoCInfinityPx = CoCScalePx;
+	Stats.MaxCoCPx = Data.MaxCoCRadiusPx;
+	Stats.BladeRoundness = BladeRoundness;
+	Stats.BladeCount = Data.BladeCount;
+	const float Ratio = Data.InFocusCoCPx / std::max(CoCScalePx, 1e-4f);
+	Stats.DoFNearM = Data.FocalDistance / (1.0f + Ratio);
+	Stats.DoFFarM = Ratio < 1.0f ? Data.FocalDistance / (1.0f - Ratio) : -1.0f;
 	return Data;
 }
 
-bool FDiaphragmDOFRenderer::RenderVisualizeCoC(const FDOFData& Data, FTexture2D* ColorTarget, FTexture2D* DepthTarget)
+bool FDiaphragmDOFRenderer::RenderVisualizeCoC(const FDOFData& Data, FCachedTargetSet& Targets,
+	FTexture2D* ColorTarget, FTexture2D* DepthTarget)
 {
 	if (!VisualizeCoCShader || !ConstantBuffer || !ColorTarget || !DepthTarget)
 	{
 		return false;
 	}
+
+	// Layers 모드는 원본 씬 색 위에 겹쳐 그리므로 SceneColor 사본이 필요하다 (RTV/SRV 동시 바인딩 방지)
+	RenderCommand::UnbindShaderResources(0, 2, EShaderBindFlagBits::Pixel);
+	RenderCommand::SetRenderTargets(0, nullptr, nullptr);
+	RenderCommand::CopyTexture(Targets.SceneColorCopy.get(), ColorTarget);
 
 	RenderCommand::SetRenderTargets(ColorTarget, nullptr);
 	RenderCommand::SetViewport(0, 0, ColorTarget->GetWidth(), ColorTarget->GetHeight());
@@ -212,8 +241,9 @@ bool FDiaphragmDOFRenderer::RenderVisualizeCoC(const FDOFData& Data, FTexture2D*
 	RenderCommand::UpdateBufferData(ConstantBuffer.get(), &Data, sizeof(Data));
 	RenderCommand::BindConstantBuffer(0, ConstantBuffer.get(), EShaderBindFlagBits::Pixel);
 	RenderCommand::BindShaderResource(0, DepthTarget, EShaderBindFlagBits::Pixel);
+	RenderCommand::BindShaderResource(1, Targets.SceneColorCopy.get(), EShaderBindFlagBits::Pixel);
 	RenderCommand::Draw(3);
-	RenderCommand::UnbindShaderResources(0, 1, EShaderBindFlagBits::Pixel);
+	RenderCommand::UnbindShaderResources(0, 2, EShaderBindFlagBits::Pixel);
 	return true;
 }
 
@@ -231,15 +261,15 @@ bool FDiaphragmDOFRenderer::OnRender(const FSceneView& View, const FSceneRenderO
 
 	const FDOFData Data = BuildConstants(View, Options, FullW, FullH);
 
-	if (GDOFDebug.bVisualizeCoC)
-	{
-		return RenderVisualizeCoC(Data, ColorTarget, DepthTarget);
-	}
-
 	FCachedTargetSet* Targets = GetOrCreateTargets(ColorTarget);
 	if (!Targets)
 	{
 		return false;
+	}
+
+	if (GDOFDebug.VisualizeMode != EDOFVisualizeMode::Off)
+	{
+		return RenderVisualizeCoC(Data, *Targets, ColorTarget, DepthTarget);
 	}
 
 	// 공통 리소스 바인딩 준비

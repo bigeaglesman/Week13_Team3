@@ -112,7 +112,7 @@ void USkeletalMeshComponent::TickClothing(float DeltaTime)
 	if (!ClothingSimulation->HasActorForAsset(Asset))
 	{
 		ClothingSimulation->DestroyActors();
-		if (ClothSectionIndex == FailedClothSectionIndex || !ClothingSimulation->CreateActor(Asset, *ClothingSimulationContext))
+		if (ClothSectionIndex == FailedClothSectionIndex || !ClothingSimulation->CreateActor(Asset, GetClothCollisionPhysicsAsset(), *ClothingSimulationContext))
 		{
 			FailedClothSectionIndex = ClothSectionIndex;   // 쿠킹 실패도 매 프레임 다시 시도하지 않는다
 			return;

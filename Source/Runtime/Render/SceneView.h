@@ -125,10 +125,43 @@ struct FCameraOverlayDebug
 };
 inline FCameraOverlayDebug GCameraOverlayDebug;
 
+// DoF 디버그 시각화 모드 (셰이더 DiaphragmDOFVisualize.hlsl의 VisualizeMode와 값이 같아야 한다)
+enum class EDOFVisualizeMode : int32
+{
+	Off = 0,
+	Layers = 1,   // 씬 위에 근경/DoF 범위/초점면/원경을 색으로 겹쳐 표시
+	CoCOnly = 2,  // 씬 없이 CoC 크기만 표시 (초록 = 근경, 검정 = 초점, 빨강 = 원경)
+};
+
+// 마지막으로 DoF를 그린 뷰의 렌즈 계산 결과 (Settings 패널 표시용)
+struct FDOFDebugStats
+{
+	bool  bValid = false;
+	float ViewWidthPx = 0.0f;
+	float FieldOfViewDeg = 0.0f;   // 세로 FOV
+	float FocalLengthMm = 0.0f;
+	float Fstop = 0.0f;
+	float ApertureMm = 0.0f;
+	float FocalDistanceM = 0.0f;
+	float CoCInfinityPx = 0.0f;    // 무한대 거리의 CoC 반지름 (px)
+	float MaxCoCPx = 0.0f;
+	float DoFNearM = 0.0f;         // 허용 CoC 이하로 선명한 범위의 앞쪽 끝
+	float DoFFarM = 0.0f;          // 뒤쪽 끝 (음수면 무한대)
+	float BladeRoundness = 0.0f;
+	int32 BladeCount = 0;
+};
+
 struct FDOFDebug
 {
 	bool  bOverride = false;
-	bool  bVisualizeCoC = false;
+	EDOFVisualizeMode VisualizeMode = EDOFVisualizeMode::Off;
+	bool  bDistanceGrid = true;       // Layers 모드에서 1m / 5m 등거리선 표시
+	float InFocusCoCPx = 1.0f;        // 이 CoC 반지름(px) 이하면 "선명함(DoF 범위)"으로 본다
+	// LDR 하이라이트 보정: 휘도가 Threshold를 넘는 샘플에 1 + Boost × (휘도 - Threshold) 가중치를 준다.
+	// HDR이 없어 작은 광원의 빛이 넓은 보케 원판에 평균되면 어두워지므로, 밝은 샘플이 평균을 지배하게 해 보상한다.
+	float HighlightThreshold = 0.7f;
+	float HighlightBoost = 60.0f;
+	FDOFDebugStats Stats;
 	float FocalDistance = 5.0f;
 	float Fstop = 1.6f;
 	float MinFstop = 1.2f;

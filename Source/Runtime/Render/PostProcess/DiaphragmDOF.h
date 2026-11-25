@@ -31,8 +31,14 @@ struct alignas(16) FDOFData
 	float BladeRoundness;     // 0 = 완전 다각형, 1 = 완전 원형 (Fstop이 MinFstop에 가까울수록 1)
 	float HighlightThreshold; // LDR 하이라이트 부스트 임계값
 	float HighlightBoost;     // LDR 하이라이트 부스트 강도
+
+	// 시각화 전용 (다른 DoF 셰이더는 앞의 64바이트만 선언하므로 영향 없음)
+	int32 VisualizeMode;      // EDOFVisualizeMode
+	float InFocusCoCPx;       // 선명 판정 CoC 반지름 (px)
+	float GridSpacingM;       // 등거리선 간격 (m), 0이면 끔
+	float VisualizePad;
 };
-static_assert(sizeof(FDOFData) == 64);
+static_assert(sizeof(FDOFData) == 80);
 
 // 언리얼의 DiaphragmDOF 이름을 따른 피사계 심도(Depth of Field) 후처리 렌더러.
 class FDiaphragmDOFRenderer
@@ -72,7 +78,7 @@ private:
 	};
 
 	FCachedTargetSet* GetOrCreateTargets(FTexture2D* ColorTarget);
-	bool RenderVisualizeCoC(const FDOFData& Data, FTexture2D* ColorTarget, FTexture2D* DepthTarget);
+	bool RenderVisualizeCoC(const FDOFData& Data, FCachedTargetSet& Targets, FTexture2D* ColorTarget, FTexture2D* DepthTarget);
 
 	FDOFData BuildConstants(const FSceneView& View, const FSceneRenderOptions& Options,
 		uint32 FullWidth, uint32 FullHeight) const;

@@ -99,11 +99,30 @@ struct FClothConfigNv
 	UPROPERTY(EditAnywhere)
 	float TetherLimit = 1.0f;
 
+	// ---- 충돌 (Physics Asset의 구·캡슐) ----
+
+	// 몸과 부딪힐지. 끄면 천이 몸을 뚫고 지나간다
+	UPROPERTY(EditAnywhere)
+	bool bEnableCollision = true;
+
+	// 충돌체 반지름에 더하는 여유 (월드 단위). 천이 몸에 너무 붙어 파고드는 것처럼 보일 때 키운다
+	UPROPERTY(EditAnywhere)
+	float CollisionThickness = 0.01f;
+
+	// 충돌체 표면을 미끄러지는 정도 (0 = 미끄러움, 1 = 달라붙음)
+	UPROPERTY(EditAnywhere)
+	float Friction = 0.1f;
+
 	// ---- 바람 (NvCloth 내장: 삼각형마다 공기 저항과 양력) ----
 
+	// 월드 공간 바람 속도 (m/s). 예: (0, 5, 0)이면 +Y로 분다. 0이면 바람 없음
 	UPROPERTY(EditAnywhere)
-	float WindDragCoefficient = 0.1f;
+	FVector WindVelocity = FVector(0.0f, 0.0f, 0.0f);
+
+	// 바람을 받는 정도. 공기 저항(면에 수직)과 양력(면을 따라)
+	UPROPERTY(EditAnywhere)
+	float WindDragCoefficient = 0.5f;
 
 	UPROPERTY(EditAnywhere)
-	float WindLiftCoefficient = 0.1f;
+	float WindLiftCoefficient = 0.3f;
 };

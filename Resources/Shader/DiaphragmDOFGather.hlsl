@@ -97,9 +97,21 @@ PSOutput mainPS(VSOutput Input)
     float3 FarAccum = float3(0.0, 0.0, 0.0);
     float  FarWeightSum = 0.0;
 
-    float3 NearAccum = float3(0.0, 0.0, 0.0);
-    float  NearWeightSum = 0.0;
-    float  NearCoverageSum = 0.0;
+    // 전경 레이어는 두 겹으로 나눠 모은다.
+    //   Self : 중심 픽셀과 같은 정도로 흐린 샘플(중심 자신 포함) — 중심 표면 자체의 번짐
+    //   Fg   : 중심보다 확연히 더 흐린(= 더 가까운) 전경 샘플 — 중심 위를 덮는 앞 물체의 번짐
+    // 마지막에 Fg를 Self 위에 over로 합친다. 한 겹으로 면적 가중 평균하면, 초점면 바로 앞의 바닥처럼
+    // CoC가 작은 중심 픽셀이 (R/c)² 가중치로 앞 물체의 번짐 색을 덮어 버려 초점면 위치에 가로선이 생긴다.
+    float CenterNearCoC = max(-CenterCoC, 0.0);
+
+    float3 SelfAccum = float3(0.0, 0.0, 0.0);
+    float  SelfWeightSum = 0.0;
+    float  SelfCoverageSum = 0.0;
+
+    float3 FgAccum = float3(0.0, 0.0, 0.0);
+    float  FgWeightSum = 0.0;
+    float  FgCoverageSum = 0.0;
+
     int    TotalSamples = 1;
 
     // 중심 샘플 누적
@@ -115,10 +127,12 @@ PSOutput mainPS(VSOutput Input)
         }
         if (CenterCoC < -0.25)
         {
-            float W = Boost;
-            NearAccum += CenterData.rgb * W;
-            NearWeightSum += W;
-            NearCoverageSum += 1.0;
+            // 면적 정규화 (아래 전경 Gather와 같은 규칙): 샘플 하나가 커널 면적의 1/N을 대표한다
+            float AreaW = (DilatedNearCoC * DilatedNearCoC) / max(CenterNearCoC * CenterNearCoC, 0.25);
+            float W = Boost * AreaW;
+            SelfAccum += CenterData.rgb * W;
+            SelfWeightSum += W;
+            SelfCoverageSum += AreaW;
         }
     }
 
@@ -184,12 +198,22 @@ PSOutput mainPS(VSOutput Input)
                 float Overlap = saturate((SampleNearCoC - SampleDist + 0.75) / 1.5);
                 if (Overlap > 0.0)
                 {
+                    // Scatter-as-gather 면적 정규화: CoC 반지름 c인 샘플은 빛을 π c² 면적에 퍼뜨린다.
+                    // 커널(반지름 R) 안 N개 샘플이 각각 πR²/N을 대표하므로 가중치는 (R/c)².
+                    // → 균일한 전경 내부는 커버리지 1, 실루엣 위는 0.5, CoC만큼 바깥에서 0으로 자연스럽게 떨어진다.
+                    float AreaW = (DilatedNearCoC * DilatedNearCoC) / max(SampleNearCoC * SampleNearCoC, 0.25);
                     float Luma = GetLuma(SampleData.rgb);
                     float Boost = 1.0 + HighlightBoost * max(0.0, Luma - HighlightThreshold);
-                    float W = Overlap * Boost;
-                    NearAccum += SampleData.rgb * W;
-                    NearWeightSum += W;
-                    NearCoverageSum += Overlap;
+                    float W = Overlap * AreaW * Boost;
+
+                    // 중심보다 CoC가 1 하프 픽셀 이상 크면 앞 물체로 보고 Fg로, 아니면 Self로 (2 하프 픽셀에 걸쳐 부드럽게 나눔)
+                    float FgFactor = saturate((SampleNearCoC - CenterNearCoC - 1.0) / 2.0);
+                    FgAccum += SampleData.rgb * (W * FgFactor);
+                    FgWeightSum += W * FgFactor;
+                    FgCoverageSum += Overlap * AreaW * FgFactor;
+                    SelfAccum += SampleData.rgb * (W * (1.0 - FgFactor));
+                    SelfWeightSum += W * (1.0 - FgFactor);
+                    SelfCoverageSum += Overlap * AreaW * (1.0 - FgFactor);
                 }
             }
         }
@@ -198,15 +222,18 @@ PSOutput mainPS(VSOutput Input)
     float3 FarColor = (FarWeightSum > 1e-4) ? (FarAccum / FarWeightSum) : CenterData.rgb;
     float FarAlpha = saturate(FarWeightSum);
 
-    float3 NearColor = (NearWeightSum > 1e-4) ? (NearAccum / NearWeightSum) : float3(0.0, 0.0, 0.0);
-    // 커버리지 스케일: 전경 실루엣 바깥은 부드럽게 페이드, 전경 내부는 불투명(1.0)
-    float NearAlpha = saturate((NearCoverageSum / (float)max(TotalSamples, 1)) * 2.2);
-    if (CenterCoC < -1.0)
-    {
-        NearAlpha = max(NearAlpha, saturate((-CenterCoC - 0.5) / 1.5));
-    }
+    // 커버리지 = 면적 정규화된 샘플 합 / 샘플 수 (겹마다 따로).
+    float InvTotal = 1.0 / (float)max(TotalSamples, 1);
+    float3 SelfColor = (SelfWeightSum > 1e-4) ? (SelfAccum / SelfWeightSum) : float3(0.0, 0.0, 0.0);
+    float3 FgColor = (FgWeightSum > 1e-4) ? (FgAccum / FgWeightSum) : float3(0.0, 0.0, 0.0);
+    float SelfAlpha = saturate(SelfCoverageSum * InvTotal);
+    float FgAlpha = saturate(FgCoverageSum * InvTotal);
+
+    // premultiplied over: 앞 물체(Fg)가 중심 표면(Self) 위에 온다
+    float3 NearPremul = FgColor * FgAlpha + SelfColor * SelfAlpha * (1.0 - FgAlpha);
+    float NearAlpha = FgAlpha + SelfAlpha * (1.0 - FgAlpha);
 
     Out.FarLayer = float4(FarColor * FarAlpha, FarAlpha);
-    Out.NearLayer = float4(NearColor * NearAlpha, NearAlpha);
+    Out.NearLayer = float4(NearPremul, NearAlpha);
     return Out;
 }

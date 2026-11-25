@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Math/Vector.h"
+#include "ClothingSystem/ClothCollisionData.h"
 
 class UClothingAssetCommon;
 
@@ -27,6 +28,9 @@ struct FClothingActorNv
 
 	// 삼각형 감김 순서로 구한 면 노멀이 메시 노멀과 반대면 true. 결과 노멀을 뒤집는다
 	bool bFlipNormals = false;
+
+	// Physics Asset에서 뽑은 충돌체 (천 근처의 구·캡슐만, NvCloth 한도 32개 안에서). 매 프레임 뼈를 따라 옮긴다
+	FClothCollisionData Collisions;
 
 	// 이번 프레임 스키닝한 시뮬레이션 정점 위치 (시뮬레이션 공간 = 컴포넌트 회전·위치 기준, 스케일 적용)
 	// 고정 입자와 Max Distance 구의 중심으로 쓴다

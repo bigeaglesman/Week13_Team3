@@ -1667,6 +1667,11 @@ void FDetailsPanel::OnRender()
 					};
 
 					ImGui::SeparatorText("Lens / Camera");
+					float FOV = CameraComponent->GetFieldOfView();
+					if (ImGui::DragFloat("Field Of View (V, deg)", &FOV, 0.1f, 5.0f, 120.0f, "%.1f"))
+					{
+						CameraComponent->SetFieldOfView(FOV);
+					}
 					DrawOverrideFloat("Aperture (F-stop)", "##OverrideFstop", PP.bOverride_DepthOfFieldFstop, PP.DepthOfFieldFstop, 0.05f, 0.7f, 32.0f, "%.2f");
 					DrawOverrideFloat("Min F-stop", "##OverrideMinFstop", PP.bOverride_DepthOfFieldMinFstop, PP.DepthOfFieldMinFstop, 0.05f, 0.7f, 32.0f, "%.2f");
 					DrawOverrideInt("Diaphragm Blade Count", "##OverrideBladeCount", PP.bOverride_DepthOfFieldBladeCount, PP.DepthOfFieldBladeCount, 4, 16);

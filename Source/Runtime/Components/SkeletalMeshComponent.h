@@ -129,6 +129,10 @@ public:
 	// 섹션이 없거나 만들 수 없으면 nullptr
 	UClothingAssetCommon* GetOrCreateClothingAsset() const;
 
+	// 천이 부딪힐 Physics Asset. 기본은 이 메시의 것 (캐릭터 메시 안의 망토 섹션).
+	// 단일 천(UClothComponent)은 자기 메시가 천뿐이라 다르게 고른다.
+	virtual UPhysicsAsset* GetClothCollisionPhysicsAsset() const { return GetOrCreatePhysicsAsset(); }
+
 protected:
 	// 천 시뮬레이션을 만들고 지운다. UE의 OnRegister / OnUnregister 안의 천 처리 + ReleaseAllClothingResources
 	virtual void OnRegister() override;

@@ -183,7 +183,7 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
     EngineData.mPeakTorque = bMonsterTruck ? 950.0f : 420.0f;
     EngineData.mMaxOmega = bMonsterTruck ? 540.0f : 650.0f;
     EngineData.mDampingRateFullThrottle = 0.15f;
-    EngineData.mDampingRateZeroThrottleClutchEngaged = 2.0f;
+    EngineData.mDampingRateZeroThrottleClutchEngaged = bMonsterTruck ? 2.0f : 1.0f;
     EngineData.mDampingRateZeroThrottleClutchDisengaged = 0.35f;
 
     // 엔진 회전 속도에 따른 정규화 토크 커브
@@ -216,17 +216,20 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
     ClutchData.mAccuracyMode = PxVehicleClutchAccuracyMode::eBEST_POSSIBLE;
 
     PxVehicleAutoBoxData AutoBoxData;
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIRST, 0.94f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eSECOND, 0.94f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eTHIRD, 0.94f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eFOURTH, 0.94f);
-    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIFTH, 0.94f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eSECOND, 0.58f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eTHIRD, 0.58f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eFOURTH, 0.58f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eFIFTH, 0.58f);
-    AutoBoxData.setDownRatios(PxVehicleGearsData::eSIXTH, 0.58f);
-    AutoBoxData.setLatency(0.35f);
+    const float AutoBoxUpRatio = bMonsterTruck ? 0.94f : 0.85f;
+    const float AutoBoxDownRatio = bMonsterTruck ? 0.58f : 0.42f;
+
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIRST, AutoBoxUpRatio);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eSECOND, AutoBoxUpRatio);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eTHIRD, AutoBoxUpRatio);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFOURTH, AutoBoxUpRatio);
+    AutoBoxData.setUpRatios(PxVehicleGearsData::eFIFTH, AutoBoxUpRatio);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eSECOND, AutoBoxDownRatio);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eTHIRD, AutoBoxDownRatio);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFOURTH, AutoBoxDownRatio);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eFIFTH, AutoBoxDownRatio);
+    AutoBoxData.setDownRatios(PxVehicleGearsData::eSIXTH, AutoBoxDownRatio);
+    AutoBoxData.setLatency(bMonsterTruck ? 0.35f : 0.45f);
 
     DriveData.setEngineData(EngineData);
     DriveData.setGearsData(GearsData);

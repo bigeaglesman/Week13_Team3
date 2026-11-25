@@ -26,6 +26,7 @@
 #include "UI/TextBlock.h"
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/Pawn.h"
 #include "Camera/CameraComponent.h"
 #include "Asset/AssetManager.h"
 #include "Components/AudioComponent.h"
@@ -230,6 +231,13 @@ namespace
 		throw sol::error("Actor does not have a SpringArmComponent.");
 	}
 
+	UCameraComponent& CameraOf(const FLuaActorRef& Ref)
+	{
+		for (UActorComponent* Comp : Deref(Ref).GetComponents())
+			if (auto* Camera = Cast<UCameraComponent>(Comp)) return *Camera;
+		throw sol::error("Actor does not have a CameraComponent.");
+	}
+
 	void RegisterActor(sol::state& Lua)
 	{
 		Lua.set_function("SetVehicleDriverInputEnabled", [](const FLuaActorRef& Ref, bool bEnabled)
@@ -323,6 +331,35 @@ namespace
 				ParticleComponent(Ref).SetSubUVSize(Cols, Rows);
 			},
 			"SetParticleFrameRate", [](const FLuaActorRef& Ref, float FPS) { ParticleComponent(Ref).SetFrameRate(FPS); },
+
+			// 카메라 렌즈: 다른 카메라의 FOV와 포스트 프로세스(DoF) 설정을 이 액터의 카메라로 복사한다.
+			// 언리얼에서 CameraComponent->PostProcessSettings / FieldOfView를 대입하는 것과 같다.
+			"CopyCameraSettingsFrom", [](const FLuaActorRef& Ref, const FLuaActorRef& Source)
+			{
+				UCameraComponent& Dst = CameraOf(Ref);
+				const UCameraComponent& Src = CameraOf(Source);
+				Dst.SetFieldOfView(Src.GetFieldOfView());
+				Dst.PostProcessSettings = Src.PostProcessSettings;
+				Dst.PostProcessBlendWeight = Src.PostProcessBlendWeight;
+			},
+			"CameraFocalDistance", sol::property(
+				[](const FLuaActorRef& Ref) { return CameraOf(Ref).PostProcessSettings.DepthOfFieldFocalDistance; },
+				[](const FLuaActorRef& Ref, float Meters)
+				{
+					FPostProcessSettings& PP = CameraOf(Ref).PostProcessSettings;
+					PP.bOverride_DepthOfFieldFocalDistance = true;
+					PP.DepthOfFieldFocalDistance = std::max(Meters, 0.0f);
+				}),
+			"CameraFieldOfView", sol::property(
+				[](const FLuaActorRef& Ref) { return CameraOf(Ref).GetFieldOfView(); },
+				[](const FLuaActorRef& Ref, float Degrees) { CameraOf(Ref).SetFieldOfView(std::clamp(Degrees, 1.0f, 170.0f)); }),
+			// 카메라 월드 위치와 앞 방향 (자동 초점 레이캐스트용)
+			"GetCameraViewPoint", [](const FLuaActorRef& Ref)
+			{
+				const UCameraComponent& Camera = CameraOf(Ref);
+				const FVector Forward = Camera.GetWorldRotation().Quaternion().GetForwardVector();
+				return std::make_tuple(Camera.GetWorldLocation(), Forward);
+			},
 			"PlayParticle", [](const FLuaActorRef& Ref, sol::optional<float> Scale) { ParticleComponent(Ref).PlayOnce(Scale.value_or(1.0f)); },
 
 			"Location", sol::property(
@@ -474,6 +511,18 @@ namespace
 
 				PCM->SetViewTarget(TargetActor, Params);
 				return true;
+			});
+
+		// 언리얼 UGameplayStatics::GetPlayerPawn
+		Lua.set_function("GetPlayerPawn",
+			[](sol::this_environment Env) -> sol::optional<FLuaActorRef>
+			{
+				AActor* Owner = OwnerFromEnv(Env);
+				UWorld* World = Owner ? Owner->GetWorld() : nullptr;
+				APlayerController* PC = World ? World->GetPlayerController() : nullptr;
+				APawn* Pawn = PC ? PC->GetPawn() : nullptr;
+				if (!Pawn) return sol::nullopt;
+				return FLuaActorRef::Make(Pawn);
 			});
 
 		Lua.set_function("IsCameraBlending",

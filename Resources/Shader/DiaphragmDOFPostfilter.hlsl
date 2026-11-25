@@ -45,6 +45,7 @@ VSOutput mainVS(uint VertexID : SV_VertexID)
 }
 
 // 3x3 텐트 필터(하프 해상도)로 Gather 샘플 사이의 미세 구멍과 TAA 부재 노이즈를 부드럽게 정리한다.
+// 입력은 premultiplied(rgb = 색 × a)라서 rgb와 a를 그대로 평균내도 커버리지가 0인 텍셀의 색이 섞이지 않는다.
 PSOutput mainPS(VSOutput Input)
 {
     float2 HalfTexelSize = float2(InvHalfWidth, InvHalfHeight);

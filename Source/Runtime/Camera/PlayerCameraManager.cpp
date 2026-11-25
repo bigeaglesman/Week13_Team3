@@ -151,11 +151,12 @@ void APlayerCameraManager::UpdateCamera(float DeltaTime)
 			const float BlendPct = BlendParams.GetBlendAlpha(TimePct);
 			NewPOV.BlendViewInfo(PendingViewTarget.POV, BlendPct);
 
-			// 언리얼 방식: 나가는 카메라(1 - BlendPct) → 들어오는 카메라(BlendPct) 순으로 캐시에 쌓는다.
-			// 한쪽 카메라만 bOverride가 켜져 있어도 전환 끝에서 끊기지 않고 부드럽게 이어진다.
+			// 언리얼 방식: 나가는 카메라(원래 가중치) → 들어오는 카메라(가중치 × BlendPct) 순으로 캐시에 쌓는다.
+			// 덮어쓰기는 순서대로 Lerp되므로 결과는 Lerp(Lerp(기본값, A, 1), B, BlendPct) = A→B 보간이다.
+			// 나가는 쪽에 (1 - BlendPct)를 곱하면 전환 중간에 기본값이 섞여 값이 꺼진다.
 			if (ViewTarget.POV.PostProcessBlendWeight > 0.0f)
 			{
-				AddCachedPPBlend(ViewTarget.POV.PostProcessSettings, ViewTarget.POV.PostProcessBlendWeight * (1.0f - BlendPct));
+				AddCachedPPBlend(ViewTarget.POV.PostProcessSettings, ViewTarget.POV.PostProcessBlendWeight);
 			}
 			if (PendingViewTarget.POV.PostProcessBlendWeight > 0.0f)
 			{

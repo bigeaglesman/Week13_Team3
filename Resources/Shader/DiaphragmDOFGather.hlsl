@@ -35,8 +35,10 @@ struct VSOutput
 
 struct PSOutput
 {
-    float4 FarLayer  : SV_Target0; // rgb = 배경 선형 색, a = 누적 가중치 여부(커버리지)
-    float4 NearLayer : SV_Target1; // rgb = 전경 선형 색, a = 전경 커버리지(0~1)
+    // 두 레이어 모두 premultiplied(rgb = 색 × a)로 저장한다.
+    // Postfilter/Recombine의 bilinear 필터가 a = 0인 텍셀의 색(초점 맞은 물체 색)을 섞어 테두리를 만들지 않게 한다.
+    float4 FarLayer  : SV_Target0; // rgb = 배경 선형 색 × a, a = 커버리지
+    float4 NearLayer : SV_Target1; // rgb = 전경 선형 색 × a, a = 전경 커버리지(0~1)
 };
 
 VSOutput mainVS(uint VertexID : SV_VertexID)
@@ -50,6 +52,13 @@ VSOutput mainVS(uint VertexID : SV_VertexID)
 float GetLuma(float3 Color)
 {
     return dot(Color, float3(0.299, 0.587, 0.114));
+}
+
+// Interleaved Gradient Noise (Jimenez 2014). 픽셀마다 0~1 값을 주어 샘플 패턴을 흔든다.
+// 고정 링 패턴이 큰 보케에서 점선·고리로 보이는 것을 노이즈로 바꾸고, Postfilter가 그 노이즈를 정리한다.
+float InterleavedGradientNoise(float2 Pixel)
+{
+    return frac(52.9829189 * frac(dot(Pixel, float2(0.06711056, 0.00583715))));
 }
 
 // 조리개 날 수(N)에 따라 원판 반지름 r을 N각형 다각형으로 접는다.
@@ -76,9 +85,14 @@ PSOutput mainPS(VSOutput Input)
     float CenterFarCoC = max(CenterCoC, 0.0);
     float DilatedNearCoC = NearCoCTileDilated.SampleLevel(LinearClampSampler, CenterUV, 0);
 
-    // 4개 동심원 링 (1 + 8 + 16 + 24 = 49 샘플)
-    const int RingCount = 3;
-    const int SamplesPerRing[3] = { 8, 16, 24 };
+    // 중심 + 4개 동심원 링 (1 + 8 + 16 + 24 + 32 = 81 샘플)
+    const int RingCount = 4;
+    const int SamplesPerRing[4] = { 8, 16, 24, 32 };
+
+    // 픽셀마다 각도와 링 반지름을 흔든다. 다각형 모양은 절대 각도(ShapeDiaphragm)로 정해지므로
+    // 각도를 돌려도 보케 모양은 그대로고 샘플 위치만 바뀐다.
+    const float AngleJitter = InterleavedGradientNoise(Input.Position.xy);
+    const float RadiusJitter = InterleavedGradientNoise(Input.Position.xy + float2(17.0, 59.0));
 
     float3 FarAccum = float3(0.0, 0.0, 0.0);
     float  FarWeightSum = 0.0;
@@ -114,13 +128,14 @@ PSOutput mainPS(VSOutput Input)
         [unroll]
         for (int Ring = 0; Ring < RingCount; ++Ring)
         {
-            float RingNorm = (float)(Ring + 1) / (float)RingCount;
+            // 링 반지름을 [Ring + 0.5, Ring + 1] / RingCount 안에서 흔든다. 바깥 링은 커널 끝(1.0)까지 닿는다.
+            float RingNorm = ((float)Ring + lerp(0.5, 1.0, RadiusJitter)) / (float)RingCount;
             int NumSamples = SamplesPerRing[Ring];
             float AngleStep = TWO_PI / (float)NumSamples;
 
             for (int i = 0; i < NumSamples; ++i)
             {
-                float Angle = (i + 0.5) * AngleStep;
+                float Angle = ((float)i + AngleJitter) * AngleStep;
                 float2 OffsetHalfPx = ShapeDiaphragm(RingNorm * CenterFarCoC, Angle);
                 float SampleDist = length(OffsetHalfPx);
 
@@ -150,14 +165,15 @@ PSOutput mainPS(VSOutput Input)
         [unroll]
         for (int Ring = 0; Ring < RingCount; ++Ring)
         {
-            float RingNorm = (float)(Ring + 1) / (float)RingCount;
+            // 링 반지름을 [Ring + 0.5, Ring + 1] / RingCount 안에서 흔든다. 바깥 링은 커널 끝(1.0)까지 닿는다.
+            float RingNorm = ((float)Ring + lerp(0.5, 1.0, RadiusJitter)) / (float)RingCount;
             int NumSamples = SamplesPerRing[Ring];
             float AngleStep = TWO_PI / (float)NumSamples;
             TotalSamples += NumSamples;
 
             for (int i = 0; i < NumSamples; ++i)
             {
-                float Angle = (i + 0.5) * AngleStep;
+                float Angle = ((float)i + AngleJitter) * AngleStep;
                 float2 OffsetHalfPx = ShapeDiaphragm(RingNorm * DilatedNearCoC, Angle);
                 float SampleDist = length(OffsetHalfPx);
 
@@ -190,7 +206,7 @@ PSOutput mainPS(VSOutput Input)
         NearAlpha = max(NearAlpha, saturate((-CenterCoC - 0.5) / 1.5));
     }
 
-    Out.FarLayer = float4(FarColor, FarAlpha);
-    Out.NearLayer = float4(NearColor, NearAlpha);
+    Out.FarLayer = float4(FarColor * FarAlpha, FarAlpha);
+    Out.NearLayer = float4(NearColor * NearAlpha, NearAlpha);
     return Out;
 }

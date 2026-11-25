@@ -84,13 +84,17 @@ float4 mainPS(VSOutput Input) : SV_Target
     float4 FarSample = HalfFarFiltered.SampleLevel(LinearClampSampler, UV, 0);
     float4 NearSample = HalfNearFiltered.SampleLevel(LinearClampSampler, UV, 0);
 
+    // 레이어는 premultiplied(rgb = 색 × a)로 들어온다. bilinear 업샘플 뒤에 a로 나눠 원래 색을 되찾는다.
+    // a = 0인 텍셀(초점 맞은 물체 자리)은 색이 0이라 경계 너머로 색이 번지지 않는다.
+    float3 FarColor = FarSample.rgb / max(FarSample.a, 1e-4);
+
     // 배경 합성: CoC가 0.25px 이하이면 선명한 원본 100%, 2.0px 이상이면 하프 배경 100%
     float FarBlend = smoothstep(0.25, 2.0, CoCPx) * saturate(FarSample.a);
-    float3 ResultLinear = lerp(SharpLinear, FarSample.rgb, FarBlend);
+    float3 ResultLinear = lerp(SharpLinear, FarColor, FarBlend);
 
-    // 전경 합성: 전경 레이어를 최상단에 덮어 실루엣 바깥 번짐 표현
+    // 전경 합성(premultiplied over): 전경 레이어를 최상단에 덮어 실루엣 바깥 번짐 표현
     float NearBlend = saturate(NearSample.a);
-    ResultLinear = lerp(ResultLinear, NearSample.rgb, NearBlend);
+    ResultLinear = ResultLinear * (1.0 - NearBlend) + NearSample.rgb;
 
     float3 FinalColor = pow(max(ResultLinear, 0.0), 1.0 / DisplayGamma);
     return float4(FinalColor, SceneSample.a);

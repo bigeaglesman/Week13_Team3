@@ -820,17 +820,18 @@ bool FPhysicsScene::GetVehicleWheelStates(physx::PxVehicleWheels* Vehicle, FVehi
 		State.WheelWidth = WheelData.mWidth;
 
 		State.SuspensionJounce = WheelResult.suspJounce;
-		State.SuspensionJounceVelocity = SuspensionSample.JounceVelocity;
 		State.SuspensionSpringForce = WheelResult.suspSpringForce;
 
 		const PxVec3 SuspensionDirectionWorld = ChassisPose.q.rotate(Vehicle->mWheelsSimData.getSuspTravelDirection(i));
 		const PxReal GravityAlongSuspension = PxMax(0.0f, Gravity.dot(SuspensionDirectionWorld));
 		const PxVec3 GravityPerpendicular = GravityAlongSuspension > 0.0f ? Gravity - SuspensionDirectionWorld * GravityAlongSuspension : PxVec3(0.0f, 0.0f, 0.0f);
 		const PxReal SpringForceAlongSuspension = PxMax(0.0f, SuspensionData.mSprungMass * GravityAlongSuspension + SuspensionData.mSpringStrength * WheelResult.suspJounce);
-		const PxReal DamperForceAlongSuspension = SuspensionData.mSpringDamperRate * SuspensionSample.JounceVelocity;
 
 		State.SuspensionSpringComponent = WheelResult.tireContactNormal.dot(-SuspensionDirectionWorld * SpringForceAlongSuspension - GravityPerpendicular * SuspensionData.mSprungMass);
-		State.SuspensionDamperComponent = WheelResult.tireContactNormal.dot(-SuspensionDirectionWorld * DamperForceAlongSuspension);
+
+		const PxReal DamperProjection = WheelResult.tireContactNormal.dot(-SuspensionDirectionWorld);
+		State.SuspensionDamperComponent = WheelResult.suspSpringForce - State.SuspensionSpringComponent;
+		State.SuspensionJounceVelocity = SuspensionData.mSpringDamperRate > 0.0f && PxAbs(DamperProjection) > 1e-4f ? State.SuspensionDamperComponent / (SuspensionData.mSpringDamperRate * DamperProjection) : 0.0f;
 
 		State.TireFriction = WheelResult.tireFriction;
 		State.LongitudinalSlip = WheelResult.longitudinalSlip;

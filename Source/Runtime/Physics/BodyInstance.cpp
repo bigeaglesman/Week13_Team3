@@ -114,6 +114,12 @@ void FBodyInstance::InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom
 	}
 	for (const FKSphylElem& Elem : Geom.SphylElems)
 	{
+		// 원통이 사라지면 두 반구가 구 하나가 된다. PhysX 캡슐은 양수 halfHeight만 허용한다.
+		if (Elem.Length == 0.0f)
+		{
+			AddShape(PxSphereGeometry(Elem.Radius), PxTransform(ToPx(Elem.Center)));
+			continue;
+		}
 		// PhysX halfHeight는 원기둥 부분의 절반
 		AddShape(PxCapsuleGeometry(Elem.Radius, Elem.Length * 0.5f), PxTransform(ToPx(Elem.Center), ToPx(Elem.Rotation).getNormalized() * CapsuleXToZ));
 	}

@@ -26,6 +26,45 @@
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetUtils.h"
 #include "Physics/PhysicsAssetFile.h"
+#include "ClothingSystem/ClothingSimulationNv.h"
+
+void USkeletalMeshComponent::OnRegister()
+{
+	Super::OnRegister();
+
+	// 메시에 천이 있든 없든 Solver는 하나 만들어 둔다 (빈 Solver는 Simulate에서 바로 돌아온다). UE도 같다.
+	// NvCloth 초기화가 실패했으면 Initialize가 false라서 천 없이 돈다.
+	ClothingSimulation = new FClothingSimulationNv();
+	if (!ClothingSimulation->Initialize())
+	{
+		delete ClothingSimulation;
+		ClothingSimulation = nullptr;
+		return;
+	}
+	ClothingSimulationContext = new FClothingSimulationContextNv();
+}
+
+void USkeletalMeshComponent::OnUnregister()
+{
+	// 컨텍스트, 시뮬레이션 순으로 지운다. Solver는 시뮬레이션 소멸자(Shutdown)에서 지워진다.
+	delete ClothingSimulationContext;
+	ClothingSimulationContext = nullptr;
+	delete ClothingSimulation;
+	ClothingSimulation = nullptr;
+
+	Super::OnUnregister();
+}
+
+void USkeletalMeshComponent::TickClothing(float DeltaTime)
+{
+	if (!ClothingSimulation || !ClothingSimulationContext || !GetSkeletalMesh())
+	{
+		return;
+	}
+
+	ClothingSimulation->FillContext(this, DeltaTime, *ClothingSimulationContext);
+	ClothingSimulation->Simulate(*ClothingSimulationContext);
+}
 
 UPhysicsAsset* USkeletalMeshComponent::GetOrCreatePhysicsAsset() const
 {
@@ -336,6 +375,9 @@ void USkeletalMeshComponent::TickComponent(float DeltaTime)
 	{
 		UpdateKinematicBonesToAnim();
 	}
+
+	// 천은 이번 프레임 뼈 행렬(Super::TickComponent에서 갱신)을 보고 돈다.
+	TickClothing(DeltaTime);
 }
 
 const TArray<FBoneInfo>& USkeletalMeshComponent::GetBones() const
@@ -692,6 +734,10 @@ USkeletalMeshComponent::USkeletalMeshComponent()
 
 USkeletalMeshComponent::~USkeletalMeshComponent()
 {
+	// 등록 해제 없이 바로 지워지는 경우 (에셋 미리보기 등)
+	delete ClothingSimulationContext;
+	delete ClothingSimulation;
+
     if (ManagedAnimGraph)
     {
         if (AnimInstance == ManagedAnimGraph.get())

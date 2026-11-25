@@ -13,6 +13,8 @@ class FPhysicsScene;
 class UPhysicsAsset;
 class FConstraintInstance;
 class USkeletalMeshComponent;
+class FClothingSimulationNv;
+struct FClothingSimulationContextNv;
 
 // 물리 이후에 도는 두 번째 틱. 래그돌이 시뮬레이션 중일 때만 등록해서 물리 결과를 뼈에 반영한다.
 // UE의 FSkeletalMeshComponentEndPhysicsTickFunction 자리다.
@@ -104,7 +106,17 @@ public:
 	// ComponentSpaceTransforms를 덮어쓰므로 RefreshBoneTransforms 안에서 부른다. UE의 BlendPhysicsBones
 	void BlendPhysicsBones();
 
+	// ---- 천 (NvCloth) ----
+	FClothingSimulationNv* GetClothingSimulation() const { return ClothingSimulation; }
+
 protected:
+	// 천 시뮬레이션을 만들고 지운다. UE의 OnRegister / OnUnregister 안의 천 처리 + ReleaseAllClothingResources
+	virtual void OnRegister() override;
+	virtual void OnUnregister() override;
+
+	// 애니메이션으로 뼈가 갱신된 뒤 천을 한 스텝 돌린다. UE의 TickClothing
+	void TickClothing(float DeltaTime);
+
 	// BodyInstance의 bEnablePhysicsCollision 또는 bSimulatePhysics가 켜져 있으면 바디 하나 대신 Physics Asset대로 뼈마다 바디를 만든다.
 	// 메시에 Physics Asset이 없으면 뼈 모양으로 자동 생성해 붙인다.
 	virtual bool ShouldCreatePhysicsState() const override;
@@ -149,4 +161,8 @@ private:
 
 	FSkeletalMeshComponentEndPhysicsTickFunction EndPhysicsTickFunction;
 	bool bRagdollSimulating = false;
+
+	// 컴포넌트마다 하나인 천 시뮬레이션과 매 프레임 입력. UE의 ClothingSimulation / ClothingSimulationContext
+	FClothingSimulationNv*        ClothingSimulation = nullptr;
+	FClothingSimulationContextNv* ClothingSimulationContext = nullptr;
 };

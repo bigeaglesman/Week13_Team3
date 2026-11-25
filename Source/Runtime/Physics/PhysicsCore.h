@@ -39,7 +39,8 @@ private:
 	physx::PxPvd*                  Pvd = nullptr;            // PhysX Visual Debugger 연결 (127.0.0.1:5425)
 	physx::PxPvdTransport*         PvdTransport = nullptr;
 	physx::PxPhysics*              Physics = nullptr;
-	bool                           bVehicleSDKInitialized = false;
+	bool						   bExtensionsInitialized = false;
+	bool						   bVehicleSDKInitialized = false;
 	physx::PxCooking*              Cooking = nullptr;
 	physx::PxDefaultCpuDispatcher* Dispatcher = nullptr;
 	physx::PxMaterial*             DefaultMaterial = nullptr;

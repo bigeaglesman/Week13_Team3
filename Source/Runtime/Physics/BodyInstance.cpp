@@ -37,6 +37,12 @@ void FBodyInstance::InitBody(UPrimitiveComponent* InOwner, const FKAggregateGeom
 
 	// 재질: 지정한 UPhysicalMaterial이 있으면 그걸, 없거나 값이 잘못됐으면 엔진 기본 재질
 	PxMaterial* Material = PhysMaterialOverride ? PhysMaterialOverride->GetPxMaterial() : nullptr;
+
+	if (!Material && InOwner->bIsVehicleDrivableSurface)
+	{
+		Material = Scene->GetVehicleSurfaceMaterial(InOwner->VehicleSurfaceType);
+	}
+
 	if (!Material)
 	{
 		Material = Core.GetDefaultMaterial();

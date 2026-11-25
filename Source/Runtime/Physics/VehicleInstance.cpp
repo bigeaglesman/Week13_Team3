@@ -144,9 +144,9 @@ bool FVehicleInstance::InitVehicle(FPhysicsScene* InPhysicsScene, const FTransfo
         TireData.mFrictionVsSlipGraph[0][0] = 0.0f;
         TireData.mFrictionVsSlipGraph[0][1] = 1.0f;
         TireData.mFrictionVsSlipGraph[1][0] = 0.10f;
-        TireData.mFrictionVsSlipGraph[1][1] = 1.15f;
+        TireData.mFrictionVsSlipGraph[1][1] = 1.10f;
         TireData.mFrictionVsSlipGraph[2][0] = 1.00f;
-        TireData.mFrictionVsSlipGraph[2][1] = 0.92f;
+        TireData.mFrictionVsSlipGraph[2][1] = 0.98f;
 
         WheelsSimData->setTireData(i, TireData);
 

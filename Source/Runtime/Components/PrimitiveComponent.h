@@ -127,6 +127,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool bIsVehicleDrivableSurface = false;
 
+	UPROPERTY(EditAnywhere)
+	EVehicleSurfaceType VehicleSurfaceType = EVehicleSurfaceType::Asphalt;
+
 	// 물리 바디의 도형. 도형이 없는 컴포넌트는 false를 돌려 바디를 만들지 않는다.
 	// Shape 컴포넌트는 자기 크기로 채운다. 스켈레탈 메시는 이걸 쓰지 않고 UBodySetup의 도형으로 뼈마다 바디를 만든다.
 	virtual bool GetBodyGeometry(FKAggregateGeom& OutGeom) const { return false; }

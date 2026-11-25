@@ -223,12 +223,19 @@ void UVehicleHUD::NativeTick(float DeltaTime)
             continue;
         }
 
+        if (!Telemetry->bHasContact)
+        {
+            const char* ContactStatus = Telemetry->bIsInAir ? "AIR" : "NO CONTACT";
+            WheelSuspensionText[i]->SetText(std::string(WheelNames[i]) + " | " + ContactStatus + " | JDOT_EST N/A | SPR_EST N/A | DMP_EST N/A | TOTAL N/A");
+            continue;
+        }
+
         std::ostringstream Stream;
         Stream << std::fixed << std::showpos << std::setprecision(3)
             << WheelNames[i]
             << " | JDOT_EST " << Telemetry->SuspensionJounceVelocityEstimate << " m/s"
-            << " | SPR " << std::setprecision(0) << Telemetry->SuspensionSpringComponent << " N"
-            << " | DMP " << Telemetry->SuspensionDamperComponent << " N"
+            << " | SPR_EST " << std::setprecision(0) << Telemetry->SuspensionSpringComponent << " N"
+            << " | DMP_EST " << Telemetry->SuspensionDamperComponent << " N"
             << std::noshowpos << " | TOTAL " << Telemetry->SuspensionTotalForce << " N";
 
         WheelSuspensionText[i]->SetText(Stream.str());

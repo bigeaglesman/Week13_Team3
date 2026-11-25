@@ -15,7 +15,10 @@ namespace physx
 	class PxScene;
 	class PxVehicleWheels;
 	class PxRigidActor;
+	class PxMaterial;
 }
+
+enum class EVehicleSurfaceType : uint8;
 
 struct FVehicleSceneQueryData;
 
@@ -136,6 +139,8 @@ public:
 	bool SetVehicleGear(physx::PxVehicleWheels* Vehicle, int32 Gear, bool bUseAutoGears, bool bForce);
 	bool SetVehicleAutomaticGears(physx::PxVehicleWheels* Vehicle, bool bUseAutoGears);
 	bool SetVehicleDriveMode(physx::PxVehicleWheels* Vehicle, EVehicleDriveMode Mode);
+	bool RefreshVehicleFrictionPairs();
+	physx::PxMaterial* GetVehicleSurfaceMaterial(EVehicleSurfaceType SurfaceType) const;
 
 	static constexpr float FixedStep = 1.0f / 60.0f;
 	static constexpr int   MaxSubSteps = 4;   // 이보다 밀리면 남은 시간은 버린다

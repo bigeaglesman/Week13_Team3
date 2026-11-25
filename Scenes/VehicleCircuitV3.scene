@@ -142,7 +142,8 @@
                   "bNotifyRigidBodyCollision": false,
                   "bSimulatePhysics": false
                 },
-                "bIsVehicleDrivableSurface": true
+                "bIsVehicleDrivableSurface": true,
+                "VehicleSurfaceType": "Grass"
               }
             }
           ],
@@ -258,7 +259,8 @@
                   "bNotifyRigidBodyCollision": false,
                   "bSimulatePhysics": false
                 },
-                "bIsVehicleDrivableSurface": true
+                "bIsVehicleDrivableSurface": true,
+                "VehicleSurfaceType": "Asphalt"
               }
             }
           ],

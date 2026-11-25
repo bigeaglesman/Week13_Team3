@@ -56,7 +56,7 @@ public:
 	// 값이 바뀌었으면 이미 만든 PxMaterial에 다시 넣는다.
 	void UpdatePxMaterial();
 
-	virtual void PostEditChangeProperty(const FProperty& Property) override { UpdatePxMaterial(); }
+	virtual void PostEditChangeProperty(const FProperty& Property) override;
 
 private:
 	physx::PxMaterial* PxMaterialHandle = nullptr;

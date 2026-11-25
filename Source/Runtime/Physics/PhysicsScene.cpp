@@ -44,6 +44,8 @@ struct FVehicleSceneQueryData
 	PxBatchQuery* BatchQuery = nullptr;
 	PxVehicleDrivableSurfaceToTireFrictionPairs* FrictionPairs = nullptr;
 
+	PxMaterial* SurfaceMaterials[5] = {};
+
 	std::vector<PxVehicleWheels*> Vehicles;
 	std::vector<USceneComponent*> SyncComponents;
 	std::vector<PxRaycastQueryResult> RaycastResults;
@@ -62,45 +64,76 @@ struct FVehicleSceneQueryData
 			FrictionPairs->release();
 			FrictionPairs = nullptr;
 		}
+
+		for (PxU32 i = 1; i < 5; ++i)
+		{
+			if (SurfaceMaterials[i])
+			{
+				SurfaceMaterials[i]->release();
+				SurfaceMaterials[i] = nullptr;
+			}
+		}
 	}
 
-	bool Initialize(PxMaterial* DefaultMaterial)
+	bool Initialize(PxPhysics* Physics, PxMaterial* DefaultMaterial)
 	{
-		if (!DefaultMaterial)
+		if (!Physics || !DefaultMaterial)
 		{
 			return false;
 		}
 
-		FrictionPairs = PxVehicleDrivableSurfaceToTireFrictionPairs::allocate(1, PxVehicleDrivableSurfaceToTireFrictionPairs::eMAX_NB_SURFACE_TYPES);
-		if (!FrictionPairs)
+		SurfaceMaterials[0] = DefaultMaterial;
+
+		for (PxU32 i = 1; i < 5; ++i)
 		{
-			return false;
+			SurfaceMaterials[i] = Physics->createMaterial(0.5f, 0.5f, 0.1f);
+
+			if (!SurfaceMaterials[i])
+			{
+				return false;
+			}
 		}
 
+		return RebuildFrictionPairs();
+	}
+
+	bool RebuildFrictionPairs()
+	{
 		std::vector<const PxMaterial*> Materials;
 		std::vector<PxVehicleDrivableSurfaceType> SurfaceTypes;
 
-		Materials.push_back(DefaultMaterial);
+		for (PxU32 i = 0; i < 5; ++i)
+		{
+			if (!SurfaceMaterials[i])
+			{
+				return false;
+			}
 
-		PxVehicleDrivableSurfaceType DefaultSurfaceType;
-		DefaultSurfaceType.mType = static_cast<PxU32>(EVehicleSurfaceType::Asphalt);
-		SurfaceTypes.push_back(DefaultSurfaceType);
+			Materials.push_back(SurfaceMaterials[i]);
+
+			PxVehicleDrivableSurfaceType SurfaceType;
+			SurfaceType.mType = i;
+			SurfaceTypes.push_back(SurfaceType);
+		}
 
 		for (TObjectIterator<UPhysicalMaterial> It; It; ++It)
 		{
 			UPhysicalMaterial* PhysicalMaterial = *It;
+
 			if (!PhysicalMaterial)
 			{
 				continue;
 			}
 
 			PxMaterial* Material = PhysicalMaterial->GetPxMaterial();
+
 			if (!Material)
 			{
 				continue;
 			}
 
 			const PxU32 SurfaceType = static_cast<PxU32>(PhysicalMaterial->VehicleSurfaceType);
+
 			if (SurfaceType > static_cast<PxU32>(EVehicleSurfaceType::Metal))
 			{
 				continue;
@@ -124,14 +157,27 @@ struct FVehicleSceneQueryData
 			SurfaceTypes.push_back(SurfaceTypeData);
 		}
 
-		FrictionPairs->setup(1, static_cast<PxU32>(Materials.size()), Materials.data(), SurfaceTypes.data());
+		PxVehicleDrivableSurfaceToTireFrictionPairs* NewFrictionPairs = PxVehicleDrivableSurfaceToTireFrictionPairs::allocate(1, PxVehicleDrivableSurfaceToTireFrictionPairs::eMAX_NB_SURFACE_TYPES);
 
-		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Asphalt), 0, 1.3f);
-		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Dirt), 0, 0.72f);
-		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Ice), 0, 0.15f);
-		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Grass), 0, 0.55f);
-		FrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Metal), 0, 0.85f);
+		if (!NewFrictionPairs)
+		{
+			return false;
+		}
 
+		NewFrictionPairs->setup(1, static_cast<PxU32>(Materials.size()), Materials.data(), SurfaceTypes.data());
+
+		NewFrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Asphalt), 0, 1.3f);
+		NewFrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Dirt), 0, 0.72f);
+		NewFrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Ice), 0, 0.15f);
+		NewFrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Grass), 0, 0.55f);
+		NewFrictionPairs->setTypePairFriction(static_cast<PxU32>(EVehicleSurfaceType::Metal), 0, 0.85f);
+
+		if (FrictionPairs)
+		{
+			FrictionPairs->release();
+		}
+
+		FrictionPairs = NewFrictionPairs;
 		return true;
 	}
 
@@ -306,8 +352,17 @@ FPhysicsScene::FPhysicsScene(UWorld* InOwner)
 	Scene = Physics->createScene(Desc);
 	if (Scene)
 	{
-		// PxScene → FPhysicsScene 역참조. 바디가 지워질 때 이걸로 대기 중인 이벤트를 정리한다.
 		Scene->userData = this;
+
+		VehicleSceneQueryData = new FVehicleSceneQueryData();
+
+		if (!VehicleSceneQueryData->Initialize(Physics, Core.GetDefaultMaterial()))
+		{
+			HTR_LOG(Error, "[Vehicle] Failed to initialize vehicle surface materials.");
+
+			delete VehicleSceneQueryData;
+			VehicleSceneQueryData = nullptr;
+		}
 	}
 }
 
@@ -471,7 +526,9 @@ void FPhysicsScene::StepOnce(float Step)
 				PxFixedSizeLookupTable<8> Table;
 				Table.addPair(0.0f, 0.75f);
 				Table.addPair(5.0f, 0.75f);
-				Table.addPair(30.0f, 0.125f);
+				Table.addPair(15.0f, 0.45f);
+				Table.addPair(30.0f, 0.18f);
+				Table.addPair(60.0f, 0.12f);
 				Table.addPair(120.0f, 0.1f);
 				return Table;
 			}();
@@ -600,14 +657,7 @@ bool FPhysicsScene::AddVehicle(PxVehicleWheels* Vehicle, USceneComponent* SyncCo
 
 	if (!VehicleSceneQueryData)
 	{
-		VehicleSceneQueryData = new FVehicleSceneQueryData();
-
-		if (!VehicleSceneQueryData->Initialize(FPhysicsCore::Get().GetDefaultMaterial()))
-		{
-			delete VehicleSceneQueryData;
-			VehicleSceneQueryData = nullptr;
-			return false;
-		}
+		return false;
 	}
 
 	auto& QueryData = *VehicleSceneQueryData;
@@ -974,6 +1024,13 @@ bool FPhysicsScene::SetVehicleDriveMode(physx::PxVehicleWheels* Vehicle, EVehicl
 	PxVehicleDrive4W* DriveVehicle = static_cast<PxVehicleDrive4W*>(Vehicle);
 	PxVehicleDifferential4WData DifferentialData = DriveVehicle->mDriveSimData.getDiffData();
 
+	DifferentialData.mFrontRearSplit = 0.55f;
+	DifferentialData.mFrontLeftRightSplit = 0.5f;
+	DifferentialData.mRearLeftRightSplit = 0.5f;
+	DifferentialData.mCentreBias = 1.3f;
+	DifferentialData.mFrontBias = 1.3f;
+	DifferentialData.mRearBias = 1.3f;
+
 	switch (Mode)
 	{
 	case EVehicleDriveMode::AWDLSD:
@@ -1007,6 +1064,34 @@ bool FPhysicsScene::SetVehicleDriveMode(physx::PxVehicleWheels* Vehicle, EVehicl
 	return true;
 }
 
+bool FPhysicsScene::RefreshVehicleFrictionPairs()
+{
+	if (!Scene || !VehicleSceneQueryData)
+	{
+		return false;
+	}
+
+	SCOPED_SCENE_WRITE_LOCK(Scene);
+
+	return VehicleSceneQueryData->RebuildFrictionPairs();
+}
+
+PxMaterial* FPhysicsScene::GetVehicleSurfaceMaterial(EVehicleSurfaceType SurfaceType) const
+{
+	if (!VehicleSceneQueryData)
+	{
+		return nullptr;
+	}
+
+	const PxU32 Index = static_cast<PxU32>(SurfaceType);
+
+	if (Index >= 5)
+	{
+		return nullptr;
+	}
+
+	return VehicleSceneQueryData->SurfaceMaterials[Index];
+}
 
 void FPhysicsScene::SetDebugVisualization(bool bEnable)
 {

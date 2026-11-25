@@ -19,62 +19,144 @@ FPhysicsCore& FPhysicsCore::Get()
 
 bool FPhysicsCore::Init()
 {
-	if (IsInitialized())
-	{
-		return true;
-	}
+    if (IsInitialized())
+    {
+        return true;
+    }
 
-	Foundation = PxCreateFoundation(PX_PHYSICS_VERSION, GPhysXAllocator, GPhysXErrorCallback);
-	if (!Foundation)
-	{
-		return false;
-	}
+    Foundation = PxCreateFoundation(PX_PHYSICS_VERSION, GPhysXAllocator, GPhysXErrorCallback);
 
-	// PVD가 켜져 있으면 연결한다. 꺼져 있으면 연결만 실패하고 나머지는 그대로 동작한다.
-	Pvd = PxCreatePvd(*Foundation);
-	PvdTransport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
-	Pvd->connect(*PvdTransport, PxPvdInstrumentationFlag::eALL);
+    if (!Foundation)
+    {
+        return false;
+    }
 
-	const PxTolerancesScale Scale;   // 기본값이 m 단위 (length 1, speed 10)
+    // PVD는 디버깅용이므로 연결에 실패해도 물리 엔진은 실행한다.
+    Pvd = PxCreatePvd(*Foundation);
 
-	Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *Foundation, Scale, false, Pvd);
-	if (!Physics)
-	{
-		Shutdown();
-		return false;
-	}
+    if (Pvd)
+    {
+        PvdTransport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
 
-	PxInitExtensions(*Physics, Pvd);   // 조인트, PxRigidBodyExt 등 확장 기능
+        if (PvdTransport)
+        {
+            if (!Pvd->connect(*PvdTransport, PxPvdInstrumentationFlag::eALL))
+            {
+                HTR_LOG(Warning, "[PhysX] PVD connection failed. Continue without PVD.");
+            }
+        }
+        else
+        {
+            HTR_LOG(Warning, "[PhysX] PVD transport creation failed. Continue without PVD.");
+        }
+    }
+    else
+    {
+        HTR_LOG(Warning, "[PhysX] PVD creation failed. Continue without PVD.");
+    }
 
-	if (!PxInitVehicleSDK(*Physics))
-	{
-		HTR_LOG(Warning, "[PhysX] Vehicle SDK initialization failed.");
-		Shutdown();
-		return false;
-	}
+    const PxTolerancesScale Scale;
 
-	bVehicleSDKInitialized = true;
+    Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *Foundation, Scale, false, Pvd);
 
-	PxVehicleSetBasisVectors(PxVec3(0.0f, 0.0f, 1.0f), PxVec3(1.0f, 0.0f, 0.0f));
+    if (!Physics)
+    {
+        Shutdown();
+        return false;
+    }
 
-	PxVehicleSetUpdateMode(PxVehicleUpdateMode::eVELOCITY_CHANGE);
-	HTR_LOG(Info, "[PhysX] Vehicle SDK initialized. Up=(0,0,1), Forward=(1,0,0).");
+    if (!PxInitExtensions(*Physics, Pvd))
+    {
+        HTR_LOG(Error, "[PhysX] Extensions initialization failed.");
+        Shutdown();
+        return false;
+    }
 
-	Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *Foundation, PxCookingParams(Scale));
-	Dispatcher = PxDefaultCpuDispatcherCreate(2);
-	DefaultMaterial = Physics->createMaterial(0.5f, 0.5f, 0.1f);   // 정마찰, 동마찰, 반발
-	return true;
+    bExtensionsInitialized = true;
+
+    if (!PxInitVehicleSDK(*Physics))
+    {
+        HTR_LOG(Error, "[PhysX] Vehicle SDK initialization failed.");
+        Shutdown();
+        return false;
+    }
+
+    bVehicleSDKInitialized = true;
+
+    PxVehicleSetBasisVectors(PxVec3(0.0f, 0.0f, 1.0f), PxVec3(1.0f, 0.0f, 0.0f));
+    PxVehicleSetUpdateMode(PxVehicleUpdateMode::eVELOCITY_CHANGE);
+
+    HTR_LOG(Info, "[PhysX] Vehicle SDK initialized. Up=(0,0,1), Forward=(1,0,0).");
+
+    Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *Foundation, PxCookingParams(Scale));
+    Dispatcher = PxDefaultCpuDispatcherCreate(2);
+    DefaultMaterial = Physics->createMaterial(0.5f, 0.5f, 0.1f);
+
+    if (!Cooking || !Dispatcher || !DefaultMaterial)
+    {
+        HTR_LOG(Error, "[PhysX] Required physics resource creation failed.");
+        Shutdown();
+        return false;
+    }
+
+    return true;
 }
 
 void FPhysicsCore::Shutdown()
 {
-	// 만든 것의 역순. PxScene은 이미 모두 release된 상태여야 한다.
-	if (DefaultMaterial)		{ DefaultMaterial->release(); DefaultMaterial = nullptr; }
-	if (Dispatcher)				{ Dispatcher->release();      Dispatcher = nullptr; }
-	if (Cooking)				{ Cooking->release();         Cooking = nullptr; }
-	if (bVehicleSDKInitialized)	{ PxCloseVehicleSDK(); bVehicleSDKInitialized = false; }
-	if (Physics)				{ PxCloseExtensions(); Physics->release(); Physics = nullptr; }
-	if (Pvd)					{ Pvd->release();             Pvd = nullptr; }
-	if (PvdTransport)			{ PvdTransport->release();    PvdTransport = nullptr; }
-	if (Foundation)				{ Foundation->release();      Foundation = nullptr; }
+    // 모든 월드와 PxScene이 먼저 해제된 상태여야 한다.
+    if (DefaultMaterial)
+    {
+        DefaultMaterial->release();
+        DefaultMaterial = nullptr;
+    }
+
+    if (Dispatcher)
+    {
+        Dispatcher->release();
+        Dispatcher = nullptr;
+    }
+
+    if (Cooking)
+    {
+        Cooking->release();
+        Cooking = nullptr;
+    }
+
+    if (bVehicleSDKInitialized)
+    {
+        PxCloseVehicleSDK();
+        bVehicleSDKInitialized = false;
+    }
+
+    if (bExtensionsInitialized)
+    {
+        PxCloseExtensions();
+        bExtensionsInitialized = false;
+    }
+
+    if (Physics)
+    {
+        Physics->release();
+        Physics = nullptr;
+    }
+
+    if (Pvd)
+    {
+        Pvd->disconnect();
+        Pvd->release();
+        Pvd = nullptr;
+    }
+
+    if (PvdTransport)
+    {
+        PvdTransport->release();
+        PvdTransport = nullptr;
+    }
+
+    if (Foundation)
+    {
+        Foundation->release();
+        Foundation = nullptr;
+    }
 }

@@ -118,6 +118,8 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 {
     Super::TickComponent(DeltaTime);
 
+    ConsumeInputVector();
+
     if (!VehicleInstance.IsValid() || !UpdatedComponent || !GetWorld() || DeltaTime <= 0.0f)
     {
         return;
@@ -172,7 +174,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
         DriveState.TargetGear == physx::PxVehicleGearsData::eREVERSE;
 
     const bool bVehicleInNeutral =
-        DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL &&
+        DriveState.CurrentGear == physx::PxVehicleGearsData::eNEUTRAL ||
         DriveState.TargetGear == physx::PxVehicleGearsData::eNEUTRAL;
 
     const bool bTransmissionTemporarilyManual = bVehicleInReverse || bVehicleInNeutral;

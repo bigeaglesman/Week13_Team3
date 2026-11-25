@@ -53,17 +53,23 @@ namespace
 		Lines.AddLine(Previous, Pivot, Color);
 	}
 
-	void DrawConstraintFrames(FLineBatcher& Lines, const FConstraintSetup& Joint, const FTransform& Parent,
-		const FTransform& Child, float Scale, float Radius, bool bHighlighted)
+	FTransform WorldJointFrame(const FTransform& Body, const FTransform& Frame, float Scale)
 	{
-		const FVector ParentPivot = Parent.Location + Parent.Rotation.RotateVector(Joint.ParentFrame.Location * Scale);
-		const FVector ChildPivot = Child.Location + Child.Rotation.RotateVector(Joint.ChildFrame.Location * Scale);
-		const FQuat Axes = (Parent.Rotation * Joint.ParentFrame.Rotation).Normalized();
+		return FTransform((Body.Rotation * Frame.Rotation).Normalized(),
+			Body.Location + Body.Rotation.RotateVector(Frame.Location * Scale));
+	}
+
+	void DrawConstraintFrames(FLineBatcher& Lines, const FConstraintSetup& Joint, const FTransform& ParentWorld,
+		const FTransform& ChildWorld, float Radius, bool bHighlighted)
+	{
+		const FVector& ParentPivot = ParentWorld.Location;
+		const FVector& ChildPivot = ChildWorld.Location;
+		const FQuat& Axes = ParentWorld.Rotation;
 		const FVector X = Axes.GetForwardVector(), Y = Axes.GetRightVector(), Z = Axes.GetUpVector();
 		const FVector4 SwingColor = bHighlighted ? FVector4(0.2f, 1.0f, 0.35f, 1) : FVector4(0.26f, 0.64f, 0.33f, 1);
 		const FVector4 TwistColor = bHighlighted ? FVector4(1.0f, 0.35f, 0.17f, 1) : FVector4(0.73f, 0.34f, 0.22f, 1);
 		const FVector4 DirectionColor(1.0f, 0.85f, 0.12f, 1);
-		const FQuat ChildAxes = (Child.Rotation * Joint.ChildFrame.Rotation).Normalized();
+		const FQuat& ChildAxes = ChildWorld.Rotation;
 		Lines.AddLine(ChildPivot, ChildPivot + ChildAxes.GetForwardVector() * Radius, DirectionColor);
 		Lines.AddLine(ParentPivot, ParentPivot + Y * (Radius * 0.28f), TwistColor);
 		Lines.AddLine(ParentPivot, ParentPivot + Z * (Radius * 0.28f), SwingColor);
@@ -315,13 +321,18 @@ void FSkeletalMeshEditor::SelectConstraint(int32 Index)
 	SelectBodyFromGraph(-1);
 	SelectedConstraintIndex = Index;
 	bShowConstraints = true;
+	SyncBoneGizmo();
 }
 
 void FSkeletalMeshEditor::SetConstraintsVisible(bool bVisible)
 {
 	bShowConstraints = bVisible;
-	if (!bVisible)
+	if (!bVisible && SelectedConstraintIndex >= 0)
+	{
+		BoneGizmo.EndDrag();
 		SelectedConstraintIndex = -1;
+		SyncBoneGizmo();
+	}
 }
 
 FConstraintSetup* FSkeletalMeshEditor::GetSelectedConstraint() const
@@ -355,7 +366,13 @@ unsigned FSkeletalMeshEditor::GetGizmoModeMask() const
 {
 	using namespace UE::Widget;
 	if (!bPhysicsAssetMode) return AllTransformModes;
-	if (IsPhysicsPreviewRunning() || SelectedShapeType == EColliderShape::None) return 0;
+	if (IsPhysicsPreviewRunning()) return 0;
+	if (const FConstraintSetup* Joint = GetSelectedConstraint())
+	{
+		int32 Parent, Child;
+		return ResolveConstraintBones(*Joint, Parent, Child) ? ModeBit(WM_Translate) | ModeBit(WM_Rotate) : 0;
+	}
+	if (SelectedShapeType == EColliderShape::None) return 0;
 	return SelectedShapeType == EColliderShape::Sphere ? ModeBit(WM_Translate) | ModeBit(WM_Scale) : AllTransformModes;
 }
 
@@ -500,7 +517,11 @@ void FSkeletalMeshEditor::OnRenderLine(FLineBatcher& LineBatcher)
 				{
 					const bool bHighlighted = i == SelectedConstraintIndex;
 					const uint32 First = LineBatcher.GetVertexCount();
-					DrawConstraintFrames(LineBatcher, Joint, *Parent, *Child, Scale, bHighlighted ? Radius * 1.5f : Radius, bHighlighted);
+					FTransform ParentFrame = Joint.ParentFrame, ChildFrame = Joint.ChildFrame;
+					if (bHighlighted && BoneGizmo.IsUsing())
+						ApplyConstraintGizmoDrag(Joint, ParentFrame, ChildFrame);
+					DrawConstraintFrames(LineBatcher, Joint, WorldJointFrame(*Parent, ParentFrame, Scale),
+						WorldJointFrame(*Child, ChildFrame, Scale), bHighlighted ? Radius * 1.5f : Radius, bHighlighted);
 					if (bPick)
 					{
 						const float Depth = PickWireDepth(LineBatcher, First, PhysicsPickPosition);
@@ -547,7 +568,7 @@ void FSkeletalMeshEditor::SetGizmoSpace(ECoordSystem Space)
 
 void FSkeletalMeshEditor::SyncBoneGizmo()
 {
-	if (IsPhysicsPreviewRunning() || !MeshComponent || !BoneGizmoTarget || SelectedBoneIndex < 0 || SelectedBoneIndex >= BoneItems.Num())
+	if (IsPhysicsPreviewRunning() || !MeshComponent || !BoneGizmoTarget)
 	{
 		BoneGizmo.SetTarget(nullptr);
 		return;
@@ -558,6 +579,26 @@ void FSkeletalMeshEditor::SyncBoneGizmo()
 		return;
 	}
 
+	if (const FConstraintSetup* Joint = bPhysicsAssetMode ? GetSelectedConstraint() : nullptr)
+	{
+		int32 Parent, Child;
+		if (!ResolveConstraintBones(*Joint, Parent, Child))
+		{
+			BoneGizmo.SetTarget(nullptr);
+			return;
+		}
+		if (GetGizmoMode() != UE::Widget::WM_Translate && GetGizmoMode() != UE::Widget::WM_Rotate)
+			ModeTools.SetWidgetMode(UE::Widget::WM_Translate);
+		const FTransform Body = MatrixToBodyTransform(MeshComponent->GetBoneWorldMatrix(Parent));
+		BoneGizmoTarget->SetTransform(WorldJointFrame(Body, Joint->ParentFrame, MeshComponent->GetPhysicsAssetScale()));
+		BoneGizmo.SetTarget(BoneGizmoTarget);
+		return;
+	}
+	if (!BoneItems.IsValidIndex(SelectedBoneIndex))
+	{
+		BoneGizmo.SetTarget(nullptr);
+		return;
+	}
 	const FMatrix BoneWorld = MeshComponent->GetBoneWorldMatrix(SelectedBoneIndex);
 	if (bPhysicsAssetMode)
 	{
@@ -648,10 +689,17 @@ bool FSkeletalMeshEditor::UpdateBoneGizmo()
 			DragStartGizmoWorld = BoneGizmoTarget->GetTransform();
 		if (!PointerInput.bMouseDown)
 		{
-			const FTransform Body = MatrixToBodyTransform(MeshComponent->GetBoneWorldMatrix(SelectedBoneIndex));
-			UBodySetup* Setup = GetSelectedBodySetup();
-			if (Setup && ApplyShapeGizmoDrag(Setup->AggGeom, Body, 1.0f))
-				MarkPhysicsAssetDirty();
+			if (FConstraintSetup* Joint = GetSelectedConstraint())
+			{
+				if (ApplyConstraintGizmoDrag(*Joint, Joint->ParentFrame, Joint->ChildFrame))
+					MarkPhysicsAssetDirty();
+			}
+			else if (UBodySetup* Setup = GetSelectedBodySetup())
+			{
+				const FTransform Body = MatrixToBodyTransform(MeshComponent->GetBoneWorldMatrix(SelectedBoneIndex));
+				if (ApplyShapeGizmoDrag(Setup->AggGeom, Body, 1.0f))
+					MarkPhysicsAssetDirty();
+			}
 			BoneGizmo.EndDrag();
 		}
 		return true;
@@ -687,6 +735,60 @@ bool FSkeletalMeshEditor::UpdateBoneGizmo()
 	}
 
 	return bWasUsing || BoneGizmo.IsUsing() || BoneGizmo.GetHoveredAxis() >= 0;
+}
+
+bool FSkeletalMeshEditor::ResolveConstraintBones(const FConstraintSetup& Joint, int32& ParentBone, int32& ChildBone) const
+{
+	const UPhysicsAsset* Asset = Mesh->GetPhysicsAsset();
+	auto FindBodyBone = [&](const FString& Name)
+	{
+		const int32 BodyIndex = Asset->FindBodyIndex(Name);
+		if (BodyIndex < 0 || Asset->BodySetups[BodyIndex]->AggGeom.IsEmpty()) return -1;
+		return Mesh->FindBoneIndex(Name);
+	};
+	ParentBone = FindBodyBone(Joint.ParentBoneName);
+	ChildBone = FindBodyBone(Joint.ChildBoneName);
+	return ParentBone >= 0 && ChildBone >= 0;
+}
+
+bool FSkeletalMeshEditor::ApplyConstraintGizmoDrag(const FConstraintSetup& Joint, FTransform& ParentFrame, FTransform& ChildFrame) const
+{
+	const FTransform& Target = BoneGizmoTarget->GetTransform();
+	const bool bTranslate = GetGizmoMode() == UE::Widget::WM_Translate;
+	if (bTranslate)
+	{
+		if (Target.Location == DragStartGizmoWorld.Location) return false;
+	}
+	else
+	{
+		if (GetGizmoMode() != UE::Widget::WM_Rotate) return false;
+		const FQuat Delta = Target.Rotation * DragStartGizmoWorld.Rotation.UnitInverse();
+		if (FVector(Delta.X, Delta.Y, Delta.Z).SizeSquared() < 1e-12f) return false;
+	}
+
+	int32 Parent, Child;
+	if (!ResolveConstraintBones(Joint, Parent, Child)) return false;
+	const FTransform ParentWorld = MatrixToBodyTransform(MeshComponent->GetBoneWorldMatrix(Parent));
+	// 드래그는 현재 포즈에서 하되, 두 프레임은 에셋 생성 때와 같은 바인드 포즈에서 맞춘다.
+	// 구부린 무릎에서 편집해도 그 자세가 관절의 새로운 0도가 되지 않는다.
+	const auto& Bones = Mesh->GetRefSkeleton();
+	const FTransform ParentBind = MatrixToBodyTransform(Bones[Parent].InverseBindPose.Inverse());
+	const FTransform ChildBind = MatrixToBodyTransform(Bones[Child].InverseBindPose.Inverse());
+	if (bTranslate)
+	{
+		const float Scale = MeshComponent->GetPhysicsAssetScale();
+		if (Scale <= 0.0f) return false;
+		ParentFrame.Location = ParentWorld.Rotation.UnitInverse().RotateVector(Target.Location - ParentWorld.Location) / Scale;
+		const FVector BindPivot = ParentBind.Location + ParentBind.Rotation.RotateVector(ParentFrame.Location);
+		ChildFrame.Location = ChildBind.Rotation.UnitInverse().RotateVector(BindPivot - ChildBind.Location);
+	}
+	else
+	{
+		ParentFrame.Rotation = (ParentWorld.Rotation.UnitInverse() * Target.Rotation).Normalized();
+		const FQuat BindAxes = ParentBind.Rotation * ParentFrame.Rotation;
+		ChildFrame.Rotation = (ChildBind.Rotation.UnitInverse() * BindAxes).Normalized();
+	}
+	return true;
 }
 
 bool FSkeletalMeshEditor::ApplyShapeGizmoDrag(FKAggregateGeom& Geom, const FTransform& Body, float GeometryScale) const

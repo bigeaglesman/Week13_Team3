@@ -92,6 +92,8 @@ private:
 	bool UpdateBoneGizmo();
 	void ApplyBoneGizmoTransform();
 	bool ApplyShapeGizmoDrag(FKAggregateGeom& Geom, const FTransform& Body, float GeometryScale) const;
+	bool ResolveConstraintBones(const FConstraintSetup& Joint, int32& ParentBone, int32& ChildBone) const;
+	bool ApplyConstraintGizmoDrag(const FConstraintSetup& Joint, FTransform& ParentFrame, FTransform& ChildFrame) const;
 	FTransform DragStartGizmoWorld;
 	FQuat GetBoneWorldRotation(int32 BoneIndex) const;
 

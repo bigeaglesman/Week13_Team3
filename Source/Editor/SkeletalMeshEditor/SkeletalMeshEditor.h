@@ -36,9 +36,10 @@ public:
 	void SelectConstraint(int32 Index);
 	void SelectBodyFromGraph(int32 BoneIndex);
 	int32 GetGraphFocusBone() const { return GraphFocusBone; }
-	const FConstraintSetup* GetSelectedConstraint() const;
+	FConstraintSetup* GetSelectedConstraint() const;
 	UBodySetup* GetSelectedBodySetup() const;
 	void SetSelectedCapsuleRadius(int32 CapsuleIndex, float Radius);
+	void MarkPhysicsAssetDirty();
 	void SavePhysicsAsset();
 	const FString& GetPhysicsAssetStatus() const { return PhysicsAssetStatus; }
 	bool IsDirty() const override;

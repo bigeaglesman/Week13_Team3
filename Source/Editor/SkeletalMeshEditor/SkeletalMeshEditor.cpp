@@ -294,9 +294,9 @@ void FSkeletalMeshEditor::SetConstraintsVisible(bool bVisible)
 		SelectedConstraintIndex = -1;
 }
 
-const FConstraintSetup* FSkeletalMeshEditor::GetSelectedConstraint() const
+FConstraintSetup* FSkeletalMeshEditor::GetSelectedConstraint() const
 {
-	const UPhysicsAsset* Asset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
+	UPhysicsAsset* Asset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
 	return Asset && Asset->ConstraintSetups.IsValidIndex(SelectedConstraintIndex) ? &Asset->ConstraintSetups[SelectedConstraintIndex] : nullptr;
 }
 
@@ -322,6 +322,11 @@ void FSkeletalMeshEditor::SetSelectedCapsuleRadius(int32 CapsuleIndex, float Rad
 	}
 
 	Setup->AggGeom.SphylElems[CapsuleIndex].Radius = Radius;
+	MarkPhysicsAssetDirty();
+}
+
+void FSkeletalMeshEditor::MarkPhysicsAssetDirty()
+{
 	Mesh->GetPhysicsAsset()->bHasUnsavedChanges = true;
 	PhysicsAssetStatus.clear();
 }

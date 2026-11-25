@@ -5,6 +5,7 @@
 #include "Physics/BodySetup.h"
 #include "Physics/PhysicsAsset.h"
 #include "Render/SkeletalMesh.h"
+#include <cmath>
 #include <format>
 
 namespace
@@ -15,6 +16,42 @@ namespace
 			return "Free";
 		const float Extent = FConstraintSetup::AngularExtentDeg(Motion, Degrees);
 		return Extent == 0.0f ? "Locked" : std::format("±{:g}°", Extent);
+	}
+
+	bool DrawAngularLimitRow(const char* Axis, EConstraintMotion& Motion, float& LimitDeg)
+	{
+		// 기존 에셋의 Limited 0°는 PhysX에서도 잠긴 축이다.
+		const EConstraintMotion EffectiveMotion = FConstraintSetup::AngularExtentDeg(Motion, LimitDeg) == 0.0f
+			? EConstraintMotion::Locked : Motion;
+		int Mode = static_cast<int>(EffectiveMotion);
+		ImGui::PushID(Axis);
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+		ImGui::AlignTextToFramePadding();
+		ImGui::TextUnformatted(Axis);
+		ImGui::TableSetColumnIndex(1);
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		bool Changed = ImGui::Combo("##Motion", &Mode, "Free\0Limited\0Locked\0");
+		if (Changed)
+		{
+			Motion = static_cast<EConstraintMotion>(Mode);
+			if (Motion == EConstraintMotion::Limited)
+				LimitDeg = FMath::Clamp(LimitDeg, 1.0f, 179.0f);
+		}
+		if (Mode == static_cast<int>(EConstraintMotion::Limited))
+		{
+			ImGui::TableSetColumnIndex(2);
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			float Degrees = FConstraintSetup::AngularExtentDeg(Motion, LimitDeg);
+			if (ImGui::DragFloat("##Degrees", &Degrees, 0.5f, 1.0f, 179.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp)
+				&& std::isfinite(Degrees) && Degrees != LimitDeg)
+			{
+				LimitDeg = Degrees;
+				Changed = true;
+			}
+		}
+		ImGui::PopID();
+		return Changed;
 	}
 
 	void DrawBodyNode(FSkeletalMeshEditor& Editor, const FString& Name, float Width)
@@ -140,7 +177,7 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 		ImGui::TextWrapped("%s", Editor.GetPhysicsAssetStatus().c_str());
 	}
 
-	const FConstraintSetup* SelectedJoint = Editor.GetSelectedConstraint();
+	FConstraintSetup* SelectedJoint = Editor.GetSelectedConstraint();
 	const auto& Bones = Editor.GetMesh()->GetRefSkeleton();
 	const int32 Focus = Editor.GetGraphFocusBone();
 	const UPhysicsAsset* Asset = Editor.GetMesh()->GetPhysicsAsset();
@@ -148,6 +185,27 @@ void FSkeletalMeshDetailsPanel::DrawPhysicsAssetDetails()
 	{
 		ImGui::TextWrapped("Select a body or constraint in the viewport, or a body in Collider Hierarchy.");
 		return;
+	}
+
+	if (SelectedJoint)
+	{
+		ImGui::SeparatorText("Angular Limits");
+		ImGui::TextWrapped("%s", SelectedJoint->JointName.c_str());
+		ImGui::PushID(SelectedJoint);
+		if (ImGui::BeginTable("##AngularLimits", 3))
+		{
+			ImGui::TableSetupColumn("Axis", ImGuiTableColumnFlags_WidthFixed);
+			ImGui::TableSetupColumn("Motion", ImGuiTableColumnFlags_WidthStretch, 1.3f);
+			ImGui::TableSetupColumn("Limit (±°)", ImGuiTableColumnFlags_WidthStretch);
+			ImGui::TableHeadersRow();
+			bool Changed = DrawAngularLimitRow("Twist", SelectedJoint->TwistMotion, SelectedJoint->TwistLimitDeg);
+			Changed |= DrawAngularLimitRow("Swing 1", SelectedJoint->Swing1Motion, SelectedJoint->Swing1LimitDeg);
+			Changed |= DrawAngularLimitRow("Swing 2", SelectedJoint->Swing2Motion, SelectedJoint->Swing2LimitDeg);
+			if (Changed)
+				Editor.MarkPhysicsAssetDirty();
+			ImGui::EndTable();
+		}
+		ImGui::PopID();
 	}
 
 	ImGui::SeparatorText("Constraint Graph");
